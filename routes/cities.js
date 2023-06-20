@@ -3,5 +3,7 @@ import CitiesController from '../controllers/CitiesController';
 
 const router = express.Router();
 
-router.get('/', CitiesController.GetCities);
+router.get('/active', CitiesController.GetCities)
+router.get('/', CitiesController.GetCity);
+router.post('/active', CitiesController.AddCityToActive);
 export default router;

@@ -1,0 +1,17 @@
+Change Reg
+Change DB
+
+// Changed
+
+DB changes {
+
+1. Sellers Schema:
+Added name field
+stores_title field -> legal_name
+2. Stores Schema:
+Added about_store field
+Added logo_url field
+Added header_photo_url
+3. Goods Schema:
+Added is_promoted field (bool)
+}

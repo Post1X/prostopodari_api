@@ -1,6 +1,5 @@
 import Sellers from '../schemas/SellersSchema';
 import JWT from 'jsonwebtoken';
-import fs from 'fs';
 
 import {
     validateEmail,
@@ -31,31 +30,12 @@ class SellersController {
                 phone_number: phone_number
             });
             if (seller) {
-                if (req.files && req.files.length > 0) {
-                    const logoFile = req.files.find(file => file.fieldname === 'logo');
-                    const headerPhotoFile = req.files.find(file => file.fieldname === 'header_photo');
-
-                    if (logoFile) {
-                        fs.unlinkSync(logoFile.path);
-                    }
-                    if (headerPhotoFile) {
-                        fs.unlinkSync(headerPhotoFile.path);
-                    }
-                }
-                //
                 res.status(400).json({
                     error: 'seller_already_exists',
                     message: 'Страница с такими данными уже существует. Если вы забыли пароль, то свяжитесь с администрацией.'
                 })
             }
             if (!seller) {
-                const logoFile = req.files.find(file => file.fieldname === 'logo');
-                const headerPhotoFile = req.files.find(file => file.fieldname === 'header_photo');
-                //
-                const logoFileFn = `${logoFile.destination + logoFile.filename}`
-                const headerPhotoFileFn = `${headerPhotoFile.destination + headerPhotoFile.filename}`
-                //
-
                 const newSeller = new Sellers({
                     email: email,
                     password: hashPassword,
@@ -67,8 +47,6 @@ class SellersController {
                     phone_number: phone_number,
                     status: 'pending',
                     message_from_admin: null,
-                    logo_url: logoFileFn,
-                    header_photo_url: headerPhotoFileFn,
                     subscription_status: null,
                     subscription_valid_until: null
                 })

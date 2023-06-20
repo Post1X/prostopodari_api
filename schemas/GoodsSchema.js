@@ -10,7 +10,9 @@ const GoodsSchema = new Schema({
     subcategory_id: {
         type: Schema.Types.ObjectId,
         ref: 'SubCategories',
-        required: false
+    },
+    is_promoted: {
+        type: Schema.Types.Boolean
     },
     title: {
         type: Schema.Types.String,

@@ -3,6 +3,9 @@ import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 const SellersSchema = new Schema({
+    name: {
+        type: Schema.Types.String,
+    },
     email: {
         type: Schema.Types.String,
         required: true
@@ -13,17 +16,14 @@ const SellersSchema = new Schema({
     },
     inn: {
         type: Schema.Types.String,
-        required: true
     },
     ip: {
         type: Schema.Types.String,
-        required: true
     },
     ogrn: {
         type: Schema.Types.String,
-        required: true
     },
-    stores_title: {
+    legal_name: {
         type: Schema.Types.String,
         required: true
     },
@@ -32,14 +32,6 @@ const SellersSchema = new Schema({
         required: true
     },
     bill_number: {
-        type: Schema.Types.String,
-        required: true
-    },
-    logo_url: {
-        type: Schema.Types.String,
-        required: true
-    },
-    header_photo_url: {
         type: Schema.Types.String,
         required: true
     },
