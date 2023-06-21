@@ -8,13 +8,12 @@ import {validateEmail, validateName, validateNumber, validatePassword} from '../
 class BuyersController {
     static RegBuyer = async (req, res, next) => {
         try {
-            const {email, password, full_name, phone_number, significant_dates} = req.body;
+            const {email, password, full_name, phone_number, city_id, address} = req.body;
             const {JWT_SECRET} = process.env;
             await validateEmail(email);
             await validateName(full_name);
             await validateNumber(phone_number);
             await validatePassword(password);
-            // const datesArray = dateparser(significant_dates)
             const hashPassword = await argon2.hash(password);
             const user = await Buyers.findOne({
                 email: email
@@ -36,7 +35,8 @@ class BuyersController {
                     password: hashPassword,
                     full_name: full_name,
                     phone_number: phone_number,
-                    significant_dates: significant_dates
+                    city_id: city_id,
+                    address: address
                 })
                 await newUser.save();
                 const user = await Buyers.findOne({

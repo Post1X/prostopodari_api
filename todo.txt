@@ -15,3 +15,38 @@ Added header_photo_url
 3. Goods Schema:
 Added is_promoted field (bool)
 }
+
+Coda changes {
+
+Changed categories_ids: [2, 4, 6],
+        subcategories_ids: [2, 4, 10]
+        to
+        about_store
+
+   in GET:/stores/my , POST:/stores/my, PUT:/stores/my
+//
+
+Changed POST:/stores/my
+from
+body:
+ {
+  city_id: 2,
+  address: "Pushkin st. 33",
+  about_store: "Магазин сладких подарков"
+ }
+to
+
+FormData: {
+body:
+ {
+  city_id: 2,
+  address: "Pushkin st. 33",
+  about_store: "Магазин сладких подарков"
+ }
+logo_img: "public/image/logo.png"
+}
+
+Deleted significant_dates: [“2022-08-11T13:16:41.000Z”, “2022-08-11T13:16:41.000Z”] from POST:/users/register/buyers
+
+}
+

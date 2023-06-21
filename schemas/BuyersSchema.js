@@ -19,8 +19,12 @@ const BuyersSchema = new Schema({
         type: Schema.Types.String,
         required: true
     },
-    significant_dates: {
-        type: Schema.Types.Array
+    city_id: {
+        type: Schema.Types.ObjectId,
+        ref: 'Cities'
+    },
+    address: {
+        type: Schema.Types.String
     }
 })
 

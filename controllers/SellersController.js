@@ -15,7 +15,7 @@ import argon2 from 'argon2';
 class SellersController {
     static RegSeller = async (req, res, next) => {
         try {
-            const {email, password, inn, ip, ogrn, stores_title, phone_number, bill_number} = req.body;
+            const {email, password, inn, ip, ogrn, legal_name, phone_number, bill_number} = req.body;
             const JWT_SECRET = process.env.JWT_SECRET;
             await validateEmail(email);
             await validatePassword(password);
@@ -23,7 +23,7 @@ class SellersController {
             await validateIp(ip);
             await validateOgrn(ogrn);
             await validateInn(inn);
-            await validateStoreTitle(stores_title)
+            await validateStoreTitle(legal_name)
             const hashPassword = await argon2.hash(password);
             const seller = await Sellers.findOne({
                 inn: inn,
@@ -42,7 +42,7 @@ class SellersController {
                     inn: inn,
                     ip: ip,
                     ogrn: ogrn,
-                    stores_title: stores_title,
+                    legal_name: legal_name,
                     bill_number: bill_number,
                     phone_number: phone_number,
                     status: 'pending',
@@ -124,7 +124,7 @@ class SellersController {
             const user_data = await Sellers.findOne({
                 _id: user_id
             });
-            console.log(user_id)
+            console.log(user_id, '||||||||||||||||')
             res.status(200).json({
                 user_data
             });
@@ -143,7 +143,7 @@ class SellersController {
                 })
             }
             const {user_id} = req;
-            const {password, inn, ip, ogrn, store_title, phone_number, bill_number} = req.body;
+            const {password, inn, ip, ogrn, legal_name, phone_number, bill_number} = req.body;
             if (password) {
                 await validatePassword(password);
             }
@@ -159,8 +159,8 @@ class SellersController {
             if (inn) {
                 await validateInn(inn);
             }
-            if (store_title) {
-                await validateStoreTitle(store_title);
+            if (legal_name) {
+                await validateStoreTitle(legal_name);
             }
             const logoFile = req.files.find(file => file.fieldname === 'logo');
             const headerPhotoFile = req.files.find(file => file.fieldname === 'header_photo');
@@ -174,7 +174,7 @@ class SellersController {
                     inn: inn,
                     ip: ip,
                     ogrn: ogrn,
-                    store_title: store_title,
+                    legal_name: legal_name,
                     phone_number: phone_number,
                     bill_number: bill_number,
                     logo: logoFileFn,

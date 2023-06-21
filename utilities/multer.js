@@ -4,32 +4,32 @@ import fs from 'fs';
 
 const folderPath = 'public/images';
 
-fs.stat(folderPath, (err, stats) => {
-    if (err) {
-        console.error(err);
-        return;
-    }
-
-    const createdDate = new Date(stats.ctime);
-
-    const currentDate = new Date();
-
-    const diff = currentDate.getTime() - createdDate.getTime();
-
-    const week = 7 * 24 * 60 * 60 * 1000;
-
-    if (diff > week) {
-        const date = currentDate.toISOString().slice(0, 10);
-        const newFolderPath = `${folderPath}-${date}`;
-        fs.mkdir(newFolderPath, (err) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
-            console.log(`New folder created: ${newFolderPath}`);
-        });
-    }
-});
+// fs.stat(folderPath, (err, stats) => {
+//     if (err) {
+//         console.error(err);
+//         return;
+//     }
+//
+//     const createdDate = new Date(stats.ctime);
+//
+//     const currentDate = new Date();
+//
+//     const diff = currentDate.getTime() - createdDate.getTime();
+//
+//     const week = 7 * 24 * 60 * 60 * 1000;
+//
+//     if (diff > week) {
+//         const date = currentDate.toISOString().slice(0, 10);
+//         const newFolderPath = `${folderPath}-${date}`;
+//         fs.mkdir(newFolderPath, (err) => {
+//             if (err) {
+//                 console.error(err);
+//                 return;
+//             }
+//             console.log(`New folder created: ${newFolderPath}`);
+//         });
+//     }
+// });
 
 
 const storage = multer.diskStorage({
