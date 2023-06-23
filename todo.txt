@@ -50,3 +50,46 @@ Deleted significant_dates: [“2022-08-11T13:16:41.000Z”, “2022-08-11T13:16:
 
 }
 
+
+
+static FilterGoods = async (req, res, next) => {
+        try {
+            const {sort, category, subcategory} = req.query;
+            let filter = {};
+            if (category) {
+                           const categoryIds = category.split(',');
+                           const categoryObjectIds = categoryIds.map(result => mongoose.Types.ObjectId(result.trim()));
+                           filter.category_id = {$in: categoryObjectIds};
+                       }
+            if (subcategory) {
+                filter.subcategory_id = subcategory;
+            }
+
+            let goods = [];
+
+            if ((sort === 'newFirst' || sort === 'oldFirst') && category) {
+                const sortDirection = sort === 'newFirst' ? -1 : 1;
+                goods = await Goods.find(filter)
+                    .sort({_id: sortDirection})
+                    // .populate('category_id')
+                    // .populate('subcategory_id')
+                    // .populate('store_id');
+            } else {
+                let sortOptions = {};
+                if (sort === 'priceAsc') {
+                    sortOptions.price = 1;
+                } else if (sort === 'priceDesc') {
+                    sortOptions.price = -1;
+                }
+                goods = await Goods.find(filter)
+                    .sort(sortOptions);
+            }
+            const promotedGoods = goods.filter(good => good.is_promoted === true);
+            const regularGoods = goods.filter(good => good.is_promoted !== true);
+            const sortedGoods = [...promotedGoods, ...regularGoods];
+            res.status(200).json(sortedGoods);
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    };

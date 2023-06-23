@@ -2,7 +2,6 @@ import Sellers from '../schemas/SellersSchema';
 import JWT from 'jsonwebtoken';
 
 import {
-    validateEmail,
     validateInn,
     validateIp,
     validateNumber,
@@ -15,15 +14,15 @@ import argon2 from 'argon2';
 class SellersController {
     static RegSeller = async (req, res, next) => {
         try {
-            const {email, password, inn, ip, ogrn, legal_name, phone_number, bill_number} = req.body;
+            const {name, email, password, inn, ip, ogrn, legal_name, phone_number, bill_number} = req.body;
             const JWT_SECRET = process.env.JWT_SECRET;
-            await validateEmail(email);
-            await validatePassword(password);
-            await validateNumber(phone_number);
-            await validateIp(ip);
-            await validateOgrn(ogrn);
-            await validateInn(inn);
-            await validateStoreTitle(legal_name)
+            // await validateEmail(email);
+            // await validatePassword(password);
+            // await validateNumber(phone_number);
+            // await validateIp(ip);
+            // await validateOgrn(ogrn);
+            // await validateInn(inn);
+            // await validateStoreTitle(legal_name)
             const hashPassword = await argon2.hash(password);
             const seller = await Sellers.findOne({
                 inn: inn,
@@ -37,6 +36,7 @@ class SellersController {
             }
             if (!seller) {
                 const newSeller = new Sellers({
+                    name: name,
                     email: email,
                     password: hashPassword,
                     inn: inn,

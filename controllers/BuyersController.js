@@ -10,10 +10,10 @@ class BuyersController {
         try {
             const {email, password, full_name, phone_number, city_id, address} = req.body;
             const {JWT_SECRET} = process.env;
-            await validateEmail(email);
-            await validateName(full_name);
-            await validateNumber(phone_number);
-            await validatePassword(password);
+            // await validateEmail(email);
+            // await validateName(full_name);
+            // await validateNumber(phone_number);
+            // await validatePassword(password);
             const hashPassword = await argon2.hash(password);
             const user = await Buyers.findOne({
                 email: email
