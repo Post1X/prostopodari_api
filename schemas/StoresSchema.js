@@ -24,10 +24,6 @@ const StoresSchema = new Schema({
         type: Schema.Types.String,
         required: true
     },
-    header_photo_url: {
-        type: Schema.Types.String,
-        required: true
-    },
     about_store: {
         type: Schema.Types.String
     },

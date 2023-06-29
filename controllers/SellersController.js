@@ -1,15 +1,7 @@
 import Sellers from '../schemas/SellersSchema';
 import JWT from 'jsonwebtoken';
-
-import {
-    validateInn,
-    validateIp,
-    validateNumber,
-    validateOgrn,
-    validatePassword,
-    validateStoreTitle
-} from '../middlewares/validate';
 import argon2 from 'argon2';
+import Stores from '../schemas/StoresSchema';
 
 class SellersController {
     static RegSeller = async (req, res, next) => {
@@ -96,6 +88,9 @@ class SellersController {
                     description: 'Введён неправильный пароль.'
                 })
             }
+            const store = await Stores.find({
+                seller_user_id: seller.user_id
+            })
             const token = JWT.sign({
                 email: email,
                 user_id: seller._id,
@@ -124,7 +119,9 @@ class SellersController {
             const user_data = await Sellers.findOne({
                 _id: user_id
             });
-            console.log(user_id, '||||||||||||||||')
+            const store = await Stores.find({
+                seller_user_id: user_id
+            })
             res.status(200).json({
                 user_data
             });
@@ -143,42 +140,38 @@ class SellersController {
                 })
             }
             const {user_id} = req;
-            const {password, inn, ip, ogrn, legal_name, phone_number, bill_number} = req.body;
-            if (password) {
-                await validatePassword(password);
-            }
-            if (phone_number) {
-                await validateNumber(phone_number);
-            }
-            if (ip) {
-                await validateIp(ip);
-            }
-            if (ogrn) {
-                await validateOgrn(ogrn);
-            }
-            if (inn) {
-                await validateInn(inn);
-            }
-            if (legal_name) {
-                await validateStoreTitle(legal_name);
-            }
-            const logoFile = req.files.find(file => file.fieldname === 'logo');
-            const headerPhotoFile = req.files.find(file => file.fieldname === 'header_photo');
+            const {name, inn, ip, ogrn, legal_name, phone_number, bill_number} = req.body;
+            // if (password) {
+            //     await validatePassword(password);
+            // }
+            // if (phone_number) {
+            //     await validateNumber(phone_number);
+            // }
+            // if (ip) {
+            //     await validateIp(ip);
+            // }
+            // if (ogrn) {
+            //     await validateOgrn(ogrn);
+            // }
+            // if (inn) {
+            //     await validateInn(inn);
+            // }
+            // if (legal_name) {
+            //     await validateStoreTitle(legal_name);
+            // }
             const logoFileFn = `${logoFile.destination + logoFile.filename}`
             const headerPhotoFileFn = `${headerPhotoFile.destination + headerPhotoFile.filename}`
             await Sellers.findByIdAndUpdate({
                 _id: user_id
             }, {
                 $set: {
-                    password: password,
+                    name: name,
                     inn: inn,
                     ip: ip,
                     ogrn: ogrn,
                     legal_name: legal_name,
                     phone_number: phone_number,
                     bill_number: bill_number,
-                    logo: logoFileFn,
-                    header_photo: headerPhotoFileFn
                 }
             });
             const user_data = await Sellers.findOne({
