@@ -98,6 +98,7 @@ class SellersController {
             }, JWT_SECRET);
             res.status(200).json({
                 token: token,
+                storesList: store,
                 user_data: seller,
                 isSeller: true
             });
@@ -123,7 +124,8 @@ class SellersController {
                 seller_user_id: user_id
             })
             res.status(200).json({
-                user_data
+                user_data,
+                storesList: store,
             });
         } catch (e) {
             e.status = 401;
