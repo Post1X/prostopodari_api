@@ -22,6 +22,7 @@ class GoodsController {
                 price,
                 parameters,
             } = req.body;
+
             //
             req.files.forEach((file, index) => {
                 if (file.fieldname === `photo_${index}`) {

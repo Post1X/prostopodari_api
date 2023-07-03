@@ -75,6 +75,7 @@ class SellersController {
             const seller = await Sellers.findOne({
                 email: email
             });
+            console.log(seller.user_id)
             if (!seller) {
                 res.status(400).json({
                     error: 'user_not_found',
@@ -89,7 +90,7 @@ class SellersController {
                 })
             }
             const store = await Stores.find({
-                seller_user_id: seller.user_id
+                seller_user_id: seller._id
             })
             const token = JWT.sign({
                 email: email,
@@ -161,8 +162,6 @@ class SellersController {
             // if (legal_name) {
             //     await validateStoreTitle(legal_name);
             // }
-            const logoFileFn = `${logoFile.destination + logoFile.filename}`
-            const headerPhotoFileFn = `${headerPhotoFile.destination + headerPhotoFile.filename}`
             await Sellers.findByIdAndUpdate({
                 _id: user_id
             }, {

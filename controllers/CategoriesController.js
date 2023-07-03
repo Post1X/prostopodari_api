@@ -147,24 +147,62 @@ class CategoriesController {
     //
     static GetSubCategories = async (req, res, next) => {
         try {
-            const subcategories = await SubCategories.find();
-            if (subcategories.length === 0) {
-                res.status(400).json({
-                    error: 'subcategories_not_found',
-                    message: 'Лист подкатегорий пуст.'
-                })
-            } else {
-                res.status(200).json({
-                    subcategories
-                })
+            const {category_id} = req.query;
+            if (!category_id) {
+                const subcategories = await SubCategories.find();
+                if (subcategories.length === 0) {
+                    res.status(400).json({
+                        error: 'subcategories_not_found',
+                        message: 'Лист подкатегорий пуст.'
+                    })
+                    res.status(200).json({
+                        subcategories
+                    })
+                }
+                if (subcategories.length === 0) {
+                    res.status(400).json({
+                        error: 'subcategories_not_found',
+                        message: 'Лист подкатегорий пуст.'
+                    })
+                } else {
+                    res.status(200).json({
+                        subcategories
+                    })
+                }
             }
-        } catch (e) {
+            if (category_id) {
+                const subcategories = await SubCategories.find({
+                    category_id: category_id
+                });
+                if (subcategories.length === 0) {
+                    res.status(400).json({
+                        error: 'subcategories_not_found',
+                        message: 'Лист подкатегорий пуст.'
+                    })
+                    res.status(200).json({
+                        subcategories
+                    })
+                }
+                if (subcategories.length === 0) {
+                    res.status(400).json({
+                        error: 'subcategories_not_found',
+                        message: 'Лист подкатегорий пуст.'
+                    })
+                } else {
+                    res.status(200).json({
+                        subcategories
+                    })
+                }
+            }
+        } catch
+            (e) {
             e.status = 401;
             next(e);
         }
     }
     //
-    static UpdateSubCategory = async (req, res, next) => {
+    static
+    UpdateSubCategory = async (req, res, next) => {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
@@ -202,7 +240,8 @@ class CategoriesController {
         }
     }
     //
-    static DeleteSubCategory = async (req, res, next) => {
+    static
+    DeleteSubCategory = async (req, res, next) => {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({

@@ -1,7 +1,10 @@
 import express from 'express';
-import PromocodesController from '../controllers/PromocodesController';
+import CategoriesController from '../controllers/CategoriesController';
 
 const router = express.Router();
 
-router.get('/', PromocodesController.GetPromocodes);
+router.get('/', CategoriesController.GetSubCategories);
+router.post('/', CategoriesController.CreateSubCategory);
+router.put('/', CategoriesController.UpdateSubCategory);
+
 export default router;
