@@ -17,6 +17,7 @@ router.post('/register/seller', uploadFields, SellersController.RegSeller);
 router.post('/login/seller', SellersController.LoginSeller);
 router.get('/profile/seller', SellersController.SellerProfile);
 router.put('/profile/seller', uploadFields, SellersController.UpdateProfile)
+router.put('/profile/seller/password', SellersController.UpdatePassword)
 router.delete('/profile/seller', SellersController.DeleteProfile);
 router.post('/profile/seller/subscription', SellersController.GetSub);
 //

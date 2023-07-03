@@ -1,3 +1,5 @@
+import {fileURLToPath} from 'url';
+
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
@@ -7,7 +9,6 @@ import headersValidation from "./middlewares/headers";
 import databaseConnections from "./services/database";
 import router from "./routes"
 import bodyParser from "express";
-
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -20,7 +21,7 @@ app.use(express.json())
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public/images')));
 app.use(router);
 app.set('view engine', 'jade');
 

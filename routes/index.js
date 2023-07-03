@@ -8,6 +8,7 @@ import promocodes from './promocodes';
 import cities from './cities';
 import subcategories from './subcategories';
 import goods from './goods';
+import orders from './orders';
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.use('/sub-categories', authorization, subcategories);
 router.use('/promocodes', authorization, promocodes);
 router.use('/cities', authorization, cities);
 router.use('/goods', authorization, goods);
+router.use('/orders', authorization, orders);
 
 export default router;

@@ -11,23 +11,18 @@ class StoresController {
             }
             if (req.files && req.files.length > 0) {
                 const logoFile = req.files.find(file => file.fieldname === 'logo');
-                const headerPhotoFile = req.files.find(file => file.fieldname === 'header_photo');
-
                 if (logoFile) {
                     fs.unlinkSync(logoFile.path);
                 }
-                if (headerPhotoFile) {
-                    fs.unlinkSync(headerPhotoFile.path);
-                }
             }
             const {user_id} = req;
-            const {city_id, address, categories_ids, subcategories_ids} = req.body;
+            const {city_id, address, title, about_store} = req.body;
             const newStores = new Stores({
                 seller_user_id: user_id,
                 city_id: city_id,
                 address: address,
-                categories_ids: categories_ids,
-                sub_categories_ids: subcategories_ids,
+                title: title,
+                about_store: about_store,
                 is_disabled: false
             });
             await newStores.save();
@@ -68,22 +63,23 @@ class StoresController {
     static
     UpdateStore = async (req, res, next) => {
         try {
-            if (!req.isSeller || req.isSeller !== true) {
-                res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
-                })
-            }
-            const {categories_ids, subcategories_ids} = req.body;
-            const {user_id} = req;
-            await Stores.findOneAndUpdate({
-                seller_user_id: user_id
-            }, {
-                $set: {
-                    categories_ids: categories_ids,
-                    subcategories_ids: subcategories_ids
+            if (req.files && req.files.length > 0) {
+                const logoFile = req.files.find(file => file.fieldname === 'logo');
+                if (logoFile) {
+                    fs.unlinkSync(logoFile.path);
                 }
-            });
+            }
+            const {store_id} = req.query;
+            const {city_id, address, title, about_store} = req.body;
+            await Stores.findByIdAndUpdate({
+                    _id: store_id
+                },
+                {
+                    city_id: city_id,
+                    address: address,
+                    title: title,
+                    about_store: about_store,
+                });
             res.status(200).json({
                 message: 'success'
             })

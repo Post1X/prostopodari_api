@@ -57,23 +57,28 @@ class GoodsController {
     static GetGoods = async (req, res, next) => {
         try {
             if (!req.isSeller || req.isSeller !== true) {
-                res.status(400).json({
+                return res.status(400).json({
                     error: 'not_enough_rights',
                     description: 'У вас нет права находиться на данной странице.'
-                })
+                });
             }
+
             const {store_id} = req.query;
-            const goods = await Goods.find({store_id: store_id}).sort({is_promoted: -1})
+            const goods = await Goods.find({store_id}).sort({is_promoted: -1})
                 .populate('category_id')
-                .exec()
-            res.status(200).json(
-                goods
-            )
-        } catch (e) {
-            e.status = 401;
-            next(e);
+                .exec();
+            const modifiedGoods = goods.map((item) => {
+                const number = item.price.toString();
+                const numericPrice = parseFloat(number);
+                return {...item._doc, price: numericPrice};
+            });
+            return res.status(200).json(modifiedGoods);
+        } catch (error) {
+            error.status = 401;
+            next(error);
         }
     }
+
     //
     static GetAllGoods = async (req, res, next) => {
         try {
@@ -84,7 +89,6 @@ class GoodsController {
                 const numericPrice = parseFloat(price);
                 return {...good.toObject(), price: numericPrice};
             });
-
             res.status(200).json(modifiedGoods);
         } catch (e) {
             e.status = 401;

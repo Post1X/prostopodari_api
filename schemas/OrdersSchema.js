@@ -2,21 +2,12 @@ import mongoose from 'mongoose';
 
 const Schema = mongoose.Schema;
 
-const OrdStatusesSchema = new Schema({
-    name: {
-        type: Schema.Types.String
-    }
-})
-
-const OrdStatuses = mongoose.model('OrdStatuses', OrdStatusesSchema)
-
 
 const OrdersSchema = new Schema({
-    goods_ids: [{
-        type: Schema.Types.ObjectId,
-        required: true,
+    goods_ids: {
+        type: Schema.Types.Array,
         ref: 'Goods'
-    }],
+    },
     store_id: {
         type: Schema.Types.ObjectId,
         ref: 'Stores'
@@ -28,21 +19,20 @@ const OrdersSchema = new Schema({
     delivery_date: {
         type: Schema.Types.Date
     },
+    delivery_time: {
+        type: Schema.Types.String
+    },
     delivery_address: {
         type: Schema.Types.String,
-        required: true
     },
     delivery_info: {
         type: Schema.Types.String,
-        required: true
     },
     full_amount: {
         type: Schema.Types.Decimal128,
-        required: true
     },
     payment_type: {
         type: Schema.Types.String,
-        required: true
     },
     commission_percentage: {
         type: Schema.Types.Number
@@ -55,7 +45,7 @@ const OrdersSchema = new Schema({
         ref: 'OrdStatuses'
     },
     promocode: {
-        type: Schema.Types.ObjectId,
+        type: Schema.Types.String,
         ref: 'Promocodes'
     },
     need_postcard: {

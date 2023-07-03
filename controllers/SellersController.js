@@ -187,6 +187,39 @@ class SellersController {
         }
     }
     //
+    static UpdatePassword = async (req, res, next) => {
+        try {
+            const {user_id} = req;
+            const seller = await Sellers.findById({
+                _id: user_id
+            });
+            const {oldPassword, confPassword, newPassword} = req.body;
+            const match = await argon2.verify(seller.password, oldPassword);
+            if (match) {
+                if (newPassword !== confPassword) {
+                    res.status(400).json({
+                        error: 'passwords_are_not_same',
+                        message: 'Пароли не совпадают.'
+                    })
+                }
+                if (newPassword === confPassword) {
+                    const encrypted = await argon2.hash(newPassword);
+                    await Sellers.findByIdAndUpdate({
+                        _id: user_id
+                    }, {
+                        password: encrypted
+                    })
+                }
+                res.status(200).json({
+                    message: 'success'
+                })
+            }
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
     static DeleteProfile = async (req, res, next) => {
         try {
             if (!req.isSeller || req.isSeller !== true) {

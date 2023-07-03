@@ -14,6 +14,9 @@ const StoresSchema = new Schema({
     address: {
         type: Schema.Types.String
     },
+    title: {
+        type: Schema.Types.String
+    },
     subscription_status: {
         type: Schema.Types.String
     },
