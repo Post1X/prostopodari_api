@@ -98,7 +98,8 @@ class SellersController {
                 }, {
                     active_store: store[0]._id
                 })
-            };
+            }
+            ;
             const token = JWT.sign({
                 email: email,
                 user_id: seller._id,

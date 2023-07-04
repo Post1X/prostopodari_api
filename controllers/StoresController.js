@@ -1,4 +1,5 @@
 import Stores from '../schemas/StoresSchema';
+import fs from 'fs';
 
 class StoresController {
     static CreateStore = async (req, res, next) => {
@@ -9,19 +10,23 @@ class StoresController {
                     description: 'У вас нет права находиться на данной странице.'
                 })
             }
-            if (req.files && req.files.length > 0) {
-                const logoFile = req.files.find(file => file.fieldname === 'logo');
-                if (logoFile) {
-                    fs.unlinkSync(logoFile.path);
-                }
-            }
+            // if (req.files && req.files.length > 0) {
+            //     const logoFile = req.files.find(file => file.fieldname === 'logo');
+            //     if (logoFile) {
+            //         fs.unlinkSync(logoFile.path);
+            //     }
+            // }
+            const logoFile = req.files.find(file => file.fieldname === 'logo');
             const {user_id} = req;
+            const parts = logoFile.path.split('public');
+            const result = parts[1].substring(1);
             const {city_id, address, title, about_store} = req.body;
             const newStores = new Stores({
                 seller_user_id: user_id,
                 city_id: city_id,
                 address: address,
                 title: title,
+                logo_url: result,
                 about_store: about_store,
                 is_disabled: false
             });

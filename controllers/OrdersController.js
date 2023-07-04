@@ -2,6 +2,7 @@ import Orders from '../schemas/OrdersSchema';
 import OrdStatuses from '../schemas/OrdStatutesSchema';
 import Goods from '../schemas/GoodsSchema';
 import mongoose from 'mongoose';
+import Stores from '../schemas/StoresSchema';
 
 class OrdersController {
     static CreateOrder = async (req, res, next) => {
@@ -27,8 +28,7 @@ class OrdersController {
                     _id: price
                 });
                 const number = goods[0].price.toString();
-                const numericPrice = parseFloat(number);
-                return numericPrice;
+                return parseFloat(number);
             }));
             const status = '64a300a909a0356fcd6181bc';
             const objId = mongoose.Types.ObjectId(status)
@@ -93,7 +93,45 @@ class OrdersController {
             next(e);
         }
     };
-
+    //
+    static GetOrderSeller = async (req, res, next) => {
+        try {
+            if (!req.isSeller || req.isSeller !== true) {
+                res.status(400).json({
+                    error: 'not_enough_rights',
+                    description: 'У вас нет права находиться на данной странице.'
+                })
+            }
+            const {user_id} = req;
+            console.log(user_id)
+            const orders = await Orders.find();
+            const filterOrders = [];
+            for (const el of orders) {
+                const id = el.store_id;
+                const stores = await Stores.find({
+                    _id: id,
+                    seller_user_id: user_id
+                }).select('_id');
+                // console.log(stores, 'storesid')
+                const orders = await Orders.find({
+                    store_id: stores
+                }).populate('goods_ids')
+                filterOrders.push(orders)
+            }
+            const modifiedOrders = filterOrders[0].map((order) => {
+                const modifiedTotalPrice = parseFloat(order.full_amount.toString())
+                const modifiedGoodsIds = order.goods_ids.map((good) => {
+                    const price = parseFloat(good.price.toString());
+                    return {...good._doc, price: price};
+                });
+                return {...order._doc, goods_ids: modifiedGoodsIds, full_amount: modifiedTotalPrice};
+            })
+        res.status(200).json(modifiedOrders)
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
     static GetStatus = async (req, res, next) => {
         try {
             const status = await OrdStatuses.find();
