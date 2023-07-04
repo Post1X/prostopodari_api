@@ -92,6 +92,13 @@ class SellersController {
             const store = await Stores.find({
                 seller_user_id: seller._id
             })
+            if (!seller.active_store && seller.active_store === null) {
+                await Sellers.findByIdAndUpdate({
+                    _id: seller._id
+                }, {
+                    active_store: store[0]._id
+                })
+            };
             const token = JWT.sign({
                 email: email,
                 user_id: seller._id,
