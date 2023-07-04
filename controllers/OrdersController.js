@@ -116,6 +116,7 @@ class OrdersController {
                 const orders = await Orders.find({
                     store_id: stores
                 }).populate('goods_ids')
+                    .populate('status_id')
                 filterOrders.push(orders)
             }
             const modifiedOrders = filterOrders[0].map((order) => {
@@ -126,7 +127,7 @@ class OrdersController {
                 });
                 return {...order._doc, goods_ids: modifiedGoodsIds, full_amount: modifiedTotalPrice};
             })
-        res.status(200).json(modifiedOrders)
+            res.status(200).json(modifiedOrders)
         } catch (e) {
             e.status = 401;
             next(e);
@@ -138,6 +139,24 @@ class OrdersController {
             res.status(200).json(
                 status
             )
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static ChangeStatus = async (req, res, next) => {
+        try {
+            const {order_id} = req.query;
+            const {status_id} = req.body;
+            const order = await Orders.findByIdAndUpdate({
+                _id: order_id
+            }, {
+                status_id: status_id
+            })
+            res.status(200).json({
+                message: 'success'
+            })
         } catch (e) {
             e.status = 401;
             next(e);

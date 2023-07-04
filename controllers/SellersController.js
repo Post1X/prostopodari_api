@@ -92,14 +92,15 @@ class SellersController {
             const store = await Stores.find({
                 seller_user_id: seller._id
             })
-            if (!seller.active_store && seller.active_store === null) {
-                await Sellers.findByIdAndUpdate({
-                    _id: seller._id
-                }, {
-                    active_store: store[0]._id
-                })
+            if (store.length !== 0) {
+                if (!seller.active_store && seller.active_store === null) {
+                    await Sellers.findByIdAndUpdate({
+                        _id: seller._id
+                    }, {
+                        active_store: store[0]._id
+                    })
+                }
             }
-            ;
             const token = JWT.sign({
                 email: email,
                 user_id: seller._id,
@@ -129,9 +130,21 @@ class SellersController {
             const user_data = await Sellers.findOne({
                 _id: user_id
             });
-            const store = await Stores.find({
-                seller_user_id: user_id
+            const seller = await Sellers.findOne({
+                _id: user_id
             })
+            const store = await Stores.find({
+                seller_user_id: seller._id
+            })
+            if (store.length !== 0) {
+                if (!seller.active_store && seller.active_store === null) {
+                    await Sellers.findByIdAndUpdate({
+                        _id: seller._id
+                    }, {
+                        active_store: store[0]._id
+                    })
+                }
+            }
             res.status(200).json({
                 user_data,
                 storesList: store,
@@ -285,7 +298,9 @@ class SellersController {
             const store = await Stores.findById({
                 _id: store_id
             })
-            if (store.seller_user_id !== user_id) {
+            const matchId = store.seller_user_id.toString();
+            console.log(matchId)
+            if (matchId !== user_id) {
                 res.status(400).json({
                     error: 'forbidden_error',
                     message: 'Этот магазин не принадлежит данному пользователю.'

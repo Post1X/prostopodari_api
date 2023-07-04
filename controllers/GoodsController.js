@@ -10,7 +10,6 @@ class GoodsController {
                     description: 'У вас нет права находиться на данной странице.'
                 })
             }
-            const photoArray = [];
             const {
                 category_id,
                 subcategory_id,
@@ -24,10 +23,13 @@ class GoodsController {
             } = req.body;
 
             //
+            const photoArray = [];
             req.files.forEach((file, index) => {
                 if (file.fieldname === `photo_${index}`) {
-                    const filePath = `${file.destination}${file.filename}`;
-                    photoArray.push(filePath);
+                    const logoFile = req.files.find(f => f.fieldname === `photo_${index}`);
+                    const parts = logoFile.path.split('public');
+                    const result = parts[1].substring(1);
+                    photoArray.push(result);
                 }
             });
             //
@@ -66,6 +68,7 @@ class GoodsController {
             const {store_id} = req.query;
             const goods = await Goods.find({store_id}).sort({is_promoted: -1})
                 .populate('category_id')
+                .populate('subcategory_id')
                 .exec();
             const modifiedGoods = goods.map((item) => {
                 const number = item.price.toString();
