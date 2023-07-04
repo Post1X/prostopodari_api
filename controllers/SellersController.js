@@ -269,6 +269,34 @@ class SellersController {
             next(e);
         }
     }
+    //
+    static AddStoreToActive = async (req, res, next) => {
+        try {
+            const {store_id} = req.query;
+            const {user_id} = req;
+            const store = await Stores.findById({
+                _id: store_id
+            })
+            if (store.seller_user_id !== user_id) {
+                res.status(400).json({
+                    error: 'forbidden_error',
+                    message: 'Этот магазин не принадлежит данному пользователю.'
+                })
+            } else {
+                await Sellers.findByIdAndUpdate({
+                    _id: user_id
+                }, {
+                    active_store: store_id
+                });
+                res.status(200).json({
+                    message: 'success'
+                })
+            }
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
 }
 
 export default SellersController;

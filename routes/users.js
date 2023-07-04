@@ -20,6 +20,7 @@ router.put('/profile/seller', uploadFields, SellersController.UpdateProfile)
 router.put('/profile/seller/password', SellersController.UpdatePassword)
 router.delete('/profile/seller', SellersController.DeleteProfile);
 router.post('/profile/seller/subscription', SellersController.GetSub);
+router.post('/stores/active', SellersController.AddStoreToActive);
 //
 router.post('/login/admin', AdminController.AdminLogin);
 router.get('/sellers/pending', AdminController.GetPendingSellers);

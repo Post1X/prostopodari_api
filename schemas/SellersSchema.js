@@ -46,6 +46,10 @@ const SellersSchema = new Schema({
     },
     subscription_valid_until: {
         type: Schema.Types.String
+    },
+    active_store: {
+        type: Schema.Types.ObjectId,
+        default: null
     }
 })
 
