@@ -49,7 +49,8 @@ const SellersSchema = new Schema({
     },
     active_store: {
         type: Schema.Types.ObjectId,
-        default: null
+        default: null,
+        ref: 'Stores'
     }
 })
 

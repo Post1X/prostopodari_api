@@ -20,8 +20,7 @@ class AdminController {
                 })
             } else {
                 res.status(400).json({
-                    error: 'user_not_found',
-                    desciprion: 'Неправильный пароль и/или логин.'
+                    error: 'Неправильный пароль и/или логин.'
                 })
             }
         } catch (e) {
@@ -34,8 +33,7 @@ class AdminController {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const sellerToApprove = await Sellers.find({
@@ -54,8 +52,7 @@ class AdminController {
             const {seller_user_id} = req.body;
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const updatedSeller = await Sellers.findByIdAndUpdate({
@@ -78,15 +75,13 @@ class AdminController {
             const {seller_user_id, message_from_admin} = req.body;
             if (!message_from_admin) {
                 res.status(400).json({
-                    error: 'empty_deny_message',
-                    description: 'Сообщение для продавца не может быть пустым.'
+                    error: 'Сообщение для продавца не может быть пустым.'
                 })
             }
             //
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             //
@@ -97,8 +92,7 @@ class AdminController {
                 message_from_admin: message_from_admin
             });
             res.status(200).json({
-                message: 'success',
-                details: 'Запрос продавца был успешно опровергнут.'
+                message:  'Запрос продавца был успешно опровергнут.'
             })
         } catch (e) {
             e.status = 401;
@@ -110,8 +104,7 @@ class AdminController {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             //

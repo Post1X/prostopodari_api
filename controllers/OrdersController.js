@@ -98,8 +98,7 @@ class OrdersController {
         try {
             if (!req.isSeller || req.isSeller !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {user_id} = req;

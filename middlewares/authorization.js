@@ -29,6 +29,7 @@ const authorization = async (req, res, next) => {
         }
         next();
     } catch (e) {
+        e.status = 401;
         next(e);
     }
 }

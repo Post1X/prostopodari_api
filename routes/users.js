@@ -2,6 +2,7 @@ import express from 'express';
 import BuyersController from '../controllers/BuyersController';
 import AdminController from '../controllers/AdminController';
 import SellersController from '../controllers/SellersController';
+import addactivestore from '../middlewares/addactivestore';
 import upload from '../utilities/multer';
 
 const uploadFields = upload.any();
@@ -14,8 +15,8 @@ router.put('/profile/buyer', BuyersController.UpdateProfile);
 router.delete('/profile/buyer', BuyersController.DeleteProfile);
 //
 router.post('/register/seller', uploadFields, SellersController.RegSeller);
-router.post('/login/seller', SellersController.LoginSeller);
-router.get('/profile/seller', SellersController.SellerProfile);
+router.post('/login/seller', addactivestore, SellersController.LoginSeller);
+router.get('/profile/seller', addactivestore, SellersController.SellerProfile);
 router.put('/profile/seller', uploadFields, SellersController.UpdateProfile)
 router.put('/profile/seller/password', SellersController.UpdatePassword)
 router.delete('/profile/seller', SellersController.DeleteProfile);

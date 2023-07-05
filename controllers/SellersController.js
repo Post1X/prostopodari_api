@@ -22,8 +22,7 @@ class SellersController {
             });
             if (seller) {
                 res.status(400).json({
-                    error: 'seller_already_exists',
-                    message: 'Страница с такими данными уже существует. Если вы забыли пароль, то свяжитесь с администрацией.'
+                    error: 'Страница с такими данными уже существует. Если вы забыли пароль, то свяжитесь с администрацией.'
                 })
             }
             if (!seller) {
@@ -74,33 +73,22 @@ class SellersController {
             const {JWT_SECRET} = process.env;
             const seller = await Sellers.findOne({
                 email: email
-            });
-            console.log(seller.user_id)
+            })
+                .populate('active_store')
             if (!seller) {
                 res.status(400).json({
-                    error: 'user_not_found',
-                    description: 'Пользователь не найден.'
+                    error: 'Пользователь не найден.'
                 })
             }
             const match = await argon2.verify(seller.password, password);
             if (!match) {
                 res.status(400).json({
-                    error: 'wrong_password',
-                    description: 'Введён неправильный пароль.'
+                    error: 'Введён неправильный пароль.'
                 })
             }
             const store = await Stores.find({
                 seller_user_id: seller._id
             })
-            if (store.length !== 0) {
-                if (!seller.active_store && seller.active_store === null) {
-                    await Sellers.findByIdAndUpdate({
-                        _id: seller._id
-                    }, {
-                        active_store: store[0]._id
-                    })
-                }
-            }
             const token = JWT.sign({
                 email: email,
                 user_id: seller._id,
@@ -122,29 +110,23 @@ class SellersController {
         try {
             if (!req.isSeller || req.isSeller !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {user_id} = req;
             const user_data = await Sellers.findOne({
                 _id: user_id
-            });
+            })
+                .populate('active_store')
+
             const seller = await Sellers.findOne({
                 _id: user_id
             })
+                .populate('active_store')
+
             const store = await Stores.find({
                 seller_user_id: seller._id
             })
-            if (store.length !== 0) {
-                if (!seller.active_store && seller.active_store === null) {
-                    await Sellers.findByIdAndUpdate({
-                        _id: seller._id
-                    }, {
-                        active_store: store[0]._id
-                    })
-                }
-            }
             res.status(200).json({
                 user_data,
                 storesList: store,
@@ -159,8 +141,7 @@ class SellersController {
         try {
             if (!req.isSeller || req.isSeller !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {user_id} = req;
@@ -219,8 +200,7 @@ class SellersController {
             if (match) {
                 if (newPassword !== confPassword) {
                     res.status(400).json({
-                        error: 'passwords_are_not_same',
-                        message: 'Пароли не совпадают.'
+                        error: 'Пароли не совпадают.'
                     })
                 }
                 if (newPassword === confPassword) {
@@ -245,8 +225,7 @@ class SellersController {
         try {
             if (!req.isSeller || req.isSeller !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {user_id} = req;
@@ -268,8 +247,7 @@ class SellersController {
             const {until} = req.body;
             if (!until) {
                 res.status(400).json({
-                    error: 'unexpected_error',
-                    message: 'Что-то пошло не так. Свяжитесь с администрацией.'
+                    error: 'Что-то пошло не так. Свяжитесь с администрацией.'
                 })
             }
             if (until) {
@@ -302,8 +280,7 @@ class SellersController {
             console.log(matchId)
             if (matchId !== user_id) {
                 res.status(400).json({
-                    error: 'forbidden_error',
-                    message: 'Этот магазин не принадлежит данному пользователю.'
+                    error: 'Этот магазин не принадлежит данному пользователю.'
                 })
             } else {
                 await Sellers.findByIdAndUpdate({

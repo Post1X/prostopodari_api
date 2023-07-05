@@ -5,8 +5,7 @@ class PromocodesController {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const promocodes = await Promocodes.find();
@@ -23,8 +22,7 @@ class PromocodesController {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {text, percentage, user_id, use_count, valid_from, valid_until} = req.body;
@@ -33,8 +31,7 @@ class PromocodesController {
             });
             if (promocode.user_id !== -1) {
                 res.status(400).json({
-                    error: 'promocode_already_exists',
-                    message: 'Промокод уже существует.'
+                    error: 'Промокод уже существует.'
                 })
             }
             const newPromocode = new Promocodes({
@@ -60,8 +57,7 @@ class PromocodesController {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {id, text, percentage, use_count, valid_from, valid_until} = req.body;
@@ -89,8 +85,7 @@ class PromocodesController {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {id} = req.params;

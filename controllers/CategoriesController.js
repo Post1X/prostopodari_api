@@ -7,8 +7,7 @@ class CategoriesController {
             const categories = await Categories.find();
             if (categories.length === 0) {
                 res.status(400).json({
-                    error: 'categories_not_found',
-                    message: 'Лист категорий пуст.'
+                    error: 'Лист категорий пуст.'
                 })
             }
             res.status(200).json({
@@ -24,8 +23,7 @@ class CategoriesController {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {filename, destination} = req.file
@@ -51,8 +49,7 @@ class CategoriesController {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {id, title, sort_number, parameters, comission_percentage} = req.body;
@@ -83,8 +80,7 @@ class CategoriesController {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {id} = req.params;
@@ -114,8 +110,7 @@ class CategoriesController {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {category_id, title, parameters, sort_number} = req.body;
@@ -125,8 +120,7 @@ class CategoriesController {
             });
             if (subcategory) {
                 res.status(400).json({
-                    error: 'subcategory_already_exists',
-                    message: 'Подкатегория с такими данными уже существует.'
+                    error: 'Подкатегория с такими данными уже существует.'
                 })
             }
             const newSubCategory = new SubCategories({
@@ -152,8 +146,7 @@ class CategoriesController {
                 const subcategories = await SubCategories.find();
                 if (subcategories.length === 0) {
                     res.status(400).json({
-                        error: 'subcategories_not_found',
-                        message: 'Лист подкатегорий пуст.'
+                        error: 'Лист подкатегорий пуст.'
                     })
                     res.status(200).json({
                         subcategories
@@ -161,8 +154,7 @@ class CategoriesController {
                 }
                 if (subcategories.length === 0) {
                     res.status(400).json({
-                        error: 'subcategories_not_found',
-                        message: 'Лист подкатегорий пуст.'
+                        error: 'Лист подкатегорий пуст.'
                     })
                 } else {
                     res.status(200).json({
@@ -176,8 +168,7 @@ class CategoriesController {
                 });
                 if (subcategories.length === 0) {
                     res.status(400).json({
-                        error: 'subcategories_not_found',
-                        message: 'Лист подкатегорий пуст.'
+                        error: 'Лист подкатегорий пуст.'
                     })
                     res.status(200).json({
                         subcategories
@@ -185,8 +176,7 @@ class CategoriesController {
                 }
                 if (subcategories.length === 0) {
                     res.status(400).json({
-                        error: 'subcategories_not_found',
-                        message: 'Лист подкатегорий пуст.'
+                        error: 'Лист подкатегорий пуст.'
                     })
                 } else {
                     res.status(200).json({
@@ -206,8 +196,7 @@ class CategoriesController {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {id, category_id, title, parameters, sort_number} = req.body;
@@ -216,8 +205,7 @@ class CategoriesController {
             })
             if (!subcategory) {
                 res.status(400).json({
-                    error: 'subcategory_undefined',
-                    message: 'Подкатегории с введенными данными не существует.'
+                    error: 'Подкатегории с введенными данными не существует.'
                 })
             } else {
                 await SubCategories.findByIdAndUpdate({
@@ -245,8 +233,7 @@ class CategoriesController {
         try {
             if (!req.isAdmin || req.isAdmin !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {id} = req.params;
@@ -255,8 +242,7 @@ class CategoriesController {
             })
             if (!subcategory) {
                 res.status(400).json({
-                    error: 'subcategory_undefined',
-                    message: 'Подкатегория с введенными данными отсутствует.'
+                    error: 'Подкатегория с введенными данными отсутствует.'
                 })
             } else {
                 await SubCategories.findOneAndDelete({

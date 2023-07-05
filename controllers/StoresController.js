@@ -1,13 +1,11 @@
 import Stores from '../schemas/StoresSchema';
-import fs from 'fs';
 
 class StoresController {
     static CreateStore = async (req, res, next) => {
         try {
             if (!req.isSeller || req.isSeller !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             // if (req.files && req.files.length > 0) {
@@ -46,8 +44,7 @@ class StoresController {
         try {
             if (!req.isSeller || req.isSeller !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.',
                 })
             }
             const {user_id} = req;
@@ -68,13 +65,8 @@ class StoresController {
     static
     UpdateStore = async (req, res, next) => {
         try {
-            if (req.files && req.files.length > 0) {
-                const logoFile = req.files.find(file => file.fieldname === 'logo');
-                if (logoFile) {
-                    fs.unlinkSync(logoFile.path);
-                }
-            }
             const logoFile = req.files.find(file => file.fieldname === 'logo');
+            const {user_id} = req;
             const parts = logoFile.path.split('public');
             const result = parts[1].substring(1);
             const {store_id} = req.query;
@@ -89,6 +81,22 @@ class StoresController {
                     about_store: about_store,
                     logo_url: result
                 });
+            res.status(200).json({
+                message: 'success'
+            })
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static
+    DeleteStore = async (req, res, next) => {
+        try {
+            const {store_id} = req.query;
+            await Stores.findOneAndDelete({
+                _id: store_id
+            })
             res.status(200).json({
                 message: 'success'
             })

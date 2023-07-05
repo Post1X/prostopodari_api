@@ -6,8 +6,7 @@ class GoodsController {
         try {
             if (!req.isSeller || req.isSeller !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {
@@ -21,7 +20,6 @@ class GoodsController {
                 price,
                 parameters,
             } = req.body;
-
             //
             const photoArray = [];
             req.files.forEach((file, index) => {
@@ -60,8 +58,7 @@ class GoodsController {
         try {
             if (!req.isSeller || req.isSeller !== true) {
                 return res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 });
             }
 
@@ -76,9 +73,9 @@ class GoodsController {
                 return {...item._doc, price: numericPrice};
             });
             return res.status(200).json(modifiedGoods);
-        } catch (error) {
-            error.status = 401;
-            next(error);
+        } catch (e) {
+            e.status = 401;
+            next(e);
         }
     }
 
@@ -103,8 +100,7 @@ class GoodsController {
         try {
             if (!req.isSeller || req.isSeller !== true) {
                 res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 })
             }
             const {

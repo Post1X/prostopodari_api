@@ -20,8 +20,7 @@ class CitiesController {
         try {
             if (!(req.isSeller === true || req.isAdmin === true)) {
                 return res.status(400).json({
-                    error: 'not_enough_rights',
-                    description: 'У вас нет права находиться на данной странице.'
+                    error: 'У вас нет права находиться на данной странице.'
                 });
             }
             const {city_name} = req.query;
@@ -44,7 +43,9 @@ class CitiesController {
             const {id_list} = req.body;
             const isValidIdList = id_list.every(id => mongoose.isValidObjectId(id));
             if (!isValidIdList) {
-                throw new Error('Недопустимый идентификатор в списке.');
+                res.status(400).json({
+                    error: 'Недопустимый идентификатор в списке.'
+                })
             }
 
             const cities = await Cities.find({_id: {$in: id_list}});

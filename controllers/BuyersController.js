@@ -22,8 +22,7 @@ class BuyersController {
             // IF (EXISTS) CHECK
             if (user) {
                 res.status(400).json({
-                    error: 'user_already_exists',
-                    description: 'Пользователь с таким логином (e-mail) уже существует.'
+                    error: 'Пользователь с таким логином (e-mail) уже существует.'
                 })
             }
 
@@ -69,15 +68,13 @@ class BuyersController {
             });
             if (!user) {
                 res.status(400).json({
-                    error: 'user_not_found',
-                    description: 'Пользователь не найден.'
+                    error: 'Пользователь не найден.'
                 })
             }
             const match = await argon2.verify(user.password, password);
             if (!match) {
                 res.status(400).json({
-                    error: 'wrong_password',
-                    description: 'Введён неправильный пароль.'
+                    error:  'Введён неправильный пароль.'
                 })
             }
             const token = JWT.sign({

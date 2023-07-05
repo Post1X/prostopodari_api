@@ -9,4 +9,5 @@ const router = express.Router();
 router.get('/my', StoresController.GetStore);
 router.post('/my', uploadFields, StoresController.CreateStore);
 router.put('/my', StoresController.UpdateStore);
+router.delete('/my', StoresController.DeleteStore);
 export default router;
