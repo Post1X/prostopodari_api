@@ -1,5 +1,6 @@
 import Stores from '../schemas/StoresSchema';
 import Sellers from '../schemas/SellersSchema';
+import users from '../routes/users';
 
 class StoresController {
     static CreateStore = async (req, res, next) => {
@@ -74,13 +75,28 @@ class StoresController {
     static
     UpdateStore = async (req, res, next) => {
         try {
-            const logoFile = req.files.find(file => file.fieldname === 'logo');
-            const {user_id} = req;
-            const parts = logoFile.path.split('public');
-            const result = parts[1].substring(1);
             const {store_id} = req.query;
             const {city_id, address, title, about_store} = req.body;
-            await Stores.findByIdAndUpdate({
+            const {user_id} = req;
+            const store = await Stores.findById({
+                _id: store_id
+            })
+            if (req.file) {
+                const logoFile = req.file.find(file => file.fieldname === 'logo');
+                const parts = logoFile.path.split('public');
+                const result = parts[1].substring(1);
+                await Stores.updateOne({
+                        _id: store_id
+                    },
+                    {
+                        city_id: city_id,
+                        address: address,
+                        title: title,
+                        about_store: about_store,
+                        logo_url: result
+                    });
+            }
+            await Stores.updateOne({
                     _id: store_id
                 },
                 {
@@ -88,8 +104,12 @@ class StoresController {
                     address: address,
                     title: title,
                     about_store: about_store,
-                    logo_url: result
                 });
+            await Sellers.findOneAndUpdate({
+                _id: user_id
+            }, {
+                active_store: store[0]._id
+            })
             res.status(200).json({
                 message: 'success'
             })
@@ -102,9 +122,19 @@ class StoresController {
     static
     DeleteStore = async (req, res, next) => {
         try {
+            const {user_id} = req;
             const {store_id} = req.query;
             await Stores.findOneAndDelete({
-                _id: store_id
+                _id: store_id,
+                seller_user_id: user_id
+            });
+            const store = await Stores.find({
+                seller_user_id: user_id
+            });
+            await Sellers.findOneAndUpdate({
+                _id: user_id
+            }, {
+                active_store: store[0]._id
             })
             res.status(200).json({
                 message: 'success'

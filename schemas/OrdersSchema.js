@@ -48,8 +48,8 @@ const OrdersSchema = new Schema({
         type: Schema.Types.String,
         ref: 'Promocodes'
     },
-    need_postcard: {
-        type: Schema.Types.Boolean
+    postcard: {
+        type: Schema.Types.String
     },
     comment: {
         type: Schema.Types.String

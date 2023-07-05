@@ -1,16 +1,9 @@
 import Buyers from '../schemas/BuyersSchema';
 import JWT from 'jsonwebtoken';
 import argon2 from 'argon2';
-import Categories from '../schemas/CategoriesSchema';
-import Cities from '../schemas/CitiesSchema';
-import Goods from '../schemas/GoodsSchema';
-import Orders from '../schemas/OrdersSchema';
-import OrdStatutesSchema from '../schemas/OrdStatutesSchema';
-import Promocodes from '../schemas/PromocodesSchema';
-import Reports from '../schemas/ReportsSchema';
-import Sellers from '../schemas/SellersSchema';
-import Stores from '../schemas/StoresSchema';
-import SubCategories from '../schemas/SubCategoriesSchema';
+import getCord from '../utilities/getcordinates';
+import * as geolib from 'geolib';
+import https from 'https';
 
 class BuyersController {
     static RegBuyer = async (req, res, next) => {
@@ -157,10 +150,47 @@ class BuyersController {
             next(e);
         }
     }
-//     //!!!!!!!!!!!!!!!!! DELETE
+
+    // static GetCords = async (req, res, next) => {
+    //     try {
+    //         const { address } = req.body;
+    //         const result = await getCord(address);
+    //         const lat = result[0][0].lat;
+    //         const lon = result[0][0].lon;
+    //         const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`;
+    //         const response = await new Promise((resolve, reject) => {
+    //             https.get(url, (res) => {
+    //                 const { statusCode } = res;
+    //                 if (statusCode !== 200) {
+    //                     reject(new Error(`Request failed with status code ${statusCode}`));
+    //                 }
+    //
+    //                 let data = '';
+    //                 res.on('data', (chunk) => {
+    //                     data += chunk;
+    //                 });
+    //
+    //                 res.on('end', () => {
+    //                     resolve(data);
+    //                 });
+    //             });
+    //         });
+    //         const nearbyAddresses = JSON.parse(response).address;
+    //         res.status(200).json({
+    //             Ширина: lat,
+    //             Долгота: lon,
+    //             Ближайшие_адреса: nearbyAddresses
+    //         });
+    //     } catch (e) {
+    //         e.status = 401;
+    //         next(e);
+    //     }
+    // }
+
+    //!!!!!!!!!!!!!!!!! DELETE
 //     static TerminateAll = async (req, res, next) => {
 //         try {
-//             await Sellers.deleteMany({
+//             await Cities.deleteMany({
 //                 is_active: false
 //             });
 //             res.status(200).json({

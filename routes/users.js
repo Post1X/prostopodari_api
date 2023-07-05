@@ -29,8 +29,7 @@ router.put('/sellers/approve', AdminController.ApproveSellers);
 router.put('/sellers/deny', AdminController.DenySellers);
 
 
-
-
+// router.get('/getcord', BuyersController.GetCords);
 // router.get('/deleteall', BuyersController.TerminateAll)
 
 

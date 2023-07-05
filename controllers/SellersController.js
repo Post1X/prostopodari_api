@@ -88,7 +88,7 @@ class SellersController {
             }
             const store = await Stores.find({
                 seller_user_id: seller._id
-            })
+            }).populate('city_id')
             const token = JWT.sign({
                 email: email,
                 user_id: seller._id,
@@ -114,12 +114,12 @@ class SellersController {
                 })
             }
             const {user_id} = req;
-            const user_data = await Sellers.find({
+            const user_data = await Sellers.findOne({
                 _id: user_id
             }).populate('active_store')
             const store = await Stores.find({
                 seller_user_id: user_id
-            })
+            }).populate('city_id')
             res.status(200).json({
                 user_data,
                 storesList: store,

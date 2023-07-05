@@ -14,6 +14,7 @@ class OrdersController {
                 time,
                 phone_number,
                 full_amount,
+                postcard,
                 city_id,
                 address,
                 name,
@@ -30,7 +31,7 @@ class OrdersController {
                 const number = goods[0].price.toString();
                 return parseFloat(number);
             }));
-            const status = '64a300a909a0356fcd6181bc';
+            const status = '64a5e7e78d8485a11d0649ee';
             const objId = mongoose.Types.ObjectId(status)
             console.log(objId)
             const total = full_price.reduce((acc, cur) => acc + cur, 0);
@@ -46,6 +47,7 @@ class OrdersController {
                 phone_number: phone_number,
                 full_amount: total,
                 payment_type: payment_type,
+                postcard: postcard,
                 // comission_percentage:
                 // income:
                 status_id: objId,
@@ -54,7 +56,7 @@ class OrdersController {
             });
             await newOrders.save();
             res.status(200).json({
-                message: 'Ok'
+                message: 'success'
             });
             await newOrders.save();
         } catch (e) {
@@ -111,7 +113,6 @@ class OrdersController {
                     _id: id,
                     seller_user_id: user_id
                 }).select('_id');
-                // console.log(stores, 'storesid')
                 const orders = await Orders.find({
                     store_id: stores
                 }).populate('goods_ids')
@@ -132,6 +133,7 @@ class OrdersController {
             next(e);
         }
     }
+    //
     static GetStatus = async (req, res, next) => {
         try {
             const status = await OrdStatuses.find();
@@ -153,6 +155,22 @@ class OrdersController {
             }, {
                 status_id: status_id
             })
+            res.status(200).json({
+                message: 'success'
+            })
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static CreateStatus = async (req, res, next) => {
+        try {
+            const {status} = req.body;
+            const newOrdStatus = new OrdStatuses({
+                name: status
+            })
+            await newOrdStatus.save();
             res.status(200).json({
                 message: 'success'
             })

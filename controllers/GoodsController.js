@@ -61,7 +61,6 @@ class GoodsController {
                     error: 'У вас нет права находиться на данной странице.'
                 });
             }
-
             const {store_id} = req.query;
             const goods = await Goods.find({store_id}).sort({is_promoted: -1})
                 .populate('category_id')
@@ -78,7 +77,6 @@ class GoodsController {
             next(e);
         }
     }
-
     //
     static GetAllGoods = async (req, res, next) => {
         try {
@@ -90,6 +88,19 @@ class GoodsController {
                 return {...good.toObject(), price: numericPrice};
             });
             res.status(200).json(modifiedGoods);
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static GetOneGood = async (req, res, next) => {
+        try {
+            const {good_id} = req.query;
+            const good = await Goods.findOne({
+                _id: good_id
+            });
+            res.status(200).json(good)
         } catch (e) {
             e.status = 401;
             next(e);
@@ -147,7 +158,7 @@ class GoodsController {
             });
             res.status(200).json({
                 message: 'success'
-            })
+            });
         } catch (e) {
             e.status = 401;
             next(e);
@@ -186,18 +197,27 @@ class GoodsController {
     }
     static FilterGoods = async (req, res, next) => {
         try {
-            const {sort, category, subcategory} = req.query;
+            const {sort, category, subcategory, search} = req.query;
             let filter = {};
+
             if (category) {
                 const categoryIds = category.split(',');
                 const categoryObjectIds = categoryIds.map(result => mongoose.Types.ObjectId(result.trim()));
                 filter.category_id = {$in: categoryObjectIds};
             }
             if (subcategory) {
-                filter.subcategory_id = subcategory;
+                const subCategoryIds = subcategory.split(','); // Исправлено: использовать 'subcategory' вместо 'category'
+                const subCategoryObjectIds = subCategoryIds.map(result => mongoose.Types.ObjectId(result.trim()));
+                filter.subcategory_id = {$in: subCategoryObjectIds};
             }
+            if (search) {
+                // Добавлено условие поиска по полю 'title' с использованием регулярного выражения
+                filter.title = {$regex: new RegExp(search, 'i')};
+            }
+
             let goods = [];
-            if ((sort === 'newFirst' || sort === 'oldFirst')) {
+
+            if (sort === 'newFirst' || sort === 'oldFirst') {
                 const sortDirection = sort === 'newFirst' ? -1 : 1;
                 goods = await Goods.find(filter)
                     .sort({_id: sortDirection})
@@ -214,15 +234,39 @@ class GoodsController {
                 goods = await Goods.find(filter)
                     .sort(sortOptions);
             }
+
             const promotedGoods = goods.filter(good => good.is_promoted === true);
             const regularGoods = goods.filter(good => good.is_promoted !== true);
             const sortedGoods = [...promotedGoods, ...regularGoods];
+
             res.status(200).json(sortedGoods);
         } catch (e) {
             e.status = 401;
             next(e);
         }
-    };
+    }
+    //
+    static DeletePhotos = async (req, res, next) => {
+        try {
+            const {photo, good_id} = req.query;
+            const updatedGoods = await Goods.findByIdAndUpdate(
+                good_id,
+                {$pull: {photo_list: photo}},
+                {new: true}
+            );
+            if (!updatedGoods) {
+                return res.status(404).json({
+                    error: 'Товар не найден'
+                });
+            }
+            res.status(200).json({
+                message: 'success'
+            });
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
 }
 
 export default GoodsController;

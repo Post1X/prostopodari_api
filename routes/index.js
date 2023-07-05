@@ -9,6 +9,8 @@ import cities from './cities';
 import subcategories from './subcategories';
 import goods from './goods';
 import orders from './orders';
+import favorites from './favorites';
+import finances from './finances';
 
 const router = express.Router();
 
@@ -21,5 +23,6 @@ router.use('/promocodes', authorization, promocodes);
 router.use('/cities', authorization, cities);
 router.use('/goods', authorization, goods);
 router.use('/orders', authorization, orders);
-
+router.use('/favorites', authorization, favorites);
+router.use('/finances', authorization, finances)
 export default router;
