@@ -61,7 +61,6 @@ class GoodsController {
                     error: 'У вас нет права находиться на данной странице.'
                 });
             }
-
             const {store_id} = req.query;
             const goods = await Goods.find({store_id}).sort({is_promoted: -1})
                 .populate('category_id')

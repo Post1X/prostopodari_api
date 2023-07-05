@@ -2266,6 +2266,11 @@ generate-function@^2.3.1:
   dependencies:
     is-property "^1.0.2"
 
+geolib@^3.3.4:
+  version "3.3.4"
+  resolved "https://registry.yarnpkg.com/geolib/-/geolib-3.3.4.tgz#09883ba2fdab84d2764cf3615dbafb9bce3c54d0"
+  integrity sha512-EicrlLLL3S42gE9/wde+11uiaYAaeSVDwCUIv2uMIoRBfNJCn8EsSI+6nS3r4TCKDO6+RQNM9ayLq2at+oZQWQ==
+
 get-caller-file@^2.0.5:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/get-caller-file/-/get-caller-file-2.0.5.tgz#4f94412a82db32f36e3b0b9741f8a97feb031f7e"
@@ -2924,6 +2929,11 @@ nodemon@^2.0.20:
     supports-color "^5.5.0"
     touch "^3.1.0"
     undefsafe "^2.0.5"
+
+nominatim-client@^3.2.1:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/nominatim-client/-/nominatim-client-3.2.1.tgz#c6ec49aa07d46b56851715c80d5058158943681e"
+  integrity sha512-i7kGGMvXU37nUhDhlTuj0JhoWntT69BUFeEOHxw40Wf5J++dUCGnPgMCE+6KAJZCOVeK6lqjMAxP2+zyg0CbKw==
 
 nopt@^5.0.0:
   version "5.0.0"

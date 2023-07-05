@@ -25,15 +25,16 @@ r1.on('line', function (line) {
 
 const res = [];
 let id = 1;
-
 function saveRecord(data) {
-    data.forEach(({CityName, CitySize, FullName}) => {
+    data.forEach(({CityName, CitySize, FullName, Longitude, Latitude}) => {
         res.push({
             id,
             city_name: CityName,
             is_active: false,
             city_size: CitySize,
-            full_name: FullName
+            full_name: FullName,
+            Latitude: Latitude,
+            Longitude: Longitude
         })
         id++
     })

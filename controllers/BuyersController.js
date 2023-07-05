@@ -1,16 +1,8 @@
 import Buyers from '../schemas/BuyersSchema';
 import JWT from 'jsonwebtoken';
 import argon2 from 'argon2';
-import Categories from '../schemas/CategoriesSchema';
-import Cities from '../schemas/CitiesSchema';
-import Goods from '../schemas/GoodsSchema';
-import Orders from '../schemas/OrdersSchema';
-import OrdStatutesSchema from '../schemas/OrdStatutesSchema';
-import Promocodes from '../schemas/PromocodesSchema';
-import Reports from '../schemas/ReportsSchema';
-import Sellers from '../schemas/SellersSchema';
-import Stores from '../schemas/StoresSchema';
-import SubCategories from '../schemas/SubCategoriesSchema';
+import getCord from '../utilities/getcordinates';
+import * as geolib from 'geolib';
 
 class BuyersController {
     static RegBuyer = async (req, res, next) => {
@@ -157,10 +149,25 @@ class BuyersController {
             next(e);
         }
     }
-//     //!!!!!!!!!!!!!!!!! DELETE
+
+    static GetCords = async (req, res, next) => {
+        const {address} = req.body;
+        const result = await getCord(address);
+
+        const lat = result[0][0].lat;
+        const lon = result[0][0].lon;
+        const distance = geolib.getDistance({
+            lat, lon
+        }, {latitude: "51° 31' N", longitude: "7° 28' E"})
+        res.status(200).json({
+            Ширина: lat,
+            Долгота: lon
+        });
+    }
+    //!!!!!!!!!!!!!!!!! DELETE
 //     static TerminateAll = async (req, res, next) => {
 //         try {
-//             await Sellers.deleteMany({
+//             await Cities.deleteMany({
 //                 is_active: false
 //             });
 //             res.status(200).json({

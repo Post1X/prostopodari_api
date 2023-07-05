@@ -26,13 +26,15 @@ class CategoriesController {
                     error: 'У вас нет права находиться на данной странице.'
                 })
             }
-            const {filename, destination} = req.file
+            const logoFile = req.files.find(file => file.fieldname === 'photo_url');
+            const parts = logoFile.path.split('public');
+            const result = parts[1].substring(1);
             const {title, sort_number, parameters, comission_percentage} = req.body;
             const newCategory = new Categories({
                 title: title,
                 sort_number: sort_number,
                 parameters: parameters,
-                photo_url: `${destination + filename}`,
+                photo_url: result,
                 comission_percentage: comission_percentage,
             })
             const category = await newCategory.save();
