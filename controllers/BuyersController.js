@@ -1,9 +1,16 @@
 import Buyers from '../schemas/BuyersSchema';
 import JWT from 'jsonwebtoken';
 import argon2 from 'argon2';
-import {validateEmail, validateName, validateNumber, validatePassword} from '../middlewares/validate'
-
-// import dateparser from "../middlewares/dateparser";
+import Categories from '../schemas/CategoriesSchema';
+import Cities from '../schemas/CitiesSchema';
+import Goods from '../schemas/GoodsSchema';
+import Orders from '../schemas/OrdersSchema';
+import OrdStatutesSchema from '../schemas/OrdStatutesSchema';
+import Promocodes from '../schemas/PromocodesSchema';
+import Reports from '../schemas/ReportsSchema';
+import Sellers from '../schemas/SellersSchema';
+import Stores from '../schemas/StoresSchema';
+import SubCategories from '../schemas/SubCategoriesSchema';
 
 class BuyersController {
     static RegBuyer = async (req, res, next) => {
@@ -74,7 +81,7 @@ class BuyersController {
             const match = await argon2.verify(user.password, password);
             if (!match) {
                 res.status(400).json({
-                    error:  'Введён неправильный пароль.'
+                    error: 'Введён неправильный пароль.'
                 })
             }
             const token = JWT.sign({
@@ -150,6 +157,20 @@ class BuyersController {
             next(e);
         }
     }
+//     //!!!!!!!!!!!!!!!!! DELETE
+//     static TerminateAll = async (req, res, next) => {
+//         try {
+//             await Sellers.deleteMany({
+//                 is_active: false
+//             });
+//             res.status(200).json({
+//                 message: 'ok'
+//             })
+//         } catch (e) {
+//             e.status = 401;
+//             next(e)
+//         }
+//     }
 }
 
 export default BuyersController;

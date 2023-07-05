@@ -1,4 +1,5 @@
 import Stores from '../schemas/StoresSchema';
+import Sellers from '../schemas/SellersSchema';
 
 class StoresController {
     static CreateStore = async (req, res, next) => {
@@ -29,6 +30,14 @@ class StoresController {
                 is_disabled: false
             });
             await newStores.save();
+            const store = Stores.findOne({
+                seller_user_id: user_id
+            });
+            await Sellers.findByIdAndUpdate({
+                _id: user_id
+            }, {
+                active_store: store._id
+            })
             res.status(200).json({
                 message: 'success'
             })

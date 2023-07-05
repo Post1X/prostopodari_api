@@ -15,7 +15,7 @@ router.put('/profile/buyer', BuyersController.UpdateProfile);
 router.delete('/profile/buyer', BuyersController.DeleteProfile);
 //
 router.post('/register/seller', uploadFields, SellersController.RegSeller);
-router.post('/login/seller', addactivestore, SellersController.LoginSeller);
+router.post('/login/seller',  SellersController.LoginSeller);
 router.get('/profile/seller', addactivestore, SellersController.SellerProfile);
 router.put('/profile/seller', uploadFields, SellersController.UpdateProfile)
 router.put('/profile/seller/password', SellersController.UpdatePassword)
@@ -27,6 +27,11 @@ router.post('/login/admin', AdminController.AdminLogin);
 router.get('/sellers/pending', AdminController.GetPendingSellers);
 router.put('/sellers/approve', AdminController.ApproveSellers);
 router.put('/sellers/deny', AdminController.DenySellers);
+
+
+
+
+// router.get('/deleteall', BuyersController.TerminateAll)
 
 
 export default router;

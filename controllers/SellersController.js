@@ -114,18 +114,11 @@ class SellersController {
                 })
             }
             const {user_id} = req;
-            const user_data = await Sellers.findOne({
+            const user_data = await Sellers.find({
                 _id: user_id
-            })
-                .populate('active_store')
-
-            const seller = await Sellers.findOne({
-                _id: user_id
-            })
-                .populate('active_store')
-
+            }).populate('active_store')
             const store = await Stores.find({
-                seller_user_id: seller._id
+                seller_user_id: user_id
             })
             res.status(200).json({
                 user_data,
