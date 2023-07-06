@@ -90,8 +90,39 @@ class StoresController {
                     about_store: about_store,
                     logo_url: result
                 });
+            const store = await Stores.find({
+                seller_user_id: user_id
+            })
+            if (!store) {
+                res.status(400).json({
+                    error: 'У вас нет магазинов'
+                })
+            }
+            if (store.length >= 2)
+                await Sellers.findOneAndUpdate({
+                    _id: user_id
+                }, {
+                    active_store: store[1]._id
+                });
+            if (store.length === 1) {
+                await Sellers.findOneAndUpdate({
+                    _id: user_id
+                }, {
+                    active_store: store[0]._id
+                });
+            }
+            if (store.length === 0) {
+                res.status(400).json({
+                    error: 'У пользователя больше нет магазинов'
+                })
+            }
+            const seller = await Sellers.findOne({
+                _id: user_id
+            })
+                .populate('active_store')
+//
             res.status(200).json({
-                message: 'success'
+                seller
             })
         } catch (e) {
             e.status = 401;
@@ -99,21 +130,66 @@ class StoresController {
         }
     }
     //
-    static
-    DeleteStore = async (req, res, next) => {
+    static DeleteStore = async (req, res, next) => {
         try {
+            const {user_id} = req;
             const {store_id} = req.query;
-            await Stores.findOneAndDelete({
+            const storeCheck = await Stores.findOne({
                 _id: store_id
             })
-            res.status(200).json({
-                message: 'success'
+            const sellerCheck = await Sellers.findOne({
+                _id: user_id
             })
+            if (!storeCheck) {
+                res.status(400).json({
+                    error: 'Такого магазина не существует или список магазинов пуст'
+                });
+            }
+            await Stores.findOneAndDelete({
+                _id: storeCheck._id
+            });
+            if (!storeCheck) {
+                res.status(400).json({
+                    error: 'У вас нет магазинов'
+                })
+            }
+            //
+            if (sellerCheck.active_store === null) {
+                if (storeCheck.length >= 2)
+                    await Sellers.findOneAndUpdate({
+                        _id: user_id
+                    }, {
+                        active_store: storeCheck[1]._id
+                    });
+                if (storeCheck.length === 1) {
+                    await Sellers.findOneAndUpdate({
+                        _id: user_id
+                    }, {
+                        active_store: storeCheck[0]._id
+                    });
+                }
+                if (storeCheck.length === 0) {
+                    res.status(400).json({
+                        error: 'У пользователя больше нет магазинов'
+                    })
+                }
+            }
+            const seller = await Sellers.findOne({_id: user_id})
+                .populate({
+                    path: 'active_store',
+                    populate: {
+                        path: 'city_id'
+                    }
+                });
+            res.status(200).json({
+                seller,
+                storesList: storeCheck
+            });
         } catch (e) {
             e.status = 401;
             next(e);
         }
-    }
+    };
 }
 
 export default StoresController;

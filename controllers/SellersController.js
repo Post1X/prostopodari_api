@@ -2,6 +2,7 @@ import Sellers from '../schemas/SellersSchema';
 import JWT from 'jsonwebtoken';
 import argon2 from 'argon2';
 import Stores from '../schemas/StoresSchema';
+
 //
 class SellersController {
     static RegSeller = async (req, res, next) => {
@@ -114,15 +115,48 @@ class SellersController {
                 })
             }
             const {user_id} = req;
-            const user_data = await Sellers.findOne({
-                _id: user_id
-            }).populate('active_store')
-            const store = await Stores.find({
+            const storeCheck = await Stores.find({
                 seller_user_id: user_id
             }).populate('city_id')
+            const seller = await Sellers.findOne({
+                _id: user_id
+            })
+            if (!storeCheck) {
+                res.status(400).json({
+                    error: 'У вас нет магазинов'
+                })
+            }
+            if (seller.active_store === null) {
+                if (storeCheck.length === 0) {
+                    res.status(400).json({
+                        error: 'У пользователя больше нет магазинов'
+                    })
+                }
+                if (storeCheck.length >= 2)
+                    await Sellers.findOneAndUpdate({
+                        _id: user_id
+                    }, {
+                        active_store: storeCheck[1]._id
+                    });
+                if (storeCheck.length === 1) {
+                    await Sellers.findOneAndUpdate({
+                        _id: user_id
+                    }, {
+                        active_store: storeCheck[0]._id
+                    });
+                }
+            }
+            const user_data = await Sellers.findOne({
+                _id: user_id
+            }).populate({
+                path: 'active_store',
+                populate: {
+                    path: 'city_id'
+                }
+            });
             res.status(200).json({
                 user_data,
-                storesList: store,
+                storesList: storeCheck,
             });
         } catch (e) {
             e.status = 401;
