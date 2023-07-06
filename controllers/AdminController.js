@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import Sellers from '../schemas/SellersSchema';
 import Reports from '../schemas/ReportsSchema';
-
+//
 class AdminController {
     static AdminLogin = async (req, res, next) => {
         try {

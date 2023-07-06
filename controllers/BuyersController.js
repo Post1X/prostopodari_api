@@ -3,7 +3,6 @@ import JWT from 'jsonwebtoken';
 import argon2 from 'argon2';
 import getCord from '../utilities/getcordinates';
 import * as geolib from 'geolib';
-import https from 'https';
 
 class BuyersController {
     static RegBuyer = async (req, res, next) => {
@@ -187,6 +186,20 @@ class BuyersController {
     //     }
     // }
 
+    static GetCords = async (req, res, next) => {
+        const {address} = req.body;
+        const result = await getCord(address);
+
+        const lat = result[0][0].lat;
+        const lon = result[0][0].lon;
+        const distance = geolib.getDistance({
+            lat, lon
+        }, {latitude: '51° 31\' N', longitude: '7° 28\' E'})
+        res.status(200).json({
+            Ширина: lat,
+            Долгота: lon
+        });
+    }
     //!!!!!!!!!!!!!!!!! DELETE
 //     static TerminateAll = async (req, res, next) => {
 //         try {

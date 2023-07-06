@@ -1,6 +1,6 @@
 import Cities from '../schemas/CitiesSchema';
 import mongoose from 'mongoose';
-
+//
 class CitiesController {
     static GetCities = async (req, res, next) => {
         try {

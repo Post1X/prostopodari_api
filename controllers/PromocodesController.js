@@ -1,5 +1,5 @@
 import Promocodes from '../schemas/PromocodesSchema';
-
+//
 class PromocodesController {
     static GetPromocodes = async (req, res, next) => {
         try {

@@ -1,7 +1,7 @@
 import express from 'express';
 import CategoriesController from '../controllers/CategoriesController';
 import upload from '../utilities/multer';
-
+//
 const uploadImage = upload.any()
 
 const router = express.Router();

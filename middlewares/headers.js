@@ -1,6 +1,6 @@
 const ALLOW_ORIGIN = ['http://localhost:3000', 'http://localhost:3001'];
 
-
+//
 export default function headersValidation(req, res, next) {
     try {
         const {origin} = req.headers;

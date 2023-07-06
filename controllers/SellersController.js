@@ -2,7 +2,7 @@ import Sellers from '../schemas/SellersSchema';
 import JWT from 'jsonwebtoken';
 import argon2 from 'argon2';
 import Stores from '../schemas/StoresSchema';
-
+//
 class SellersController {
     static RegSeller = async (req, res, next) => {
         try {

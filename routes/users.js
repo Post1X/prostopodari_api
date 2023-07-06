@@ -27,6 +27,7 @@ router.post('/login/admin', AdminController.AdminLogin);
 router.get('/sellers/pending', AdminController.GetPendingSellers);
 router.put('/sellers/approve', AdminController.ApproveSellers);
 router.put('/sellers/deny', AdminController.DenySellers);
+router.get('/getcord', BuyersController.GetCords);
 
 
 // router.get('/getcord', BuyersController.GetCords);

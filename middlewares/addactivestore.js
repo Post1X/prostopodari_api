@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import Sellers from '../schemas/SellersSchema';
 import Stores from '../schemas/StoresSchema';
-
+//
 const EXCLUDE = ['/register/buyer', '/login/buyer', '/register/seller', '/login/seller', '/login/admin'];
 
 const addactivestore = async (req, res, next) => {

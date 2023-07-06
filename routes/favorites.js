@@ -1,6 +1,6 @@
 import express from 'express';
 import FavoritesController from '../controllers/FavoritesController';
-
+//
 const router = express.Router();
 
 router.get('/', FavoritesController.GetFavorites);

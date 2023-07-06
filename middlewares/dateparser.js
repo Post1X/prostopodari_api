@@ -1,3 +1,4 @@
+//
 export default function (datetoparse) {
     return datetoparse.map((date) => {
         const parsedDate = new Date(date)

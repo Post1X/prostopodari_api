@@ -1,5 +1,5 @@
 import Favorites from '../schemas/FavoritesSchema';
-
+//
 class FavoritesController {
     static AddToFavorites = async (req, res, next) => {
         try {

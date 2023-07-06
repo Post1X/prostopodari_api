@@ -1,6 +1,6 @@
 import Categories from '../schemas/CategoriesSchema';
 import SubCategories from '../schemas/SubCategoriesSchema';
-
+//
 class CategoriesController {
     static GetCategories = async (req, res, next) => {
         try {

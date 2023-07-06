@@ -1,6 +1,8 @@
 import Goods from '../schemas/GoodsSchema';
 import mongoose from 'mongoose';
 
+// git
+
 class GoodsController {
     static CreateGoods = async (req, res, next) => {
         try {

@@ -1,7 +1,7 @@
 import express from 'express';
 import upload from '../utilities/multer';
 import StoresController from '../controllers/StoresController'
-
+//
 const uploadFields = upload.any();
 
 const router = express.Router();
