@@ -1,5 +1,6 @@
 import Categories from '../schemas/CategoriesSchema';
 import SubCategories from '../schemas/SubCategoriesSchema';
+
 //
 class CategoriesController {
     static GetCategories = async (req, res, next) => {
@@ -211,7 +212,7 @@ class CategoriesController {
                 })
             } else {
                 await SubCategories.findByIdAndUpdate({
-                    _id: id
+                    _id: id,
                 }, {
                     $set: {
                         category_id: category_id,

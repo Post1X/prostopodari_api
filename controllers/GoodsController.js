@@ -112,12 +112,23 @@ class GoodsController {
     static UpdateGoods = async (req, res, next) => {
         try {
             if (!req.isSeller || req.isSeller !== true) {
-                res.status(400).json({
+                return res.status(400).json({
                     error: 'У вас нет права находиться на данной странице.'
-                })
+                });
             }
+            console.log(req.files);
+            console.log(req.file)
+            const photoArray = [];
+            req.files.forEach((file, index) => {
+                if (file.fieldname === `photo_${index}`) {
+                    const logoFile = req.files.find(f => f.fieldname === `photo_${index}`);
+                    const parts = logoFile.path.split('public');
+                    const result = parts[1].substring(1);
+                    photoArray.push(result);
+                }
+            });
+            const {good_id} = req.query;
             const {
-                id,
                 category_id,
                 subcategory_id,
                 title,
@@ -128,24 +139,29 @@ class GoodsController {
                 price,
                 parameters
             } = req.body;
-            //
-            console.log(id)
-            await Goods.findByIdAndUpdate({
-                _id: id
-            }, {
-                category_id: category_id,
-                subcategory_id: subcategory_id,
-                title: title,
-                count: count,
-                time_to_get_ready: time_to_get_ready,
-                store_id: store_id,
-                short_description: short_description,
-                price: price,
-                parameters: parameters
-            })
+
+            const good = await Goods.findById(good_id).populate('photo_list');
+            console.log(good.photo_list)
+            const updatedPhotoArray = [...good.photo_list, ...photoArray];
+            await Goods.findOneAndUpdate(
+                {_id: good_id},
+                {
+                    category_id: category_id,
+                    subcategory_id: subcategory_id,
+                    title: title,
+                    count: count,
+                    photo_list: updatedPhotoArray,
+                    time_to_get_ready: time_to_get_ready,
+                    store_id: store_id,
+                    short_description: short_description,
+                    price: price,
+                    parameters: parameters
+                }
+            );
+
             res.status(200).json({
                 message: 'success'
-            })
+            });
         } catch (e) {
             e.status = 401;
             next(e);

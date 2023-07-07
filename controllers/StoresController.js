@@ -80,6 +80,12 @@ class StoresController {
             const result = parts[1].substring(1);
             const {store_id} = req.query;
             const {city_id, address, title, about_store} = req.body;
+            const storeCheck = await Stores.findOne({
+                _id: store_id
+            });
+            const storesCheck = await Stores.find({
+                seller_user_id: user_id
+            });
             await Stores.findByIdAndUpdate({
                     _id: store_id
                 },
@@ -98,18 +104,24 @@ class StoresController {
                     error: 'У вас нет магазинов'
                 })
             }
-            if (store.length >= 2)
-                await Sellers.findOneAndUpdate({
-                    _id: user_id
-                }, {
-                    active_store: store[1]._id
-                });
-            if (store.length === 1) {
-                await Sellers.findOneAndUpdate({
-                    _id: user_id
-                }, {
-                    active_store: store[0]._id
-                });
+            if (storesCheck.length >= 2) {
+                console.log('length > 2');
+                const deletedStoreIndex = storesCheck.findIndex(store => store._id.toString() === store_id);
+                if (deletedStoreIndex !== -1) {
+                    storesCheck.splice(deletedStoreIndex, 1);
+                    const newActiveStoreId = storesCheck[storesCheck.length - 1]._id;
+                    await Sellers.findOneAndUpdate(
+                        {_id: user_id},
+                        {active_store: newActiveStoreId}
+                    );
+                }
+            }
+            if (storesCheck.length === 1) {
+                console.log('length = 1');
+                await Sellers.findOneAndUpdate(
+                    {_id: user_id},
+                    {active_store: storesCheck[0]._id}
+                );
             }
             if (store.length === 0) {
                 res.status(400).json({
@@ -120,7 +132,7 @@ class StoresController {
                 _id: user_id
             })
                 .populate('active_store')
-//
+            //
             res.status(200).json({
                 seller
             })
@@ -129,67 +141,79 @@ class StoresController {
             next(e);
         }
     }
-    //
     static DeleteStore = async (req, res, next) => {
         try {
             const {user_id} = req;
             const {store_id} = req.query;
             const storeCheck = await Stores.findOne({
                 _id: store_id
-            })
+            });
+            const storesCheck = await Stores.find({
+                seller_user_id: user_id
+            });
             const sellerCheck = await Sellers.findOne({
                 _id: user_id
-            })
-            if (!storeCheck) {
-                res.status(400).json({
-                    error: 'Такого магазина не существует или список магазинов пуст'
+            });
+            const activeStoreCheck = await Stores.findOne({
+                _id: sellerCheck.active_store
+            });
+
+            console.log(storesCheck.length, 'storechecklength');
+
+            if (storesCheck.length === 0) {
+                await Sellers.findOneAndUpdate(
+                    {_id: user_id},
+                    {active_store: null}
+                );
+                return res.status(400).json({
+                    error: 'У пользователя больше нет магазинов'
                 });
+            }
+            if (!storeCheck) {
+                return res.status(400).json({
+                    error: 'Неправильный магазин'
+                });
+            }
+            console.log(storeCheck._id, 'store1');
+            console.log(!activeStoreCheck, 'store2');
+            console.log(sellerCheck.active_store === null, 'store4');
+            if (storesCheck.length >= 2) {
+                console.log('length > 2');
+                const deletedStoreIndex = storesCheck.findIndex(store => store._id.toString() === store_id);
+                if (deletedStoreIndex !== -1) {
+                    storesCheck.splice(deletedStoreIndex, 1);
+                    const newActiveStoreId = storesCheck[storesCheck.length - 1]._id;
+                    await Sellers.findOneAndUpdate(
+                        {_id: user_id},
+                        {active_store: newActiveStoreId}
+                    );
+                }
+            }
+            if (storesCheck.length === 1) {
+                console.log('length = 1');
+                await Sellers.findOneAndUpdate(
+                    {_id: user_id},
+                    {active_store: storesCheck[0]._id}
+                );
             }
             await Stores.findOneAndDelete({
                 _id: storeCheck._id
             });
-            if (!storeCheck) {
-                res.status(400).json({
-                    error: 'У вас нет магазинов'
-                })
-            }
-            //
-            if (sellerCheck.active_store === null) {
-                if (storeCheck.length >= 2)
-                    await Sellers.findOneAndUpdate({
-                        _id: user_id
-                    }, {
-                        active_store: storeCheck[1]._id
-                    });
-                if (storeCheck.length === 1) {
-                    await Sellers.findOneAndUpdate({
-                        _id: user_id
-                    }, {
-                        active_store: storeCheck[0]._id
-                    });
+            const seller = await Sellers.findOne({_id: user_id}).populate({
+                path: 'active_store',
+                populate: {
+                    path: 'city_id'
                 }
-                if (storeCheck.length === 0) {
-                    res.status(400).json({
-                        error: 'У пользователя больше нет магазинов'
-                    })
-                }
-            }
-            const seller = await Sellers.findOne({_id: user_id})
-                .populate({
-                    path: 'active_store',
-                    populate: {
-                        path: 'city_id'
-                    }
-                });
-            res.status(200).json({
-                seller,
-                storesList: storeCheck
+            });
+            return res.status(200).json({
+                seller
             });
         } catch (e) {
             e.status = 401;
             next(e);
         }
     };
+
 }
 
 export default StoresController;

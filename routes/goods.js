@@ -13,6 +13,6 @@ router.delete('/photo', GoodsController.DeletePhotos);
 router.get('/all', GoodsController.GetAllGoods);
 router.put('/promote/:good_id', GoodsController.PromoteGoods);
 router.post('/', uploadFields, GoodsController.CreateGoods);
-router.put('/', GoodsController.UpdateGoods);
+router.put('/', uploadFields, GoodsController.UpdateGoods);
 router.delete('/:id', GoodsController.DeleteGoods);
 export default router;

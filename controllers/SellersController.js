@@ -127,11 +127,6 @@ class SellersController {
                 })
             }
             if (seller.active_store === null) {
-                if (storeCheck.length === 0) {
-                    res.status(400).json({
-                        error: 'У пользователя больше нет магазинов'
-                    })
-                }
                 if (storeCheck.length >= 2)
                     await Sellers.findOneAndUpdate({
                         _id: user_id
