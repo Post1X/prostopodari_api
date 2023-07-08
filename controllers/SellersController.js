@@ -110,37 +110,40 @@ class SellersController {
     static SellerProfile = async (req, res, next) => {
         try {
             if (!req.isSeller || req.isSeller !== true) {
-                res.status(400).json({
+                return res.status(400).json({
                     error: 'У вас нет права находиться на данной странице.'
-                })
+                });
             }
             const {user_id} = req;
             const storeCheck = await Stores.find({
                 seller_user_id: user_id
-            }).populate('city_id')
+            }).populate('city_id');
             const seller = await Sellers.findOne({
                 _id: user_id
-            })
+            });
+
             if (!storeCheck) {
-                res.status(400).json({
+                return res.status(400).json({
                     error: 'У вас нет магазинов'
-                })
+                });
             }
-            if (seller.active_store === null) {
-                if (storeCheck.length >= 2)
-                    await Sellers.findOneAndUpdate({
-                        _id: user_id
-                    }, {
-                        active_store: storeCheck[1]._id
-                    });
-                if (storeCheck.length === 1) {
-                    await Sellers.findOneAndUpdate({
-                        _id: user_id
-                    }, {
-                        active_store: storeCheck[0]._id
-                    });
+
+            if (!seller.active_store) {
+                if (storeCheck.length >= 2) {
+                    const newActiveStoreId = storeCheck[0]._id;
+                    await Sellers.findOneAndUpdate(
+                        {_id: user_id},
+                        {active_store: newActiveStoreId}
+                    );
+                } else if (storeCheck.length === 1) {
+                    const newActiveStoreId = storeCheck[0]._id;
+                    await Sellers.findOneAndUpdate(
+                        {_id: user_id},
+                        {active_store: newActiveStoreId}
+                    );
                 }
             }
+
             const user_data = await Sellers.findOne({
                 _id: user_id
             }).populate({
@@ -149,7 +152,8 @@ class SellersController {
                     path: 'city_id'
                 }
             });
-            res.status(200).json({
+
+            return res.status(200).json({
                 user_data,
                 storesList: storeCheck,
             });
@@ -157,7 +161,7 @@ class SellersController {
             e.status = 401;
             next(e);
         }
-    }
+    };
     //
     static UpdateProfile = async (req, res, next) => {
         try {
@@ -314,6 +318,40 @@ class SellersController {
                     message: 'success'
                 })
             }
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static  DenySecondAttempt = async (req, res, next) => {
+        try {
+            const {user_id} = req;
+            const {name, email, password, inn, ip, ogrn, legal_name, phone_number, bill_number} = req.body;
+            const sellerCheck = await Sellers.findOne({
+                email: email,
+            });
+            if (!sellerCheck) {
+                res.status(400).json({
+                    error: 'Такого пользователя нет в базе данных'
+                })
+            }
+            await Sellers.findByIdAndUpdate({
+                user_id
+            }, {
+                name: name,
+                email: email,
+                password: password,
+                inn: inn,
+                ip: ip,
+                ogrn: ogrn,
+                legal_name: legal_name,
+                phone_number: phone_number,
+                bill_number: bill_number
+            });
+            res.status(200).json({
+                message: 'success'
+            })
         } catch (e) {
             e.status = 401;
             next(e);

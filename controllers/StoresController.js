@@ -33,11 +33,53 @@ class StoresController {
             const store = Stores.findOne({
                 seller_user_id: user_id
             });
-            await Sellers.findByIdAndUpdate({
+            const storeCheck = await Stores.findOne({
+                title: title,
+                seller_user_id: user_id
+            });
+            const storesCheck = await Stores.find({
+                seller_user_id: user_id
+            });
+            const sellerCheck = await Sellers.findOne({
                 _id: user_id
-            }, {
-                active_store: store._id
-            })
+            });
+            // const activeStoreCheck = await Stores.findOne({
+            //     _id: sellerCheck.active_store
+            // });
+            // console.log(storesCheck.length, 'storechecklength');
+            if (storesCheck.length === 0) {
+                await Sellers.findOneAndUpdate(
+                    {_id: user_id},
+                    {active_store: null}
+                );
+                return res.status(400).json({
+                    error: 'У пользователя больше нет магазинов'
+                });
+            }
+            if (!storeCheck) {
+                return res.status(400).json({
+                    error: 'Неправильный магазин'
+                });
+            }
+            if (storesCheck.length >= 2) {
+                console.log('length > 2');
+                const deletedStoreIndex = storesCheck.findIndex(store => store._id.toString() === storeCheck._id);
+                if (deletedStoreIndex !== -1) {
+                    storesCheck.splice(deletedStoreIndex, 1);
+                    const newActiveStoreId = storesCheck[storesCheck.length - 1]._id;
+                    await Sellers.findOneAndUpdate(
+                        {_id: user_id},
+                        {active_store: newActiveStoreId}
+                    );
+                }
+            }
+            if (storesCheck.length === 1) {
+                console.log('length = 1');
+                await Sellers.findOneAndUpdate(
+                    {_id: user_id},
+                    {active_store: storesCheck[0]._id}
+                );
+            }
             res.status(200).json({
                 message: 'success'
             })
@@ -74,10 +116,14 @@ class StoresController {
     static
     UpdateStore = async (req, res, next) => {
         try {
-            const logoFile = req.files.find(file => file.fieldname === 'logo');
-            const {user_id} = req;
-            const parts = logoFile.path.split('public');
-            const result = parts[1].substring(1);
+            const photoArray = [];
+            if (req.files) {
+                const logoFile = req.files.find(file => file.fieldname === 'logo');
+                const {user_id} = req;
+                const parts = logoFile.path.split('public');
+                const result = parts[1].substring(1);
+                photoArray.push(result)
+            }
             const {store_id} = req.query;
             const {city_id, address, title, about_store} = req.body;
             const storeCheck = await Stores.findOne({
@@ -94,7 +140,7 @@ class StoresController {
                     address: address,
                     title: title,
                     about_store: about_store,
-                    logo_url: result
+                    logo_url: photoArray
                 });
             const store = await Stores.find({
                 seller_user_id: user_id
@@ -157,9 +203,7 @@ class StoresController {
             const activeStoreCheck = await Stores.findOne({
                 _id: sellerCheck.active_store
             });
-
             console.log(storesCheck.length, 'storechecklength');
-
             if (storesCheck.length === 0) {
                 await Sellers.findOneAndUpdate(
                     {_id: user_id},
@@ -174,9 +218,6 @@ class StoresController {
                     error: 'Неправильный магазин'
                 });
             }
-            console.log(storeCheck._id, 'store1');
-            console.log(!activeStoreCheck, 'store2');
-            console.log(sellerCheck.active_store === null, 'store4');
             if (storesCheck.length >= 2) {
                 console.log('length > 2');
                 const deletedStoreIndex = storesCheck.findIndex(store => store._id.toString() === store_id);
@@ -213,7 +254,9 @@ class StoresController {
             next(e);
         }
     };
-
 }
 
 export default StoresController;
+
+
+// todo store deny, update good img
