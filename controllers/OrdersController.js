@@ -1,7 +1,7 @@
 import Orders from '../schemas/OrdersSchema';
 import OrdStatuses from '../schemas/OrdStatutesSchema';
-import Goods from '../schemas/GoodsSchema';
 import mongoose from 'mongoose';
+import Cart from '../schemas/CartsSchema';
 import Stores from '../schemas/StoresSchema';
 
 //
@@ -9,48 +9,57 @@ class OrdersController {
     static CreateOrder = async (req, res, next) => {
         try {
             const {
-                goods_ids,
-                store_id,
                 day,
                 time,
                 phone_number,
-                full_amount,
                 postcard,
                 city_id,
                 address,
                 name,
-                payment_type,
                 promocode,
                 comment
             } = req.body;
-            console.log(goods_ids)
             const {user_id} = req;
-            const full_price = await Promise.all(goods_ids.map(async (price) => {
-                const goods = await Goods.find({
-                    _id: price
-                });
-                const number = goods[0].price.toString();
-                return parseFloat(number);
-            }));
+            //
+            const goods = await Cart.find({user: user_id})
+                .populate('user')
+                .populate('items.good_id')
+                .populate({path: 'items.store_id', populate: {path: 'city_id'}});
+            const modifiedGoods = goods.map((good) => {
+                const price = good.items[0].good_id.price;
+                const numericPrice = parseFloat(price);
+                return {
+                    ...good.toObject(),
+                    items: [{
+                        ...good.items[0].toObject(),
+                        good_id: {...good.items[0].good_id.toObject(), price: numericPrice}
+                    }]
+                };
+            });
+            const storeId = goods[0].items[0].store_id
+            const goodsIds = modifiedGoods.map((good) => good.items[0].good_id._id);
+            console.log(goodsIds, 'goodsIds')
+            const totalPrice = modifiedGoods.reduce((accumulator, good) => {
+                const price = good.items[0].good_id.price;
+                return accumulator + price;
+            }, 0);
+            const commission = 30;
+            const income = (totalPrice * commission) / 100;
             const status = '64a5e7e78d8485a11d0649ee';
             const objId = mongoose.Types.ObjectId(status)
-            console.log(objId)
-            const total = full_price.reduce((acc, cur) => acc + cur, 0);
             const newOrders = new Orders({
-                goods_ids: goods_ids,
-                store_id: store_id,
+                goods_ids: goodsIds,
                 user_id: user_id,
+                store_id: storeId,
                 city_id: city_id,
                 address: address,
                 name: name,
                 delivery_day: day,
                 delivery_time: time,
                 phone_number: phone_number,
-                full_amount: total,
-                payment_type: payment_type,
+                full_amount: totalPrice,
                 postcard: postcard,
-                // comission_percentage:
-                // income:
+                income: income,
                 status_id: objId,
                 promocode: promocode,
                 comment: comment
@@ -96,45 +105,40 @@ class OrdersController {
             next(e);
         }
     };
-    //
     static GetOrderSeller = async (req, res, next) => {
         try {
-            if (!req.isSeller || req.isSeller !== true) {
-                res.status(400).json({
-                    error: 'У вас нет права находиться на данной странице.'
-                })
-            }
             const {user_id} = req;
-            console.log(user_id)
-            const orders = await Orders.find();
-            const filterOrders = [];
-            for (const el of orders) {
-                const id = el.store_id;
-                const stores = await Stores.find({
-                    _id: id,
-                    seller_user_id: user_id
-                }).select('_id');
-                const orders = await Orders.find({
-                    store_id: stores
-                }).populate('goods_ids')
-                    .populate('status_id')
-                filterOrders.push(orders)
-            }
-            const modifiedOrders = filterOrders[0].map((order) => {
+            const stores = await Stores.find({
+                seller_user_id: user_id
+            });
+            const orders = await Orders.find()
+                .populate('store_id')
+                .populate('goods_ids');
+            const aaa = [];
+            orders.forEach(function (element) {
+                if (
+                    element.store_id &&
+                    stores.some(store => store._id.toString() === element.store_id._id.toString())
+                ) {
+                    aaa.push(element);
+                }
+            });
+            const modifiedOrders = aaa.map((order) => {
                 const modifiedTotalPrice = parseFloat(order.full_amount.toString())
+                const modifiedIncome = parseFloat(order.income.toString())
                 const modifiedGoodsIds = order.goods_ids.map((good) => {
                     const price = parseFloat(good.price.toString());
                     return {...good._doc, price: price};
                 });
-                return {...order._doc, goods_ids: modifiedGoodsIds, full_amount: modifiedTotalPrice};
+                return {...order._doc, goods_ids: modifiedGoodsIds, full_amount: modifiedTotalPrice, income: modifiedIncome};
             })
-            res.status(200).json(modifiedOrders)
+            res.status(200).json(modifiedOrders);
         } catch (e) {
             e.status = 401;
             next(e);
         }
     }
-    //
+
     static GetStatus = async (req, res, next) => {
         try {
             const status = await OrdStatuses.find();

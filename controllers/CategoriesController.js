@@ -27,15 +27,25 @@ class CategoriesController {
                     error: 'У вас нет права находиться на данной странице.'
                 })
             }
-            const logoFile = req.files.find(file => file.fieldname === 'photo_url');
-            const parts = logoFile.path.split('public');
-            const result = parts[1].substring(1);
             const {title, sort_number, parameters, comission_percentage} = req.body;
+
+            if (req.files.length !== 0) {
+                const logoFile = req.files.find(file => file.fieldname === 'photo_url');
+                const parts = logoFile.path.split('public');
+                const result = parts[1].substring(1);
+                const newCategory = new Categories({
+                    title: title,
+                    sort_number: sort_number,
+                    parameters: parameters,
+                    photo_url: result,
+                    comission_percentage: comission_percentage,
+                });
+                await newCategory.save();
+            }
             const newCategory = new Categories({
                 title: title,
                 sort_number: sort_number,
                 parameters: parameters,
-                photo_url: result,
                 comission_percentage: comission_percentage,
             })
             const category = await newCategory.save();

@@ -42,7 +42,6 @@ const storage = multer.diskStorage({
         if (file.mimetype === 'image/jpeg') ext = '.jpg';
         else if (file.mimetype === 'image/svg+xml') ext = '.svg';
         else if (file.mimetype === 'image/png') ext = '.png';
-
         cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
     },
 })
@@ -50,8 +49,6 @@ const storage = multer.diskStorage({
 const limit = {
     fileSize: 1024 * 1024 * 50
 }
-
-
 const upload = multer({
     storage: storage,
     limits: limit

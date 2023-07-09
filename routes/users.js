@@ -15,7 +15,7 @@ router.delete('/profile/buyer', BuyersController.DeleteProfile);
 //
 router.post('/register/seller', uploadFields, SellersController.RegSeller);
 router.post('/login/seller',  SellersController.LoginSeller);
-router.put('/sellers/try')
+router.put('/sellers/try', SellersController.DenySecondAttempt);
 router.get('/profile/seller', SellersController.SellerProfile);
 router.put('/profile/seller', uploadFields, SellersController.UpdateProfile)
 router.put('/profile/seller/password', SellersController.UpdatePassword)

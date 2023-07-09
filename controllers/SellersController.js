@@ -2,6 +2,7 @@ import Sellers from '../schemas/SellersSchema';
 import JWT from 'jsonwebtoken';
 import argon2 from 'argon2';
 import Stores from '../schemas/StoresSchema';
+import mongoose from 'mongoose';
 
 //
 class SellersController {
@@ -324,20 +325,14 @@ class SellersController {
         }
     }
     //
-    static  DenySecondAttempt = async (req, res, next) => {
+    static DenySecondAttempt = async (req, res, next) => {
         try {
             const {user_id} = req;
             const {name, email, password, inn, ip, ogrn, legal_name, phone_number, bill_number} = req.body;
-            const sellerCheck = await Sellers.findOne({
-                email: email,
-            });
-            if (!sellerCheck) {
-                res.status(400).json({
-                    error: 'Такого пользователя нет в базе данных'
-                })
-            }
-            await Sellers.findByIdAndUpdate({
-                user_id
+            const userObj = mongoose.Types.ObjectId(user_id);
+            console.log(userObj)
+            await Sellers.findOneAndUpdate({
+                _id: user_id
             }, {
                 name: name,
                 email: email,
@@ -347,11 +342,18 @@ class SellersController {
                 ogrn: ogrn,
                 legal_name: legal_name,
                 phone_number: phone_number,
-                bill_number: bill_number
+                bill_number: bill_number,
+                status: 'pending'
             });
-            res.status(200).json({
-                message: 'success'
-            })
+            const sellerCheck = await Sellers.findOne({
+                _id: user_id,
+            });
+            if (!sellerCheck) {
+                res.status(400).json({
+                    error: 'Такого пользователя нет в базе данных'
+                })
+            }
+            res.status(200).json(sellerCheck);
         } catch (e) {
             e.status = 401;
             next(e);

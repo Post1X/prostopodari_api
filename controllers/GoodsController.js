@@ -24,14 +24,16 @@ class GoodsController {
             } = req.body;
             //
             const photoArray = [];
-            req.files.forEach((file, index) => {
-                if (file.fieldname === `photo_${index}`) {
-                    const logoFile = req.files.find(f => f.fieldname === `photo_${index}`);
+            console.log(req.files)
+            for (let i = 0; i < req.files.length; i++) {
+                const file = req.files[i];
+                if (file.fieldname === `photo_${i}`) {
+                    const logoFile = req.files.find(f => f.fieldname === `photo_${i}`);
                     const parts = logoFile.path.split('public');
                     const result = parts[1].substring(1);
                     photoArray.push(result);
                 }
-            });
+            }
             //
             const newGoods = new Goods({
                 category_id: category_id,
@@ -116,19 +118,22 @@ class GoodsController {
                     error: 'У вас нет права находиться на данной странице.'
                 });
             }
-            console.log(req.files);
-            console.log(req.file)
             const photoArray = [];
-            req.files.forEach((file, index) => {
-                if (file.fieldname === `photo_${index}`) {
-                    const logoFile = req.files.find(f => f.fieldname === `photo_${index}`);
-                    const parts = logoFile.path.split('public');
-                    const result = parts[1].substring(1);
-                    photoArray.push(result);
+            if (req.files) {
+                if (req.files.length !== 0) {
+                    req.files.forEach((file, index) => {
+                        if (file.fieldname === `photo_${index}`) {
+                            const logoFile = req.files.find(f => f.fieldname === `photo_${index}`);
+                            const parts = logoFile.path.split('public');
+                            const result = parts[1].substring(1);
+                            photoArray.push(result);
+                        }
+                    });
                 }
-            });
+            }
             const {good_id} = req.query;
             const {
+                oldphoto_array,
                 category_id,
                 subcategory_id,
                 title,
@@ -139,10 +144,7 @@ class GoodsController {
                 price,
                 parameters
             } = req.body;
-
-            const good = await Goods.findById(good_id).populate('photo_list');
-            console.log(good.photo_list)
-            const updatedPhotoArray = [...good.photo_list, ...photoArray];
+            const updatedPhotoArray = [...oldphoto_array, ...photoArray];
             await Goods.findOneAndUpdate(
                 {_id: good_id},
                 {
@@ -224,7 +226,7 @@ class GoodsController {
                 filter.category_id = {$in: categoryObjectIds};
             }
             if (subcategory) {
-                const subCategoryIds = subcategory.split(','); // Исправлено: использовать 'subcategory' вместо 'category'
+                const subCategoryIds = subcategory.split(',');
                 const subCategoryObjectIds = subCategoryIds.map(result => mongoose.Types.ObjectId(result.trim()));
                 filter.subcategory_id = {$in: subCategoryObjectIds};
             }

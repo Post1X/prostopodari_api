@@ -11,12 +11,14 @@ import goods from './goods';
 import orders from './orders';
 import favorites from './favorites';
 import finances from './finances';
+import carts from './carts';
 // a
 
 const router = express.Router();
 
 router.use('/stores', authorization, stores);
 router.use('/users', authorization, users);
+router.use('/carts', authorization, carts);
 router.use('/reports', authorization, reports);
 router.use('/categories', authorization, categories);
 router.use('/sub-categories', authorization, subcategories);

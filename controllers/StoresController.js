@@ -15,21 +15,23 @@ class StoresController {
             //         fs.unlinkSync(logoFile.path);
             //     }
             // }
-            const logoFile = req.files.find(file => file.fieldname === 'logo');
             const {user_id} = req;
-            const parts = logoFile.path.split('public');
-            const result = parts[1].substring(1);
             const {city_id, address, title, about_store} = req.body;
-            const newStores = new Stores({
-                seller_user_id: user_id,
-                city_id: city_id,
-                address: address,
-                title: title,
-                logo_url: result,
-                about_store: about_store,
-                is_disabled: false
-            });
-            await newStores.save();
+            if (req.files.length !== 0) {
+                const logoFile = req.files.find(file => file.fieldname === 'logo');
+                const parts = logoFile.path.split('public');
+                const result = parts[1].substring(1);
+                const newStores = new Stores({
+                    seller_user_id: user_id,
+                    city_id: city_id,
+                    address: address,
+                    title: title,
+                    logo_url: result,
+                    about_store: about_store,
+                    is_disabled: false
+                });
+                await newStores.save();
+            }
             const store = Stores.findOne({
                 seller_user_id: user_id
             });
@@ -117,9 +119,11 @@ class StoresController {
     UpdateStore = async (req, res, next) => {
         try {
             const photoArray = [];
-            if (req.files) {
+            const {user_id} = req;
+            console.log(req.files, 'reqfiles');
+            console.log(req.file, 'reqfile');
+            if (req.files.length !== 0) {
                 const logoFile = req.files.find(file => file.fieldname === 'logo');
-                const {user_id} = req;
                 const parts = logoFile.path.split('public');
                 const result = parts[1].substring(1);
                 photoArray.push(result)
@@ -132,16 +136,28 @@ class StoresController {
             const storesCheck = await Stores.find({
                 seller_user_id: user_id
             });
-            await Stores.findByIdAndUpdate({
-                    _id: store_id
-                },
-                {
-                    city_id: city_id,
-                    address: address,
-                    title: title,
-                    about_store: about_store,
-                    logo_url: photoArray
-                });
+            if (photoArray.length !== 0)
+                await Stores.findByIdAndUpdate({
+                        _id: store_id
+                    },
+                    {
+                        city_id: city_id,
+                        address: address,
+                        title: title,
+                        about_store: about_store,
+                        logo_url: photoArray
+                    });
+            if (photoArray.length === 0) {
+                await Stores.findByIdAndUpdate({
+                        _id: store_id
+                    },
+                    {
+                        city_id: city_id,
+                        address: address,
+                        title: title,
+                        about_store: about_store,
+                    });
+            }
             const store = await Stores.find({
                 seller_user_id: user_id
             })
@@ -179,8 +195,11 @@ class StoresController {
             })
                 .populate('active_store')
             //
+            const storeToReturn = await Stores.findOne({
+                _id: store_id
+            }).populate('city_id')
             res.status(200).json({
-                seller
+                storeToReturn
             })
         } catch (e) {
             e.status = 401;

@@ -25,7 +25,7 @@ const GoodsSchema = new Schema({
         type: Schema.Types.Number
     },
     time_to_get_ready: {
-        type: Schema.Types.Number
+        type: Schema.Types.String
     },
     store_id: {
         type: Schema.Types.ObjectId,

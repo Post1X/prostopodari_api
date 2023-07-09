@@ -3,6 +3,16 @@ import JWT from 'jsonwebtoken';
 import argon2 from 'argon2';
 import getCord from '../utilities/getcordinates';
 import * as geolib from 'geolib';
+import CartItem from '../schemas/CartItemsSchema';
+import Cart from '../schemas/CartsSchema';
+import Categories from '../schemas/CategoriesSchema';
+import Chats from '../schemas/ChatsSchema';
+import Favorites from '../schemas/FavoritesSchema';
+import Goods from '../schemas/GoodsSchema';
+import Orders from '../schemas/OrdersSchema';
+import Sellers from '../schemas/SellersSchema';
+import Stores from '../schemas/StoresSchema';
+import SubCategories from '../schemas/SubCategoriesSchema';
 
 class BuyersController {
     static RegBuyer = async (req, res, next) => {
@@ -200,20 +210,27 @@ class BuyersController {
             Долгота: lon
         });
     }
-    //!!!!!!!!!!!!!!!!! DELETE
-//     static TerminateAll = async (req, res, next) => {
-//         try {
-//             await Cities.deleteMany({
-//                 is_active: false
-//             });
-//             res.status(200).json({
-//                 message: 'ok'
-//             })
-//         } catch (e) {
-//             e.status = 401;
-//             next(e)
-//         }
-//     }
+    // static TerminateAll = async (req, res, next) => {
+    //     try {
+    //         await Buyers.deleteMany();
+    //         await CartItem.deleteMany();
+    //         await Cart.deleteMany();
+    //         await Categories.deleteMany();
+    //         await Chats.deleteMany();
+    //         await Favorites.deleteMany();
+    //         await Goods.deleteMany();
+    //         await Orders.deleteMany();
+    //         await Sellers.deleteMany();
+    //         await Stores.deleteMany();
+    //         await SubCategories.deleteMany();
+    //         res.status(200).json({
+    //             message: 'ok'
+    //         })
+    //     } catch (e) {
+    //         e.status = 401;
+    //         next(e)
+    //     }
+    // }
 }
 
 export default BuyersController;
