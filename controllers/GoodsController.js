@@ -144,26 +144,53 @@ class GoodsController {
                 price,
                 parameters
             } = req.body;
-            const updatedPhotoArray = [...oldphoto_array, ...photoArray];
-            await Goods.findOneAndUpdate(
-                {_id: good_id},
-                {
-                    category_id: category_id,
-                    subcategory_id: subcategory_id,
-                    title: title,
-                    count: count,
-                    photo_list: updatedPhotoArray,
-                    time_to_get_ready: time_to_get_ready,
-                    store_id: store_id,
-                    short_description: short_description,
-                    price: price,
-                    parameters: parameters
-                }
-            );
+            const updatedPhotoArrayMain = [];
+            if (oldphoto_array) {
+                const splittedOld = oldphoto_array.split(', ')
+                const updatedPhotoArray = [...splittedOld, ...photoArray];
+                updatedPhotoArrayMain.push(updatedPhotoArray)
+            }
+            if (subcategory_id) {
+                await Goods.findOneAndUpdate(
+                    {_id: good_id},
+                    {
+                        category_id: category_id,
+                        subcategory_id: subcategory_id,
+                        title: title,
+                        count: count,
+                        photo_list: updatedPhotoArrayMain,
+                        time_to_get_ready: time_to_get_ready,
+                        store_id: store_id,
+                        short_description: short_description,
+                        price: price,
+                        parameters: parameters
+                    }
+                );
 
-            res.status(200).json({
-                message: 'success'
-            });
+                res.status(200).json({
+                    message: 'success'
+                });
+            }
+            if (!subcategory_id) {
+                await Goods.findOneAndUpdate(
+                    {_id: good_id},
+                    {
+                        category_id: category_id,
+                        subcategory_id: null,
+                        title: title,
+                        count: count,
+                        photo_list: updatedPhotoArrayMain,
+                        time_to_get_ready: time_to_get_ready,
+                        store_id: store_id,
+                        short_description: short_description,
+                        price: price,
+                        parameters: parameters
+                    }
+                );
+                res.status(200).json({
+                    message: 'success'
+                });
+            }
         } catch (e) {
             e.status = 401;
             next(e);
@@ -231,7 +258,6 @@ class GoodsController {
                 filter.subcategory_id = {$in: subCategoryObjectIds};
             }
             if (search) {
-                // Добавлено условие поиска по полю 'title' с использованием регулярного выражения
                 filter.title = {$regex: new RegExp(search, 'i')};
             }
 

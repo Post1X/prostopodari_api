@@ -242,6 +242,9 @@ class SellersController {
                     message: 'success'
                 })
             }
+            res.status(400).json({
+                error: 'Пароли не совпадают!'
+            })
         } catch (e) {
             e.status = 401;
             next(e);
@@ -256,6 +259,9 @@ class SellersController {
                 })
             }
             const {user_id} = req;
+            await Stores.deleteMany({
+                seller_user_id: user_id
+            })
             await Sellers.findByIdAndDelete({
                 _id: user_id
             });
@@ -343,7 +349,9 @@ class SellersController {
                 legal_name: legal_name,
                 phone_number: phone_number,
                 bill_number: bill_number,
-                status: 'pending'
+                message_from_admin: null,
+                status: 'pending',
+
             });
             const sellerCheck = await Sellers.findOne({
                 _id: user_id,

@@ -6,30 +6,26 @@ const Schema = mongoose.Schema;
 const PromocodesSchema = new Schema({
     text: {
         type: Schema.Types.String,
-        required: true
     },
     user_id: {
         type: Schema.Types.ObjectId,
         ref: 'Buyers'
     },
-    use_count: {
-        type: Schema.Types.Number,
-        required: true
-    },
-    valid_from: {
-        type: Schema.Types.Date,
-        required: true
-    },
-    valid_until: {
-        type: Schema.Types.Date,
-        required: true
+    date: {
+        type: Schema.Types.String
     },
     percentage: {
         type: Schema.Types.Number,
-        required: true
+    },
+    event_name: {
+        type: Schema.Types.String
+    },
+    priority: {
+        type: Schema.Types.String
     }
 })
 
 const Promocodes = mongoose.model('Promocodes', PromocodesSchema)
 
 export default Promocodes;
+

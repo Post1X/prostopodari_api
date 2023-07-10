@@ -1,17 +1,29 @@
 import Promocodes from '../schemas/PromocodesSchema';
+
 //
 class PromocodesController {
     static GetPromocodes = async (req, res, next) => {
         try {
-            if (!req.isAdmin || req.isAdmin !== true) {
+            const {user_id} = req;
+            if (user_id) {
+                const promocodes = await Promocodes.find({
+                    user_id: user_id
+                });
+                res.status(200).json({
+                    promocodes
+                })
+            } else if (req.isAdmin || req.isAdmin === true) {
+                const promocodes = await Promocodes.findOne({
+                    priority: 'admin'
+                });
+                res.status(200).json({
+                    message: promocodes
+                })
+            } else {
                 res.status(400).json({
-                    error: 'У вас нет права находиться на данной странице.'
+                    error: 'Что-то пошло не так'
                 })
             }
-            const promocodes = await Promocodes.find();
-            res.status(200).json({
-                promocodes
-            })
         } catch (e) {
             e.status = 401;
             next(e);
@@ -20,33 +32,66 @@ class PromocodesController {
     //
     static CreatePromocode = async (req, res, next) => {
         try {
-            if (!req.isAdmin || req.isAdmin !== true) {
-                res.status(400).json({
-                    error: 'У вас нет права находиться на данной странице.'
-                })
-            }
-            const {text, percentage, user_id, use_count, valid_from, valid_until} = req.body;
+            const {user_id} = req;
+            const {text, date, event_name} = req.body;
             const promocode = await Promocodes.findOne({
+                user_id: user_id,
                 text: text
             });
-            if (promocode.user_id !== -1) {
+            if (promocode) {
                 res.status(400).json({
                     error: 'Промокод уже существует.'
                 })
             }
-            const newPromocode = new Promocodes({
-                text: text,
-                percentage: percentage,
-                user_id: user_id,
-                use_count: use_count,
-                valid_from: valid_from,
-                valid_until: valid_until
-            })
-            await newPromocode.save();
+            if (!promocode) {
+                const newPromocode = new Promocodes({
+                    text: text,
+                    event_name: event_name,
+                    percentage: 5,
+                    user_id: user_id,
+                    date: date,
+                    priority: 'user'
+                })
+                await newPromocode.save();
 
-            res.status(200).json({
-                message: 'success'
-            })
+                res.status(200).json(
+                    newPromocode
+                )
+            }
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static CreatePromocodeAdmin = async (req, res, next) => {
+        try {
+            if (!req.isAdmin || req.isAdmin !== true) {
+                res.status(400).json({
+                    error: 'У вас нет права находиться на данной странице.'
+                });
+            }
+            if (req.isAdmin || req.isAdmin === true) {
+                const {text, event_name, percentage} = req.body;
+                const promocode = await Promocodes.findOne({
+                    text: text
+                });
+                if (promocode) {
+                    res.status(400).json({
+                        error: 'Промокод уже существует.'
+                    })
+                }
+                const newPromocode = new Promocodes({
+                    text: text,
+                    event_name: event_name,
+                    percentage: percentage,
+                    priority: 'admin'
+                })
+                await newPromocode.save();
+                res.status(200).json(
+                    newPromocode
+                )
+            }
         } catch (e) {
             e.status = 401;
             next(e);
@@ -55,26 +100,46 @@ class PromocodesController {
     //
     static UpdatePromocode = async (req, res, next) => {
         try {
-            if (!req.isAdmin || req.isAdmin !== true) {
-                res.status(400).json({
-                    error: 'У вас нет права находиться на данной странице.'
+            const {user_id} = req;
+            const {promocode_id} = req.query;
+            const {text, date, event_name, percentage} = req.body;
+            if (user_id) {
+                await Promocodes.findByIdAndUpdate({
+                    _id: promocode_id
+                }, {
+                    $set: {
+                        text: text,
+                        event_name: event_name,
+                        percentage: 5,
+                        user_id: user_id,
+                        date: date,
+                        priority: 'user'
+                    }
+                });
+                res.status(200).json({
+                    message: 'success'
                 })
             }
-            const {id, text, percentage, use_count, valid_from, valid_until} = req.body;
-            await Promocodes.findByIdAndUpdate({
-                _id: id
-            }, {
-                $set: {
-                    text: text,
-                    percentage: percentage,
-                    use_count: use_count,
-                    valid_from: valid_from,
-                    valid_until: valid_until
-                }
-            });
-            res.status(200).json({
-                message: 'success'
-            })
+            if (req.isAdmin || req.isAdmin === true) {
+                await Promocodes.findByIdAndUpdate({
+                    _id: promocode_id
+                }, {
+                    $set: {
+                        text: text,
+                        event_name: event_name,
+                        percentage: percentage,
+                        user_id: user_id,
+                        priority: 'admin'
+                    }
+                });
+                res.status(200).json({
+                    message: 'success'
+                })
+            } else {
+                res.status(200).json({
+                    error: 'Непредвиденная ошибка'
+                })
+            }
         } catch (e) {
             e.status = 401;
             next(e);
@@ -83,13 +148,8 @@ class PromocodesController {
     //
     static DeletePromocode = async (req, res, next) => {
         try {
-            if (!req.isAdmin || req.isAdmin !== true) {
-                res.status(400).json({
-                    error: 'У вас нет права находиться на данной странице.'
-                })
-            }
-            const {id} = req.params;
-            await Promocodes.findByIdAndDelete({
+            const {id} = req.query;
+            await Promocodes.findOneAndDelete({
                 _id: id
             })
             res.status(200).json({

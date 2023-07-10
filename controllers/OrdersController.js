@@ -3,6 +3,7 @@ import OrdStatuses from '../schemas/OrdStatutesSchema';
 import mongoose from 'mongoose';
 import Cart from '../schemas/CartsSchema';
 import Stores from '../schemas/StoresSchema';
+import Promocodes from '../schemas/PromocodesSchema';
 
 //
 class OrdersController {
@@ -43,7 +44,10 @@ class OrdersController {
                 const price = good.items[0].good_id.price;
                 return accumulator + price;
             }, 0);
-            const commission = 30;
+            const promocodeGet = await Promocodes.findOne({
+                text: promocode
+            })
+            const commission = promocodeGet.percentage;
             const income = (totalPrice * commission) / 100;
             const status = '64a5e7e78d8485a11d0649ee';
             const objId = mongoose.Types.ObjectId(status)
@@ -65,6 +69,11 @@ class OrdersController {
                 comment: comment
             });
             await newOrders.save();
+            if (promocodeGet.priority === 'user') {
+                await Promocodes.findOneAndDelete({
+                    text: promocode
+                })
+            };
             res.status(200).json({
                 message: 'success'
             });
@@ -130,7 +139,12 @@ class OrdersController {
                     const price = parseFloat(good.price.toString());
                     return {...good._doc, price: price};
                 });
-                return {...order._doc, goods_ids: modifiedGoodsIds, full_amount: modifiedTotalPrice, income: modifiedIncome};
+                return {
+                    ...order._doc,
+                    goods_ids: modifiedGoodsIds,
+                    full_amount: modifiedTotalPrice,
+                    income: modifiedIncome
+                };
             })
             res.status(200).json(modifiedOrders);
         } catch (e) {
