@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import Sellers from '../schemas/SellersSchema';
 import Reports from '../schemas/ReportsSchema';
+
 //
 class AdminController {
     static AdminLogin = async (req, res, next) => {
@@ -36,9 +37,7 @@ class AdminController {
                     error: 'У вас нет права находиться на данной странице.'
                 })
             }
-            const sellerToApprove = await Sellers.find({
-                status: 'pending'
-            })
+            const sellerToApprove = await Sellers.find();
             res.status(200).json({
                 sellerToApprove
             })
@@ -92,7 +91,7 @@ class AdminController {
                 message_from_admin: message_from_admin
             });
             res.status(200).json({
-                message:  'Запрос продавца был успешно опровергнут.'
+                message: 'Запрос продавца был успешно опровергнут.'
             })
         } catch (e) {
             e.status = 401;

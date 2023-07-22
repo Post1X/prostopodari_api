@@ -265,7 +265,6 @@ class CategoriesController {
                             error: 'Нет субкатегорий у товаров в активном магазине.'
                         });
                     }
-
                     const subcategoriesWithProductCount = subcategories.map((subcategory) => {
                         const subcategoryId = subcategory._id.toString();
                         const productCount = subcategoryCountMap[subcategoryId] || 0;
