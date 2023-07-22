@@ -259,6 +259,9 @@ class StoresController {
             await Stores.findOneAndDelete({
                 _id: storeCheck._id
             });
+            await Goods.deleteMany({
+                store_id: store_id
+            })
             const seller = await Sellers.findOne({_id: user_id}).populate({
                 path: 'active_store',
                 populate: {

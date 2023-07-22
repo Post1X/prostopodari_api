@@ -39,7 +39,6 @@ class OrdersController {
             });
             const storeId = goods[0].items[0].store_id
             const goodsIds = modifiedGoods.map((good) => good.items[0].good_id._id);
-            console.log(goodsIds, 'goodsIds')
             const totalPrice = modifiedGoods.reduce((accumulator, good) => {
                 const price = good.items[0].good_id.price;
                 return accumulator + price;
@@ -47,6 +46,7 @@ class OrdersController {
             const promocodeGet = await Promocodes.findOne({
                 text: promocode
             })
+            console.log(promocodeGet, "promocode")
             const commission = promocodeGet.percentage;
             const income = (totalPrice * commission) / 100;
             const status = '64a5e7e78d8485a11d0649ee';
@@ -66,7 +66,8 @@ class OrdersController {
                 income: income,
                 status_id: objId,
                 promocode: promocode,
-                comment: comment
+                comment: comment,
+                paid: false
             });
             await newOrders.save();
             if (promocodeGet.priority === 'user') {

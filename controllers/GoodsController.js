@@ -65,17 +65,67 @@ class GoodsController {
                     error: 'У вас нет права находиться на данной странице.'
                 });
             }
-            const {store_id} = req.query;
-            const goods = await Goods.find({store_id}).sort({is_promoted: -1})
-                .populate('category_id')
-                .populate('subcategory_id')
-                .exec();
-            const modifiedGoods = goods.map((item) => {
+            const {store_id, stock, sort, category, subcategory, search} = req.query;
+            let filter = {};
+            if (category) {
+                const categoryIds = category.split(',');
+                const categoryObjectIds = categoryIds.map(result => mongoose.Types.ObjectId(result.trim()));
+                filter.category_id = {$in: categoryObjectIds};
+            }
+            if (subcategory) {
+                const subCategoryIds = subcategory.split(',');
+                const subCategoryObjectIds = subCategoryIds.map(result => mongoose.Types.ObjectId(result.trim()));
+                filter.subcategory_id = {$in: subCategoryObjectIds};
+            }
+            if (store_id) {
+                console.log('aaaa')
+                const storeId = mongoose.Types.ObjectId(store_id)
+                console.log(storeId)
+                filter.store_id = {$in: storeId}
+            }
+            if (stock === 'true') {
+                filter.count = {$gte: 1};
+            }
+            if (search) {
+                filter.title = {$regex: new RegExp(search, 'i')};
+            }
+
+            let goods = [];
+
+            if (sort === 'newFirst' || sort === 'oldFirst') {
+                const sortDirection = sort === 'newFirst' ? -1 : 1;
+                goods = await Goods.find(filter)
+                    .sort({_id: sortDirection})
+                    .populate('category_id')
+                    .populate('subcategory_id')
+            } else {
+                let sortOptions = {};
+                if (sort === 'priceAsc') {
+                    sortOptions.price = 1;
+                } else if (sort === 'priceDesc') {
+                    sortOptions.price = -1;
+                }
+                if (sort === 'countAsc') {
+                    sortOptions.count = 1
+                }
+                if (sort === 'countDesc') {
+                    sortOptions.count = -1;
+                }
+                goods = await Goods.find(filter)
+                    .sort(sortOptions)
+                    .populate('category_id')
+                    .populate('subcategory_id')
+            }
+
+            const promotedGoods = goods.filter(good => good.is_promoted === true);
+            const regularGoods = goods.filter(good => good.is_promoted !== true);
+            const sortedGoods = [...promotedGoods, ...regularGoods];
+            const modifiedGoods = sortedGoods.map((item) => {
                 const number = item.price.toString();
                 const numericPrice = parseFloat(number);
                 return {...item._doc, price: numericPrice};
             });
-            return res.status(200).json(modifiedGoods);
+            res.status(200).json(modifiedGoods);
         } catch (e) {
             e.status = 401;
             next(e);
@@ -85,7 +135,6 @@ class GoodsController {
     static GetAllGoods = async (req, res, next) => {
         try {
             const goods = await Goods.find({}).sort({is_promoted: -1});
-
             const modifiedGoods = goods.map((good) => {
                 const price = good.price.toString();
                 const numericPrice = parseFloat(price);
@@ -244,9 +293,8 @@ class GoodsController {
     }
     static FilterGoods = async (req, res, next) => {
         try {
-            const {sort, category, subcategory, search} = req.query;
+            const {stock, sort, category, subcategory, search} = req.query;
             let filter = {};
-
             if (category) {
                 const categoryIds = category.split(',');
                 const categoryObjectIds = categoryIds.map(result => mongoose.Types.ObjectId(result.trim()));
@@ -256,6 +304,9 @@ class GoodsController {
                 const subCategoryIds = subcategory.split(',');
                 const subCategoryObjectIds = subCategoryIds.map(result => mongoose.Types.ObjectId(result.trim()));
                 filter.subcategory_id = {$in: subCategoryObjectIds};
+            }
+            if (stock === 'true') {
+                filter.count = {$gte: 1};
             }
             if (search) {
                 filter.title = {$regex: new RegExp(search, 'i')};
@@ -269,7 +320,6 @@ class GoodsController {
                     .sort({_id: sortDirection})
                     .populate('category_id')
                     .populate('subcategory_id')
-                    .populate('store_id');
             } else {
                 let sortOptions = {};
                 if (sort === 'priceAsc') {
@@ -277,15 +327,27 @@ class GoodsController {
                 } else if (sort === 'priceDesc') {
                     sortOptions.price = -1;
                 }
+                if (sort === 'countAsc') {
+                    sortOptions.count = 1
+                }
+                if (sort === 'countDesc') {
+                    sortOptions.count = -1;
+                }
                 goods = await Goods.find(filter)
-                    .sort(sortOptions);
+                    .sort(sortOptions)
+                    .populate('category_id')
+                    .populate('subcategory_id')
             }
 
             const promotedGoods = goods.filter(good => good.is_promoted === true);
             const regularGoods = goods.filter(good => good.is_promoted !== true);
             const sortedGoods = [...promotedGoods, ...regularGoods];
-
-            res.status(200).json(sortedGoods);
+            const modifiedGoods = sortedGoods.map((item) => {
+                const number = item.price.toString();
+                const numericPrice = parseFloat(number);
+                return {...item._doc, price: numericPrice};
+            });
+            res.status(200).json(modifiedGoods);
         } catch (e) {
             e.status = 401;
             next(e);

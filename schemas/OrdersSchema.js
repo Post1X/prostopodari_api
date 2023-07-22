@@ -53,6 +53,9 @@ const OrdersSchema = new Schema({
     },
     comment: {
         type: Schema.Types.String
+    },
+    paid: {
+        type: Schema.Types.Boolean,
     }
 })
 

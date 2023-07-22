@@ -1,24 +1,95 @@
 import Categories from '../schemas/CategoriesSchema';
+import Goods from '../schemas/GoodsSchema';
 import SubCategories from '../schemas/SubCategoriesSchema';
+import Sellers from '../schemas/SellersSchema';
+import Stores from '../schemas/StoresSchema';
 
 //
 class CategoriesController {
     static GetCategories = async (req, res, next) => {
         try {
-            const categories = await Categories.find();
-            if (categories.length === 0) {
-                res.status(400).json({
-                    error: 'Лист категорий пуст.'
-                })
+            const {seller_id} = req.query;
+            if (seller_id) {
+                console.log('alo')
+                const seller = await Sellers.findOne({
+                    _id: seller_id
+                });
+                const seller_activestore = seller.active_store;
+                const activestore = await Stores.findOne({
+                    _id: seller_activestore
+                });
+                if (activestore) {
+                    const goodsInActiveStore = await Goods.find({
+                        store_id: activestore._id
+                    });
+                    if (goodsInActiveStore.length === 0) {
+                        return res.status(400).json({
+                            error: 'Нет товаров в активном магазине.'
+                        });
+                    }
+                    const categoryCountMap = {};
+                    goodsInActiveStore.forEach((goods) => {
+                        const {category_id} = goods;
+                        if (category_id) {
+                            if (!categoryCountMap[category_id]) {
+                                categoryCountMap[category_id] = 1;
+                            } else {
+                                categoryCountMap[category_id]++;
+                            }
+                        }
+                    });
+                    const categories = await Categories.find({
+                        _id: {$in: Object.keys(categoryCountMap)}
+                    });
+                    if (categories.length === 0) {
+                        return res.status(400).json({
+                            error: 'Нет категорий у товаров в активном магазине.'
+                        });
+                    }
+                    const categoriesWithProductCount = categories.map((category) => {
+                        const categoryId = category._id.toString();
+                        const productCount = categoryCountMap[categoryId] || 0;
+                        return {
+                            ...category.toJSON(),
+                            productCount
+                        };
+                    });
+
+                    res.status(200).json({
+                        categories: categoriesWithProductCount
+                    });
+                }
+                if (!activestore) {
+                    res.status(401).json({
+                        error: 'У вас нет активного магазина'
+                    })
+                }
+            } else {
+                const categories = await Categories.find();
+                if (categories.length === 0) {
+                    return res.status(400).json({
+                        error: 'Лист категорий пуст.'
+                    });
+                }
+                const categoriesWithProductCount = await Promise.all(
+                    categories.map(async (category) => {
+                        const productCount = await Goods.countDocuments({category_id: category._id});
+                        return {
+                            ...category.toJSON(),
+                            productCount
+                        };
+                    })
+                );
+                res.status(200).json({
+                    categories: categoriesWithProductCount
+                });
             }
-            res.status(200).json({
-                categories
-            })
         } catch (e) {
             e.status = 401;
             next(e);
         }
-    }
+    };
+
     //
     static CreateCategory = async (req, res, next) => {
         try {
@@ -154,55 +225,86 @@ class CategoriesController {
     //
     static GetSubCategories = async (req, res, next) => {
         try {
-            const {category_id} = req.query;
-            if (!category_id) {
+            const { seller_id } = req.query;
+            if (seller_id) {
+                const seller = await Sellers.findOne({
+                    _id: seller_id
+                });
+                const seller_activestore = seller.active_store;
+                const activestore = await Stores.findOne({
+                    _id: seller_activestore
+                });
+                if (activestore) {
+                    const goodsInActiveStore = await Goods.find({
+                        store_id: activestore._id
+                    });
+                    if (goodsInActiveStore.length === 0) {
+                        return res.status(400).json({
+                            error: 'Нет товаров в активном магазине.'
+                        });
+                    }
+                    const subcategoryCountMap = {};
+                    goodsInActiveStore.forEach((goods) => {
+                        const { subcategory_id } = goods;
+                        if (subcategory_id) {
+                            if (!subcategoryCountMap[subcategory_id]) {
+                                subcategoryCountMap[subcategory_id] = 1;
+                            } else {
+                                subcategoryCountMap[subcategory_id]++;
+                            }
+                        }
+                    });
+                    const subcategories = await SubCategories.find({
+                        _id: { $in: Object.keys(subcategoryCountMap) }
+                    });
+                    if (subcategories.length === 0) {
+                        return res.status(400).json({
+                            error: 'Нет субкатегорий у товаров в активном магазине.'
+                        });
+                    }
+                    const subcategoriesWithProductCount = subcategories.map((subcategory) => {
+                        const subcategoryId = subcategory._id.toString();
+                        const productCount = subcategoryCountMap[subcategoryId] || 0;
+                        return {
+                            ...subcategory.toJSON(),
+                            productCount
+                        };
+                    });
+
+                    res.status(200).json({
+                        subcategories: subcategoriesWithProductCount
+                    });
+                } else {
+                    res.status(401).json({
+                        error: 'У вас нет активного магазина'
+                    });
+                }
+            } else {
                 const subcategories = await SubCategories.find();
                 if (subcategories.length === 0) {
-                    res.status(400).json({
-                        error: 'Лист подкатегорий пуст.'
-                    })
-                    res.status(200).json({
-                        subcategories
-                    })
+                    return res.status(400).json({
+                        error: 'Лист субкатегорий пуст.'
+                    });
                 }
-                if (subcategories.length === 0) {
-                    res.status(400).json({
-                        error: 'Лист подкатегорий пуст.'
+                const subcategoriesWithProductCount = await Promise.all(
+                    subcategories.map(async (subcategory) => {
+                        const productCount = await Goods.countDocuments({ subcategory_id: subcategory._id });
+                        return {
+                            ...subcategory.toJSON(),
+                            productCount
+                        };
                     })
-                } else {
-                    res.status(200).json({
-                        subcategories
-                    })
-                }
-            }
-            if (category_id) {
-                const subcategories = await SubCategories.find({
-                    category_id: category_id
+                );
+                res.status(200).json({
+                    subcategories: subcategoriesWithProductCount
                 });
-                if (subcategories.length === 0) {
-                    res.status(400).json({
-                        error: 'Лист подкатегорий пуст.'
-                    })
-                    res.status(200).json({
-                        subcategories
-                    })
-                }
-                if (subcategories.length === 0) {
-                    res.status(400).json({
-                        error: 'Лист подкатегорий пуст.'
-                    })
-                } else {
-                    res.status(200).json({
-                        subcategories
-                    })
-                }
             }
-        } catch
-            (e) {
+        } catch (e) {
             e.status = 401;
             next(e);
         }
-    }
+    };
+
     //
     static
     UpdateSubCategory = async (req, res, next) => {
