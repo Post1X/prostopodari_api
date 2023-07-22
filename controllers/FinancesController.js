@@ -11,15 +11,18 @@ class FinancesController {
             }
             const finances = [];
             for (const store of stores) {
-                const order = await Orders.findOne({store_id: store._id});
+                const order = await Orders.find({store_id: store._id});
                 if (order) {
-                    finances.push(order);
+                    finances.push(...order);
                 }
             }
             const modifiedFinances = finances.map((item) => {
+                console.log(item, 'item')
                 const number = item.full_amount.toString();
                 const numericPrice = parseFloat(number);
-                return {...item._doc, full_amount: numericPrice};
+                const income = item.income.toString();
+                const numericIncome = parseFloat(income)
+                return {...item._doc, full_amount: numericPrice, income: income};
             });
             res.status(200).json(modifiedFinances);
         } catch (e) {
@@ -42,8 +45,8 @@ class FinancesController {
             const modifiedFinances = finances.map((item) => {
                 const number = item.full_amount.toString();
                 const income = item.income.toString();
-                const numericPrice = parseFloat(number);
                 const numericIncome = parseFloat(income)
+                const numericPrice = parseFloat(number);
                 return {...item._doc, full_amount: numericPrice, income: numericIncome};
             });
             res.status(200).json(modifiedFinances);

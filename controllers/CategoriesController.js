@@ -112,17 +112,21 @@ class CategoriesController {
                     comission_percentage: comission_percentage,
                 });
                 await newCategory.save();
+                res.status(200).json({
+                    message: 'success'
+                })
+            } else {
+                const newCategory = new Categories({
+                    title: title,
+                    sort_number: sort_number,
+                    parameters: parameters,
+                    comission_percentage: comission_percentage,
+                })
+                const category = await newCategory.save();
+                res.status(200).json({
+                    message: 'Success.'
+                })
             }
-            const newCategory = new Categories({
-                title: title,
-                sort_number: sort_number,
-                parameters: parameters,
-                comission_percentage: comission_percentage,
-            })
-            const category = await newCategory.save();
-            res.status(200).json({
-                message: 'Success.'
-            })
         } catch (e) {
             e.status = 401;
             next(e);

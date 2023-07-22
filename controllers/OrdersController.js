@@ -46,7 +46,6 @@ class OrdersController {
             const promocodeGet = await Promocodes.findOne({
                 text: promocode
             })
-            console.log(promocodeGet, "promocode")
             const commission = promocodeGet.percentage;
             const income = (totalPrice * commission) / 100;
             const status = '64a5e7e78d8485a11d0649ee';
@@ -74,7 +73,8 @@ class OrdersController {
                 await Promocodes.findOneAndDelete({
                     text: promocode
                 })
-            };
+            }
+            ;
             res.status(200).json({
                 message: 'success'
             });
