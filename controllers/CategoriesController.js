@@ -225,7 +225,7 @@ class CategoriesController {
     //
     static GetSubCategories = async (req, res, next) => {
         try {
-            const { seller_id } = req.query;
+            const {seller_id, category_id} = req.query;
             if (seller_id) {
                 const seller = await Sellers.findOne({
                     _id: seller_id
@@ -235,17 +235,18 @@ class CategoriesController {
                     _id: seller_activestore
                 });
                 if (activestore) {
-                    const goodsInActiveStore = await Goods.find({
-                        store_id: activestore._id
-                    });
+                    const filter = category_id ? {category_id, store_id: activestore._id} : {store_id: activestore._id};
+                    const goodsInActiveStore = await Goods.find(filter);
+
                     if (goodsInActiveStore.length === 0) {
                         return res.status(400).json({
                             error: 'Нет товаров в активном магазине.'
                         });
                     }
+
                     const subcategoryCountMap = {};
                     goodsInActiveStore.forEach((goods) => {
-                        const { subcategory_id } = goods;
+                        const {subcategory_id} = goods;
                         if (subcategory_id) {
                             if (!subcategoryCountMap[subcategory_id]) {
                                 subcategoryCountMap[subcategory_id] = 1;
@@ -254,14 +255,17 @@ class CategoriesController {
                             }
                         }
                     });
+
                     const subcategories = await SubCategories.find({
-                        _id: { $in: Object.keys(subcategoryCountMap) }
+                        _id: {$in: Object.keys(subcategoryCountMap)}
                     });
+
                     if (subcategories.length === 0) {
                         return res.status(400).json({
                             error: 'Нет субкатегорий у товаров в активном магазине.'
                         });
                     }
+
                     const subcategoriesWithProductCount = subcategories.map((subcategory) => {
                         const subcategoryId = subcategory._id.toString();
                         const productCount = subcategoryCountMap[subcategoryId] || 0;
@@ -280,21 +284,29 @@ class CategoriesController {
                     });
                 }
             } else {
-                const subcategories = await SubCategories.find();
+                let filter = {};
+                if (category_id) {
+                    filter = {category_id};
+                }
+
+                const subcategories = await SubCategories.find(filter);
+
                 if (subcategories.length === 0) {
                     return res.status(400).json({
                         error: 'Лист субкатегорий пуст.'
                     });
                 }
+
                 const subcategoriesWithProductCount = await Promise.all(
                     subcategories.map(async (subcategory) => {
-                        const productCount = await Goods.countDocuments({ subcategory_id: subcategory._id });
+                        const productCount = await Goods.countDocuments({subcategory_id: subcategory._id});
                         return {
                             ...subcategory.toJSON(),
                             productCount
                         };
                     })
                 );
+
                 res.status(200).json({
                     subcategories: subcategoriesWithProductCount
                 });
@@ -303,7 +315,8 @@ class CategoriesController {
             e.status = 401;
             next(e);
         }
-    };
+    }
+
 
     //
     static
