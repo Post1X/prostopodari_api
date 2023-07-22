@@ -11,6 +11,17 @@ class CartsController {
             const good = await Goods.findOne({
                 _id: good_id
             });
+            if (count > good.count) {
+                res.status(300).json({
+                    error: 'Товар отсутствует на складе.'
+                })
+            } else {
+                await Goods.findOneAndUpdate({
+                    _id: good_id
+                }, {
+                    count: good.count - count
+                })
+            }
             const newCartItem = new CartItem({
                 good_id: mongoose.Types.ObjectId(good_id),
                 count: count,

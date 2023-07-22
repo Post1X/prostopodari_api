@@ -51,6 +51,10 @@ const SellersSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Stores',
         default: null
+    },
+    is_banned: {
+        type: Schema.Types.Boolean,
+        default: false
     }
 })
 
