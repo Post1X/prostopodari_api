@@ -55,7 +55,16 @@ const OrdersSchema = new Schema({
         type: Schema.Types.String
     },
     paid: {
-        type: Schema.Types.Boolean,
+        type: Schema.Types.Boolean
+    },
+    paymentCard: {
+        type: Schema.Types.String
+    },
+    promocodeComission: {
+        type: Schema.Types.Number
+    },
+    comission: {
+        type: Schema.Types.Number
     }
 })
 

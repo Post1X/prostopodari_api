@@ -20,12 +20,14 @@ class StoresController {
             if (req.files.length !== 0) {
                 const logoFile = req.files.find(file => file.fieldname === 'logo');
                 const parts = logoFile.path.split('public');
+                const comission = 30;
                 const result = parts[1].substring(1);
                 const newStores = new Stores({
                     seller_user_id: user_id,
                     city_id: city_id,
                     address: address,
                     title: title,
+                    comission: 30,
                     logo_url: result,
                     about_store: about_store,
                     is_disabled: false

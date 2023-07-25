@@ -39,6 +39,10 @@ class OrdersController {
             });
             const storeId = goods[0].items[0].store_id
             const goodsIds = modifiedGoods.map((good) => good.items[0].good_id._id);
+            const storeComission = await Stores.findOne({
+                _id: storeId
+            })
+            console.log(storeComission.comission)
             const totalPrice = modifiedGoods.reduce((accumulator, good) => {
                 const price = good.items[0].good_id.price;
                 return accumulator + price;
@@ -46,9 +50,10 @@ class OrdersController {
             const promocodeGet = await Promocodes.findOne({
                 text: promocode
             })
-            const commission = promocodeGet.percentage;
-            const income = (totalPrice * commission) / 100;
+            const promocodeCommission = promocodeGet.percentage;
+            const income = (totalPrice * (promocodeCommission + 30)) / 100;
             const status = '64a5e7e78d8485a11d0649ee';
+            const card = '1234 5678 9123 1412'
             const objId = mongoose.Types.ObjectId(status)
             const newOrders = new Orders({
                 goods_ids: goodsIds,
@@ -64,17 +69,21 @@ class OrdersController {
                 postcard: postcard,
                 income: income,
                 status_id: objId,
+                commission_percentage: 30,
                 promocode: promocode,
                 comment: comment,
-                paid: false
+                paid: false,
+                paymentCard: card,
+                promocodeComission: promocodeCommission,
             });
             await newOrders.save();
+            //
             if (promocodeGet.priority === 'user') {
                 await Promocodes.findOneAndDelete({
                     text: promocode
                 })
             }
-            ;
+            //
             res.status(200).json({
                 message: 'success'
             });

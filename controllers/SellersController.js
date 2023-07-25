@@ -128,7 +128,8 @@ class SellersController {
                     error: 'У вас нет магазинов'
                 });
             }
-
+            const timestamp = seller.active_store.getTimestamp();
+            console.log(timestamp, 'timestamp')
             if (!seller.active_store) {
                 if (storeCheck.length >= 2) {
                     const newActiveStoreId = storeCheck[0]._id;

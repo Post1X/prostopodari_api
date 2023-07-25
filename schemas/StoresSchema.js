@@ -40,6 +40,9 @@ const StoresSchema = new Schema({
     },
     is_disabled: {
         type: Schema.Types.Boolean
+    },
+    comission: {
+        type: Schema.Types.Number
     }
 });
 
