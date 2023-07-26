@@ -208,6 +208,30 @@ class OrdersController {
             next(e);
         }
     }
+    //
+    static GetOrder = async (req, res, next) => {
+        try {
+            const {order_id} = req.query;
+            const order = await Orders.findOne({
+                _id: order_id
+            }).populate({
+                path: 'store_id',
+            })
+                .populate({
+                    path: 'goods_ids',
+                })
+                .populate({
+                    path: 'user_id',
+                })
+                .populate({
+                    path: 'status_id',
+                })
+            res.status(200).json(order)
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
 }
 
 export default OrdersController;

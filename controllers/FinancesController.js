@@ -37,10 +37,23 @@ class FinancesController {
     }
     static GetFinancesAdmin = async (req, res, next) => {
         try {
+            // if (!req.isAdmin || req.isAdmin !== true) {
+            //     res.status(400).json({
+            //         error: 'У вас нет права находиться на данной странице.'
+            //     });
+            // }
             const {dateStart, dateEnd} = req.query;
             const startDate = moment(dateStart, 'YY-MM-DD').startOf('day').unix();
             const endDate = moment(dateEnd, 'YY-MM-DD').endOf('day').unix();
-            const orders = await Orders.find({createdAt: {$gte: startDate, $lte: endDate}});
+            const orders = await Orders.find({createdAt: {$gte: startDate, $lte: endDate}})
+                .populate('store_id')
+                .populate('user_id')
+                .populate({
+                    path: 'store_id',
+                    populate: {
+                        path: 'seller_user_id',
+                    },
+                })
             const stores = [];
             const modifiedFinances = orders.map((item) => {
                 const numericPrice = parseFloat(item.full_amount);
@@ -50,23 +63,6 @@ class FinancesController {
                 const numericIncome = parseFloat(item.income);
                 const timestamp = new Date(parseInt(item._id.toString().substring(0, 8), 16) * 1000);
                 const formattedTimestamp = moment(timestamp).format('YY-MM-DD');
-                const info = {
-                    orderID: item._id,
-                    dateTime: formattedTimestamp,
-                    storeName: item.store_id.title,
-                    phone_number: item.user_id.phone_number
-                };
-                const finance = {
-                    payAmount: item.full_amount,
-                    income: item.income,
-                    allAmount: item.full_amount + item.income,
-                    deliveryAmount: 0,
-                    paymentCard: item.paymentCard,
-                    comission: {
-                        percent: comperc,
-                        promo: promocom
-                    }
-                }
                 return {...item._doc, full_amount: numericPrice, income: numericIncome};
             });
             const allAmount = modifiedFinances.reduce((total, item) => {
@@ -83,14 +79,15 @@ class FinancesController {
                 payAmount: payAmount,
                 income: allIncome
             };
+            console.log(orders, 'orders')
             const modifiedFinancesData = orders.map((item) => {
                 const comperc = parseFloat(item.commission_percentage);
                 const promocom = parseFloat(item.promocodeComission)
                 const timestamp = new Date(parseInt(item._id.toString().substring(0, 8), 16) * 1000);
                 const formattedTimestamp = moment(timestamp).format('YY-MM-DD');
-                const info = {
-                    orderID: item._id,
-                    dateTime: formattedTimestamp,
+                const store = {
+                    _id: item.store_id._id,
+                    ip: item.store_id.seller_user_id.ip,
                     storeName: item.store_id.title,
                     phone_number: item.user_id.phone_number
                 };
@@ -105,11 +102,11 @@ class FinancesController {
                         promo: promocom
                     }
                 }
-                return {info: info, finance: finance};
+                return {seller: store, finance: finance};
             });
             res.status(200).json({
                 statistics: statistics,
-                orders: modifiedFinancesData
+                financesSellers: modifiedFinancesData
             });
         } catch (e) {
             e.status = 401;
@@ -118,6 +115,11 @@ class FinancesController {
     }
     static GetFinanceForStore = async (req, res, next) => {
         try {
+            // if (!req.isAdmin || req.isAdmin !== true) {
+            //     res.status(400).json({
+            //         error: 'У вас нет права находиться на данной странице.'
+            //     });
+            // }
             const {seller_id, dateStart, dateEnd} = req.query;
             const startDate = moment(dateStart, 'YY-MM-DD').startOf('day').unix();
             const endDate = moment(dateEnd, 'YY-MM-DD').endOf('day').unix();
@@ -190,30 +192,3 @@ class FinancesController {
 }
 
 export default FinancesController;
-
-// if (!req.isAdmin || req.isAdmin !== true) {
-//     res.status(400).json({
-//         error: 'У вас нет права находиться на данной странице.'
-//     });
-// }
-// const stores = await Stores.find();
-// if (stores.length === 0) {
-//     return res.status(404).json({message: 'Магазины не найдены'});
-// }
-// const payAmount = [];
-// const statistics = [];
-// const financesSellers = [];
-// const finance = [];
-// const finances = await Orders.find();
-// const modifiedFinances = finances.map((item) => {
-//     const number = item.full_amount.toString();
-//     const income = item.income.toString();
-//     const numericIncome = parseFloat(income);
-//     const numericPrice = parseFloat(number);
-//     return {...item._doc, full_amount: numericPrice, income: numericIncome};
-// });
-// const allAmount = modifiedFinances.reduce((total, item) => {
-//     return total + item.full_amount;
-// }, 0);
-// console.log(allAmount)
-// res.status(200).json(modifiedFinances);
