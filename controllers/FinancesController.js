@@ -38,11 +38,6 @@ class FinancesController {
     }
     static GetFinancesAdmin = async (req, res, next) => {
         try {
-            // if (!req.isAdmin || req.isAdmin !== true) {
-            //     res.status(400).json({
-            //         error: 'У вас нет права находиться на данной странице.'
-            //     });
-            // }
             const {dateStart, dateEnd} = req.query;
             const startDate = moment(dateStart, 'YY-MM-DD').startOf('day').unix();
             const endDate = moment(dateEnd, 'YY-MM-DD').endOf('day').unix();
@@ -73,8 +68,6 @@ class FinancesController {
                 return Math.ceil(total + parseFloat(item.income));
             }, 0);
             const payAmount = allAmount - allIncome;
-
-
             const statistics = {
                 allAmount: allAmount,
                 payAmount: payAmount,
@@ -86,11 +79,21 @@ class FinancesController {
                 const promocom = parseFloat(item.promocodeComission)
                 const timestamp = new Date(parseInt(item._id.toString().substring(0, 8), 16) * 1000);
                 const formattedTimestamp = moment(timestamp).format('YY-MM-DD');
+
+                function generateRandom7DigitNumber() {
+                    const min = 0;
+                    const max = 9999999;
+                    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+                    return randomNumber.toString().padStart(7, '0');
+                }
+
                 const store = {
                     _id: item.store_id._id,
+                    order_number: generateRandom7DigitNumber(),
                     ip: item.store_id.seller_user_id.ip,
                     storeName: item.store_id.title,
-                    phone_number: item.user_id.phone_number
+                    phone_number: item.user_id.phone_number,
+                    sellerName: item.store_id.seller_user_id.name,
                 };
                 const finance = {
                     payAmount: Math.ceil(parseFloat(item.full_amount)),
@@ -98,6 +101,7 @@ class FinancesController {
                     allAmount: Math.ceil(parseFloat(item.full_amount)) + Math.ceil(parseFloat(item.income)),
                     deliveryAmount: 0,
                     paymentCard: item.paymentCard,
+                    sellerName: item.store_id.seller_user_id.name,
                     comission: {
                         percent: comperc,
                         promo: promocom
@@ -139,12 +143,32 @@ class FinancesController {
                 const promocom = parseFloat(item.promocodeComission)
                 const timestamp = new Date(parseInt(item._id.toString().substring(0, 8), 16) * 1000);
                 const formattedTimestamp = moment(timestamp).format('YY-MM-DD');
-                console.log(item)
+
+                function getTimeFromObjectId(objectId) {
+                    const hexString = objectId.toString();
+                    const timestampHexString = hexString.substring(0, 8);
+                    const timestampDecimal = parseInt(timestampHexString, 16);
+                    const dateObject = new Date(timestampDecimal * 1000);
+                    const hours = dateObject.getHours();
+                    const minutes = dateObject.getMinutes();
+                    return {hours, minutes};
+                }
+                const time = getTimeFromObjectId(item._id);
+                function generateRandom7DigitNumber() {
+                    const min = 0;
+                    const max = 9999999;
+                    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+                    return randomNumber.toString().padStart(7, '0');
+                }
+
                 const info = {
+                    order_number: generateRandom7DigitNumber(),
                     orderID: item._id,
                     dateTime: formattedTimestamp,
+                    time: time,
                     storeName: item.store_id.title,
-                    phone_number: item.user_id.phone_number
+                    phone_number: item.user_id.phone_number,
+                    sellerName: item.store_id.seller_user_id.name
                 };
                 const finance = {
                     payAmount: Math.ceil(parseFloat(item.full_amount)),
@@ -152,6 +176,7 @@ class FinancesController {
                     allAmount: Math.ceil(parseFloat(item.full_amount)) + Math.ceil(parseFloat(item.income)),
                     deliveryAmount: 0,
                     paymentCard: item.paymentCard,
+                    sellerName: item.store_id.seller_user_id.name,
                     comission: {
                         percent: comperc,
                         promo: promocom

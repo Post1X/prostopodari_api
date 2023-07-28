@@ -5,6 +5,7 @@ class PromocodesController {
     static GetPromocodes = async (req, res, next) => {
         try {
             const {user_id} = req;
+            const promo = [];
             if (user_id) {
                 const promocodes = await Promocodes.find({
                     user_id: user_id
@@ -13,12 +14,12 @@ class PromocodesController {
                     promocodes
                 })
             } else if (req.isAdmin || req.isAdmin === true) {
-                const promocodes = await Promocodes.findOne({
-                    priority: 'admin'
-                });
-                res.status(200).json(
-                    promocodes
-                )
+                const promocodes = await Promocodes.find({priority: 'admin'});
+                promocodes.map((item) => {
+                    console.log(item, 'item')
+                    promo.push(item)
+                })
+                res.status(200).json(promo)
             } else {
                 res.status(400).json({
                     error: 'Что-то пошло не так'
@@ -35,8 +36,7 @@ class PromocodesController {
             const {user_id} = req;
             const {text, date, event_name} = req.body;
             const promocode = await Promocodes.findOne({
-                user_id: user_id,
-                text: text
+                user_id: user_id, text: text
             });
             if (promocode) {
                 res.status(400).json({
@@ -45,18 +45,11 @@ class PromocodesController {
             }
             if (!promocode) {
                 const newPromocode = new Promocodes({
-                    text: text,
-                    event_name: event_name,
-                    percentage: 5,
-                    user_id: user_id,
-                    date: date,
-                    priority: 'user'
+                    text: text, event_name: event_name, percentage: 5, user_id: user_id, date: date, priority: 'user'
                 })
                 await newPromocode.save();
 
-                res.status(200).json(
-                    newPromocode
-                )
+                res.status(200).json(newPromocode)
             }
         } catch (e) {
             e.status = 401;
@@ -82,15 +75,10 @@ class PromocodesController {
                     })
                 }
                 const newPromocode = new Promocodes({
-                    text: text,
-                    event_name: event_name,
-                    percentage: percentage,
-                    priority: 'admin'
+                    text: text, event_name: event_name, percentage: percentage, priority: 'admin'
                 })
                 await newPromocode.save();
-                res.status(200).json(
-                    newPromocode
-                )
+                res.status(200).json(newPromocode)
             }
         } catch (e) {
             e.status = 401;
@@ -125,11 +113,7 @@ class PromocodesController {
                     _id: promocode_id
                 }, {
                     $set: {
-                        text: text,
-                        event_name: event_name,
-                        percentage: percentage,
-                        user_id: user_id,
-                        priority: 'admin'
+                        text: text, event_name: event_name, percentage: percentage, user_id: user_id, priority: 'admin'
                     }
                 });
                 res.status(200).json({

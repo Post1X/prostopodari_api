@@ -19,6 +19,9 @@ const CategoriesSchema = new Schema({
     },
     photo_url: {
         type: Schema.Types.String
+    },
+    is_active: {
+        type: Schema.Types.Boolean
     }
 })
 

@@ -17,6 +17,9 @@ const SubCategoriesSchema = new Schema({
     },
     parameters: {
         type: Schema.Types.Array
+    },
+    is_active: {
+        type: Schema.Types.Boolean
     }
 })
 

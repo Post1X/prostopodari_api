@@ -388,6 +388,37 @@ class CategoriesController {
             next(e);
         }
     }
+    //
+    static GetCategoriesAdmin = async (req, res, next) => {
+        try {
+            const categories = await Categories.find();
+            const modifiedCategories = await Promise.all(
+                categories.map(async (item) => {
+                    const subcategory = await SubCategories.find({
+                        category_id: item._id
+                    })
+                    const subcatPromise = subcategory.map(async (subcat) => {
+                        return {
+                            subcatId: subcat._id,
+                            subcatTitle: subcat.name,
+                            isActive: subcat.is_active
+                        }
+                    });
+                    const subcats = await Promise.all(subcatPromise);
+                    return {
+                        catId: item._id,
+                        catTitle: item.title,
+                        isActive: item.is_active,
+                        subcats: subcats
+                    };
+                })
+            )
+            res.status(200).json(modifiedCategories)
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
 }
 
 
