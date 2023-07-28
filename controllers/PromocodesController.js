@@ -16,9 +16,9 @@ class PromocodesController {
                 const promocodes = await Promocodes.findOne({
                     priority: 'admin'
                 });
-                res.status(200).json({
-                    message: promocodes
-                })
+                res.status(200).json(
+                    promocodes
+                )
             } else {
                 res.status(400).json({
                     error: 'Что-то пошло не так'

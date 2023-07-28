@@ -1,57 +1,38 @@
 import Buyers from '../schemas/BuyersSchema';
 import JWT from 'jsonwebtoken';
-import argon2 from 'argon2';
-import getCord from '../utilities/getcordinates';
-import * as geolib from 'geolib';
-import CartItem from '../schemas/CartItemsSchema';
-import Cart from '../schemas/CartsSchema';
-import Categories from '../schemas/CategoriesSchema';
-import Chats from '../schemas/ChatsSchema';
-import Favorites from '../schemas/FavoritesSchema';
-import Goods from '../schemas/GoodsSchema';
-import Orders from '../schemas/OrdersSchema';
-import Sellers from '../schemas/SellersSchema';
-import Stores from '../schemas/StoresSchema';
-import SubCategories from '../schemas/SubCategoriesSchema';
 
 class BuyersController {
     static RegBuyer = async (req, res, next) => {
         try {
-            const {email, password, full_name, phone_number, city_id, address} = req.body;
+            const {
+                phone_number,
+                full_name
+            } = req.body;
             const {JWT_SECRET} = process.env;
-            // await validateEmail(email);
             // await validateName(full_name);
             // await validateNumber(phone_number);
-            // await validatePassword(password);
-            const hashPassword = await argon2.hash(password);
             const user = await Buyers.findOne({
-                email: email
+                phone_number: phone_number
             }, '-password');
 
             // IF (EXISTS) CHECK
             if (user) {
                 res.status(400).json({
-                    error: 'Пользователь с таким логином (e-mail) уже существует.'
+                    error: 'Пользователь с таким номером телефона уже существует.'
                 })
             }
-
-
             // IF (NOT_EXISTS) CHECK
             if (!user) {
                 const newUser = new Buyers({
-                    email: email,
-                    password: hashPassword,
-                    full_name: full_name,
                     phone_number: phone_number,
-                    city_id: city_id,
-                    address: address
+                    full_name: full_name
                 })
                 await newUser.save();
                 const user = await Buyers.findOne({
-                    email: email
+                    phone_number: phone_number
                 }, '-password');
                 const token = JWT.sign({
-                    email: email,
+                    phone_number: phone_number,
                     user_id: user._id
                 }, JWT_SECRET)
                 res.status(200).json({
@@ -59,7 +40,6 @@ class BuyersController {
                     user_data: user
                 })
             }
-
             //
 
         } catch (e) {
@@ -70,24 +50,18 @@ class BuyersController {
     //
     static LoginBuyer = async (req, res, next) => {
         try {
-            const {email, password} = req.body;
+            const {phone_number} = req.body;
             const {JWT_SECRET} = process.env;
             const user = await Buyers.findOne({
-                email: email
+                phone_number: phone_number
             });
             if (!user) {
                 res.status(400).json({
                     error: 'Пользователь не найден.'
                 })
             }
-            const match = await argon2.verify(user.password, password);
-            if (!match) {
-                res.status(400).json({
-                    error: 'Введён неправильный пароль.'
-                })
-            }
             const token = JWT.sign({
-                email: email,
+                phone_number: phone_number,
                 user_id: user._id
             }, JWT_SECRET);
             res.status(200).json({
@@ -120,14 +94,13 @@ class BuyersController {
     static UpdateProfile = async (req, res, next) => {
         try {
             const {user_id} = req;
-            const {full_name, significant_dates, phone_number} = req.body;
+            const {full_name, phone_number} = req.body;
 
             await Buyers.updateOne({
                 _id: user_id
             }, {
                 $set: {
                     full_name: full_name,
-                    significant_dates: significant_dates,
                     phone_number: phone_number
                 }
             })
@@ -159,78 +132,29 @@ class BuyersController {
             next(e);
         }
     }
-
-    // static GetCords = async (req, res, next) => {
-    //     try {
-    //         const { address } = req.body;
-    //         const result = await getCord(address);
-    //         const lat = result[0][0].lat;
-    //         const lon = result[0][0].lon;
-    //         const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`;
-    //         const response = await new Promise((resolve, reject) => {
-    //             https.get(url, (res) => {
-    //                 const { statusCode } = res;
-    //                 if (statusCode !== 200) {
-    //                     reject(new Error(`Request failed with status code ${statusCode}`));
-    //                 }
     //
-    //                 let data = '';
-    //                 res.on('data', (chunk) => {
-    //                     data += chunk;
-    //                 });
-    //
-    //                 res.on('end', () => {
-    //                     resolve(data);
-    //                 });
-    //             });
-    //         });
-    //         const nearbyAddresses = JSON.parse(response).address;
-    //         res.status(200).json({
-    //             Ширина: lat,
-    //             Долгота: lon,
-    //             Ближайшие_адреса: nearbyAddresses
-    //         });
-    //     } catch (e) {
-    //         e.status = 401;
-    //         next(e);
-    //     }
-    // }
-
-    static GetCords = async (req, res, next) => {
-        const {address} = req.body;
-        const result = await getCord(address);
-
-        const lat = result[0][0].lat;
-        const lon = result[0][0].lon;
-        const distance = geolib.getDistance({
-            lat, lon
-        }, {latitude: '51° 31\' N', longitude: '7° 28\' E'})
-        res.status(200).json({
-            Ширина: lat,
-            Долгота: lon
-        });
+    static ChangeGeostatus = async (req, res, next) => {
+        try {
+            const {user_id} = req;
+            const {lon, lat} = req.query;
+            const {address, city} = req.body;
+            console.log(`Широта: ${lat} Долгота: ${lon}`)
+            await Buyers.findOneAndUpdate({
+                _id: user_id
+            }, {
+                lon: lon,
+                lat: lat,
+                address: address,
+                city: city
+            });
+            res.status(200).json({
+                message: 'success'
+            })
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
     }
-    // static TerminateAll = async (req, res, next) => {
-    //     try {
-    //         await Buyers.deleteMany();
-    //         await CartItem.deleteMany();
-    //         await Cart.deleteMany();
-    //         await Categories.deleteMany();
-    //         await Chats.deleteMany();
-    //         await Favorites.deleteMany();
-    //         await Goods.deleteMany();
-    //         await Orders.deleteMany();
-    //         await Sellers.deleteMany();
-    //         await Stores.deleteMany();
-    //         await SubCategories.deleteMany();
-    //         res.status(200).json({
-    //             message: 'ok'
-    //         })
-    //     } catch (e) {
-    //         e.status = 401;
-    //         next(e)
-    //     }
-    // }
 }
 
 export default BuyersController;

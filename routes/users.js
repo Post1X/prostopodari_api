@@ -10,6 +10,7 @@ const router = express.Router();
 // buyers
 router.post('/register/buyer', BuyersController.RegBuyer);
 router.post('/login/buyer', BuyersController.LoginBuyer);
+router.put('/get-geo', BuyersController.ChangeGeostatus)
 router.get('/profile/buyer', BuyersController.UserProfile);
 router.put('/profile/buyer', BuyersController.UpdateProfile);
 router.delete('/profile/buyer', BuyersController.DeleteProfile);
@@ -31,8 +32,6 @@ router.get('/sellers', AdminController.GetSellers);
 router.put('/sellers/ban', AdminController.BanSellers)
 router.put('/sellers/approve', AdminController.ApproveSellers);
 router.put('/sellers/deny', AdminController.DenySellers);
-router.get('/getcord', BuyersController.GetCords);
-
 
 // router.get('/getcord', BuyersController.GetCords);
 // router.get('/deleteall', BuyersController.TerminateAll)

@@ -7,13 +7,6 @@ const StoresSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Sellers'
     },
-    city_id: {
-        type: Schema.Types.ObjectId,
-        ref: 'Cities'
-    },
-    address: {
-        type: Schema.Types.String
-    },
     title: {
         type: Schema.Types.String
     },
@@ -43,6 +36,18 @@ const StoresSchema = new Schema({
     },
     comission: {
         type: Schema.Types.Number
+    },
+    lat: {
+        type: Schema.Types.String
+    },
+    lon: {
+        type: Schema.Types.String
+    },
+    address: {
+        type: Schema.Types.String
+    },
+    city: {
+        type: Schema.Types.String
     }
 });
 

@@ -9,14 +9,9 @@ class StoresController {
                     error: 'У вас нет права находиться на данной странице.'
                 })
             }
-            // if (req.files && req.files.length > 0) {
-            //     const logoFile = req.files.find(file => file.fieldname === 'logo');
-            //     if (logoFile) {
-            //         fs.unlinkSync(logoFile.path);
-            //     }
-            // }
             const {user_id} = req;
-            const {city_id, address, title, about_store} = req.body;
+            const {lon, lat} = req.query;
+            const {address, title, about_store, city} = req.body;
             if (req.files.length !== 0) {
                 const logoFile = req.files.find(file => file.fieldname === 'logo');
                 const parts = logoFile.path.split('public');
@@ -24,13 +19,15 @@ class StoresController {
                 const result = parts[1].substring(1);
                 const newStores = new Stores({
                     seller_user_id: user_id,
-                    city_id: city_id,
                     address: address,
                     title: title,
                     comission: 30,
                     logo_url: result,
                     about_store: about_store,
-                    is_disabled: false
+                    is_disabled: false,
+                    lon: lon,
+                    lat: lat,
+                    city: city
                 });
                 await newStores.save();
             }
@@ -47,10 +44,6 @@ class StoresController {
             const sellerCheck = await Sellers.findOne({
                 _id: user_id
             });
-            // const activeStoreCheck = await Stores.findOne({
-            //     _id: sellerCheck.active_store
-            // });
-            // console.log(storesCheck.length, 'storechecklength');
             if (storesCheck.length === 0) {
                 await Sellers.findOneAndUpdate(
                     {_id: user_id},
@@ -131,7 +124,7 @@ class StoresController {
                 photoArray.push(result)
             }
             const {store_id} = req.query;
-            const {city_id, address, title, about_store} = req.body;
+            const {address, title, about_store, city} = req.body;
             const storeCheck = await Stores.findOne({
                 _id: store_id
             });
@@ -143,7 +136,7 @@ class StoresController {
                         _id: store_id
                     },
                     {
-                        city_id: city_id,
+                        city_id: city,
                         address: address,
                         title: title,
                         about_store: about_store,
@@ -154,7 +147,7 @@ class StoresController {
                         _id: store_id
                     },
                     {
-                        city_id: city_id,
+                        city_id: city,
                         address: address,
                         title: title,
                         about_store: about_store,

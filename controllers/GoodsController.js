@@ -1,5 +1,6 @@
 import Goods from '../schemas/GoodsSchema';
 import mongoose from 'mongoose';
+import Buyers from '../schemas/BuyersSchema';
 
 // git
 
@@ -65,7 +66,17 @@ class GoodsController {
                     error: 'У вас нет права находиться на данной странице.'
                 });
             }
+            const {user_id} = req;
             const {store_id, stock, sort, category, subcategory, search} = req.query;
+            //
+            const userLon = await Buyers.findOne({
+                _id: user_id
+            }).select('lon')
+            //
+            const userLat = await Buyers.findOne({
+                _id: user_id
+            }).select('lat')
+            //
             let filter = {};
             if (category) {
                 const categoryIds = category.split(',');
@@ -89,15 +100,16 @@ class GoodsController {
             if (search) {
                 filter.title = {$regex: new RegExp(search, 'i')};
             }
-
+            //
             let goods = [];
-
+            //
             if (sort === 'newFirst' || sort === 'oldFirst') {
                 const sortDirection = sort === 'newFirst' ? -1 : 1;
                 goods = await Goods.find(filter)
                     .sort({_id: sortDirection})
                     .populate('category_id')
                     .populate('subcategory_id')
+                    .populate('store_id')
             } else {
                 let sortOptions = {};
                 if (sort === 'priceAsc') {
@@ -115,8 +127,8 @@ class GoodsController {
                     .sort(sortOptions)
                     .populate('category_id')
                     .populate('subcategory_id')
+                    .populate('store_id')
             }
-
             const promotedGoods = goods.filter(good => good.is_promoted === true);
             const regularGoods = goods.filter(good => good.is_promoted !== true);
             const sortedGoods = [...promotedGoods, ...regularGoods];

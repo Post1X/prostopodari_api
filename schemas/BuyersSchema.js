@@ -3,14 +3,6 @@ import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 const BuyersSchema = new Schema({
-    email: {
-        type: Schema.Types.String,
-        required: true
-    },
-    password: {
-        type: Schema.Types.String,
-        required: true
-    },
     full_name: {
         type: Schema.Types.String,
         required: true
@@ -19,11 +11,16 @@ const BuyersSchema = new Schema({
         type: Schema.Types.String,
         required: true
     },
-    city_id: {
-        type: Schema.Types.ObjectId,
-        ref: 'Cities'
+    lat: {
+        type: Schema.Types.String
+    },
+    lon: {
+        type: Schema.Types.String
     },
     address: {
+        type: Schema.Types.String
+    },
+    city: {
         type: Schema.Types.String
     }
 })
