@@ -101,6 +101,7 @@ class StoresController {
             })
                 .populate('categories_ids')
                 .populate('sub_categories_ids')
+                .populate('city_id')
                 .populate('seller_user_id')
             res.status(200).json(store)
         } catch (e) {
@@ -135,7 +136,7 @@ class StoresController {
                         _id: store_id
                     },
                     {
-                        city: city,
+                        city_id: city,
                         address: address,
                         title: title,
                         about_store: about_store,
@@ -146,7 +147,7 @@ class StoresController {
                         _id: store_id
                     },
                     {
-                        city: city,
+                        city_id: city,
                         address: address,
                         title: title,
                         about_store: about_store,
@@ -191,7 +192,7 @@ class StoresController {
             //
             const storeToReturn = await Stores.findOne({
                 _id: store_id
-            })
+            }).populate('city_id')
             res.status(200).json({
                 storeToReturn
             })
@@ -258,6 +259,9 @@ class StoresController {
             })
             const seller = await Sellers.findOne({_id: user_id}).populate({
                 path: 'active_store',
+                populate: {
+                    path: 'city_id'
+                }
             });
             return res.status(200).json({
                 seller

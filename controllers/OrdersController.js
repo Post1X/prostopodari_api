@@ -14,7 +14,7 @@ class OrdersController {
                 time,
                 phone_number,
                 postcard,
-                city,
+                city_id,
                 address,
                 name,
                 promocode,
@@ -25,7 +25,7 @@ class OrdersController {
             const goods = await Cart.find({user: user_id})
                 .populate('user')
                 .populate('items.good_id')
-                .populate({path: 'items.store_id'});
+                .populate({path: 'items.store_id', populate: {path: 'city_id'}});
             const modifiedGoods = goods.map((good) => {
                 const price = good.items[0].good_id.price;
                 const numericPrice = parseFloat(price);
@@ -59,7 +59,8 @@ class OrdersController {
                 goods_ids: goodsIds,
                 user_id: user_id,
                 store_id: storeId,
-                delivery_address: `${city},+ ${address}`,
+                city_id: city_id,
+                address: address,
                 name: name,
                 delivery_day: day,
                 delivery_time: time,

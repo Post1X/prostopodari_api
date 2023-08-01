@@ -52,7 +52,7 @@ class BuyersController {
         try {
             const {phone_number} = req.body;
             const {JWT_SECRET} = process.env;
-            const user = await Buyers.findOne({   // finding user
+            const user = await Buyers.findOne({
                 phone_number: phone_number
             });
             if (!user) {
@@ -60,12 +60,12 @@ class BuyersController {
                     error: 'Пользователь не найден.'
                 })
             }
-            const token = JWT.sign({  // generating token
+            const token = JWT.sign({
                 phone_number: phone_number,
                 user_id: user._id
             }, JWT_SECRET);
             res.status(200).json({
-                token: token,  // response token
+                token: token,
                 user_data: user
             });
         } catch (e) {

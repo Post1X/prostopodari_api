@@ -3,7 +3,6 @@ import BuyersController from '../controllers/BuyersController';
 import AdminController from '../controllers/AdminController';
 import SellersController from '../controllers/SellersController';
 import upload from '../utilities/multer';
-import authorization from '../middlewares/authorization';
 
 const uploadFields = upload.any();
 const router = express.Router();
