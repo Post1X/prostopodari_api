@@ -60,7 +60,7 @@ class BuyersController {
                     error: 'Пользователь не найден.'
                 })
             }
-            const token = JWT.sign({
+            const token = JWT.sign({ //
                 phone_number: phone_number,
                 user_id: user._id
             }, JWT_SECRET);

@@ -54,7 +54,7 @@ class CartsController {
             const goods = await Cart.find({user: user_id})
                 .populate('user')
                 .populate('items.good_id')
-                .populate({path: 'items.store_id', populate: {path: 'city_id'}});
+                .populate({path: 'items.store_id'});
             const modifiedGoods = goods.map((good) => {
                 const price = good.items[0].good_id.price;
                 const numericPrice = parseFloat(price);
