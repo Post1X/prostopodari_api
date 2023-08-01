@@ -90,7 +90,7 @@ class SellersController {
             }
             const store = await Stores.find({
                 seller_user_id: seller._id
-            }).populate('city_id')
+            })
             const token = JWT.sign({
                 email: email,
                 user_id: seller._id,
@@ -118,7 +118,7 @@ class SellersController {
             const {user_id} = req;
             const storeCheck = await Stores.find({
                 seller_user_id: user_id
-            }).populate('city_id');
+            })
             const seller = await Sellers.findOne({
                 _id: user_id
             });
@@ -128,8 +128,6 @@ class SellersController {
                     error: 'У вас нет магазинов'
                 });
             }
-            const timestamp = seller.active_store.getTimestamp();
-            console.log(timestamp, 'timestamp')
             if (!seller.active_store) {
                 if (storeCheck.length >= 2) {
                     const newActiveStoreId = storeCheck[0]._id;
@@ -150,9 +148,6 @@ class SellersController {
                 _id: user_id
             }).populate({
                 path: 'active_store',
-                populate: {
-                    path: 'city_id'
-                }
             });
 
             return res.status(200).json({

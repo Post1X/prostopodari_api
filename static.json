@@ -1,0 +1,91 @@
+{
+  "title": "Разборки на месте",
+  "category_id": "идентификатор_категории",
+  "service_id": "идентификатор_услуги",
+  "service_params": "идентификатор_доп_услуги",
+  "model_name": [
+    "Mazda",
+    "Opel",
+    "Mercedes-Benz"
+  ],
+  "city": "Симферополь",
+  "address": {
+    "lon": 46.231,
+    "lat": 70.213
+  },
+  "phone_number": "+7(321)321-324",
+  "wa_number": "+7(321)321-324",
+  "additional_phone": [
+    {
+      "position": "Таджик",
+      "master_name": "Джабик",
+      "master_phone": "+7(321)ЗВОНИ-СЕЙЧАС"
+    },
+    {
+      "position": "Узбек",
+      "master_name": "Радик",
+      "master_phone": "+7(321)ЗВОНИ-ПОТОМ"
+    }
+  ],
+  "short_description": "...текст...",
+  "schedule": [
+    {
+      "day": 1,
+      "time": {
+        "from": "21:00",
+        "to": "00:00",
+        "all_day": false
+      }
+    },
+    {
+      "day": 2,
+      "time": {
+        "from": "21:00",
+        "to": "00:00",
+        "all_day": false
+      }
+    },
+    {
+      "day": 3,
+      "time": {
+        "all_day": true
+      }
+    },
+    {
+      "day": 4,
+      "time": {
+        "from": "21:00",
+        "to": "00:00",
+        "all_day": false
+      }
+    },
+    {
+      "day": 5,
+      "time": {
+        "from": "21:00",
+        "to": "00:00",
+        "all_day": false
+      }
+    },
+    {
+      "day": 6,
+      "time": {
+        "from": "21:00",
+        "to": "00:00",
+        "all_day": false
+      }
+    },
+    {
+      "day": 7,
+      "time": {
+        "from": "21:00",
+        "to": "00:00",
+        "all_day": false
+      }
+    }
+  ],
+  "logo_img": "...фотография",
+  "photo_0": "photo_0",
+  "photo_1": "photo_1",
+  "photo_2": "photo_2"
+}
