@@ -318,7 +318,7 @@ class SellersController {
                     active_store: store_id
                 });
                 res.status(200).json({
-                    message: 'success'
+                    store
                 })
             }
         } catch (e) {
