@@ -8,7 +8,17 @@ import mongoose from 'mongoose';
 class SellersController {
     static RegSeller = async (req, res, next) => {
         try {
-            const {name, email, password, inn, ip, ogrn, legal_name, phone_number, bill_number} = req.body;
+            const {
+                name,
+                email,
+                password,
+                inn,
+                ip,
+                ogrn,
+                legal_name,
+                phone_number,
+                bill_number
+            } = req.body;
             const JWT_SECRET = process.env.JWT_SECRET;
             // await validateEmail(email);
             // await validatePassword(password);

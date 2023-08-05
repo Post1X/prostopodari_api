@@ -12,6 +12,7 @@ import orders from './orders';
 import favorites from './favorites';
 import finances from './finances';
 import carts from './carts';
+import chat from './chat';
 // a
 
 const router = express.Router();
@@ -26,6 +27,7 @@ router.use('/promocodes', authorization, promocodes);
 router.use('/cities', authorization, cities);
 router.use('/goods', authorization, goods);
 router.use('/orders', authorization, orders);
+router.use('/chat', authorization, chat);
 router.use('/favorites', authorization, favorites);
 router.use('/finances', authorization, finances)
 export default router;

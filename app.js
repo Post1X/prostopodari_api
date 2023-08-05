@@ -25,6 +25,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(router);
 app.set('view engine', 'jade');
 
+
 process.once('SIGUSR2', async () => {
     await databaseConnections.closeDatabaseConnection();
     process.kill(process.pid, 'SIGUSR2');

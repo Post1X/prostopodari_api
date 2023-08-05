@@ -1,25 +1,37 @@
 import mongoose from 'mongoose';
-import Orders from './OrdersSchema';
-import Sellers from './SellersSchema';
-import Buyers from './BuyersSchema';
 
 const Schema = mongoose.Schema;
 
 const ChatsSchema = new Schema({
-    order_id: {
-        type: Schema.Types.ObjectId,
-        ref: 'Orders'
+    name: {
+        type: Schema.Types.String
     },
-    seller_user_id: {
+    user_id: {
         type: Schema.Types.ObjectId,
-        ref: 'Sellers'
     },
-    buyer_user_id: {
-        type: Schema.Types.ObjectId,
-        ref: 'Buyers'
+    chatID: {
+        type: Schema.Types.String
+    },
+    phone_number: {
+        type: Schema.Types.String
+    },
+    newMessCount: {
+        type: Schema.Types.Number
+    },
+    lastMessage: {
+        type: Schema.Types.String
+    },
+    priority: {
+        type: Schema.Types.String
     }
 });
 
-const Chats = mongoose.model('Chats', ChatsSchema)
+ChatsSchema.pre('save', function (next) {
+    const currentDate = new Date();
+    this.date = currentDate.toISOString().split('T')[0];
+    this.time = currentDate.toISOString().split('T')[1].split('.')[0];
+    next();
+});
 
+const Chats = mongoose.model('Chat', ChatsSchema);
 export default Chats;

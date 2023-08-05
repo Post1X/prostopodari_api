@@ -55,6 +55,10 @@ const SellersSchema = new Schema({
     is_banned: {
         type: Schema.Types.Boolean,
         default: false
+    },
+    isChatCreate: {
+        type: Schema.Types.Boolean,
+        default: false
     }
 })
 
