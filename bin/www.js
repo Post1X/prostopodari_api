@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
-import ChatController from '../controllers/ChatController';
 import {uuid} from 'uuidv4';
 import Messages from '../schemas/MessagesSchema';
 import Sellers from '../schemas/SellersSchema';
 import Chats from '../schemas/ChatsSchema';
+import chat from '../routes/chat';
 
 const app = require('../app');
 const debug = require('debug')('server:server');
@@ -47,13 +47,16 @@ chatSpace.on('connection', async (socket) => {
         const sellerForTest = await Sellers.findOne({
             _id: seller_id
         })
+        if (roomId) {
+            socket.roomId = roomId;
+            socket.join(roomId);
+        }
         const result = decoded ? (decoded.isSeller ? 'seller' : (decoded.isAdmin ? 'admin' : 'user')) : 'user';
         console.log(`Пользователь ${decoded.user_id} с ролью ${result} подключился к чату под номером ${roomId}`);
         socket.phone_number = sellerForTest.phone_number;
         socket.seller_id = seller_id;
         socket.name = sellerForTest.name;
         socket.result = result;
-        socket.roomId = roomId;
         socket.user_id = decoded.user_id;
         socket.isSeller = decoded.isSeller || false;
         socket.isAdmin = decoded.isAdmin || false;
@@ -83,7 +86,7 @@ async function getMessagesAndSendToClient(socket) {
         let chatMessages = [];
         console.log('Getting messages...');
         if (socket.isSeller || socket.isAdmin) {
-            chatMessages = await Messages.find({ room_id: socket.roomId }).sort({ date: 1 });
+            chatMessages = await Messages.find({room_id: socket.roomId}).sort({date: 1});
             const sellerMessages = chatMessages.filter((message) => message.role === 'seller');
             const adminMessages = chatMessages.filter((message) => message.role === 'admin');
             const newMessSeller = sellerMessages.filter((message) => !message.isRead).length;
@@ -91,17 +94,13 @@ async function getMessagesAndSendToClient(socket) {
             socket.newMessSeller = newMessSeller;
             socket.newMessAdmin = newMessAdmin;
         }
-        // Отправляем список сообщений клиенту
-        socket.emit('messages', {
+        chatSpace.emit('messages', {
             messages: chatMessages,
             newMessCount: socket.isSeller ? socket.newMessSeller : socket.newMessAdmin
         });
-
         if (!socket.roomId) {
-            // Если roomId не передан, создаем новый roomId и чат
             const newRoomId = uuid();
             socket.roomId = newRoomId;
-
             const name = socket.name;
             const user_id = socket.seller_id;
             const phone_number = socket.phone_number;
@@ -115,6 +114,7 @@ async function getMessagesAndSendToClient(socket) {
                 lastMessage,
                 priority: 'admin'
             });
+            socket.join(newRoomId);
             await newChat.save();
         }
     } catch (e) {
@@ -124,6 +124,7 @@ async function getMessagesAndSendToClient(socket) {
 }
 
 async function processSendMessage(socket, message) {
+    chatSpace.to(socket.roomId).emit('newMessage', message);
     const newMessages = new Messages({
         room_id: socket.roomId,
         name: socket.name,
@@ -132,14 +133,13 @@ async function processSendMessage(socket, message) {
         isRead: false
     });
     if (socket.roomId) {
-        const chats = await Chats.findOne({ chatID: socket.roomId });
+        const chats = await Chats.findOne({chatID: socket.roomId});
         if (chats) {
-            await Chats.findOneAndUpdate({ chatID: socket.roomId }, { lastMessage: message.text });
+            await Chats.findOneAndUpdate({chatID: socket.roomId}, {lastMessage: message.text});
         }
     }
     await newMessages.save();
 }
-
 
 server.listen(port);
 server.on('error', onError);

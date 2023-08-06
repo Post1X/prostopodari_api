@@ -33,6 +33,7 @@
     "nominatim-client": "^3.2.1",
     "sequelize": "^6.31.1",
     "socket.io": "^4.7.1",
+    "socket.io-auth": "^1.0.0",
     "uuidv4": "^6.2.13",
     "yarn": "^1.22.19"
   },

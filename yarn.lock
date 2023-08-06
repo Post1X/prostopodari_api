@@ -3534,6 +3534,11 @@ socket.io-adapter@~2.5.2:
   dependencies:
     ws "~8.11.0"
 
+socket.io-auth@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/socket.io-auth/-/socket.io-auth-1.0.0.tgz#77d9d0cad65bc7224de93211d6ab48aa25ab0ae3"
+  integrity sha512-2PxwbjvSAYjHJ3kp+A11EfFxPhP3Hsfp+X+0JS5kUnA7iiKhzGoyxVoRpxh8LkA9CQ3gj8g4eslsSnlxItCP9w==
+
 socket.io-parser@~4.2.4:
   version "4.2.4"
   resolved "https://registry.yarnpkg.com/socket.io-parser/-/socket.io-parser-4.2.4.tgz#c806966cf7270601e47469ddeec30fbdfda44c83"
