@@ -3,7 +3,8 @@ import {uuid} from 'uuidv4';
 import Messages from '../schemas/MessagesSchema';
 import Sellers from '../schemas/SellersSchema';
 import Chats from '../schemas/ChatsSchema';
-import chat from '../routes/chat';
+import Buyers from '../schemas/BuyersSchema';
+import UserChats from '../schemas/UserChats';
 
 const app = require('../app');
 const debug = require('debug')('server:server');
@@ -29,7 +30,6 @@ const io = socketIO(server, {
     }
 });
 app.set('io', io);
-
 /**
  * Listen on provided port, on all network interfaces.
  */
@@ -37,6 +37,132 @@ app.set('io', io);
 
 
 const chatSpace = io.of('/chat/messages');
+const userChatSpace = io.of('/chat/user')
+
+userChatSpace.on('connection', async (socket) => {
+    try {
+        socket.roomId = socket.handshake.query.roomId;
+        console.log(socket.roomId, 'roomidontop')
+        socket.seller_id = socket.handshake.query.seller_id;
+        socket.buyer_id = socket.handshake.query.buyer_id;
+        socket.seller = await Sellers.findOne({_id: socket.seller_id});
+        socket.buyer = await Buyers.findOne({_id: socket.buyer_id})
+        const token = socket.handshake.query.token;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        socket.result = decoded.isSeller ? 'seller' : 'user';
+        if (!socket.roomId) {
+            socket.roomId = uuid();
+        }
+        await getMessagesAndSendToUsers(socket);
+        socket.on('sendMessage', async (message) => {
+            try {
+                console.log('Received message:', message.text);
+                await sendMessage(socket, message);
+                await getMessagesAndSendToUsers(socket);
+            } catch (err) {
+                console.error('Ошибка в обработчике событий сокета:', err);
+                socket.disconnect(true);
+            }
+        });
+        socket.on('disconnect', () => {
+            console.log('Клиент отключился от пространства /chat');
+        });
+    } catch (e) {
+        console.error('Ошибка в обработчике событий сокета:', e);
+        socket.emit('Ошибка:', e);
+    }
+})
+
+async function getMessagesAndSendToUsers(socket) {
+    try {
+        console.log('Getting messages...');
+        let chatMessages = [];
+        if (socket.result === 'seller' || socket.result === 'user') {
+            chatMessages = await Messages.find({room_id: socket.roomId}).sort({date: 1});
+            const sellerMessages = chatMessages.filter((message) => message.role === 'seller');
+            const userMessages = chatMessages.filter((message) => message.role === 'user');
+            const newMessSeller = sellerMessages.filter((message) => !message.isRead).length;
+            const newMessUser = userMessages.filter((message) => !message.isRead).length;
+            socket.newMessSeller = newMessSeller;
+            socket.newMessUser = newMessUser;
+        }
+        userChatSpace.emit('messages', {
+            messages: chatMessages,
+            newMessCount: socket.result === 'seller' ? socket.newMessSeller : socket.newMessUser
+        });
+        if (!socket.roomId) {
+            const newRoomId = uuid();
+            socket.roomId = newRoomId;
+            const lastMessage = chatMessages.length > 0 ? chatMessages[chatMessages.length - 1].text : '';
+            if (socket.result === 'seller') {
+                const newChat = new UserChats({
+                    name: socket.seller.name,
+                    user_id: socket.buyer_id,
+                    seller_id: socket.seller_id,
+                    chatID: newRoomId,
+                    phone_number: socket.seller.phone_number,
+                    newMessCount: 0,
+                    lastMessage: lastMessage
+                })
+                socket.join(newRoomId);
+                await newChat.save();
+            }
+            if (socket.result === 'user') {
+                const newChat = new UserChats({
+                    name: socket.buyer.full_name ? socket.buyer.full_name : socket.buyer.phone_number,
+                    user_id: socket.buyer_id,
+                    seller_id: socket.seller_id,
+                    chatID: newRoomId,
+                    phone_number: socket.buyer.phone_number,
+                    newMessCount: 0,
+                    lastMessage: lastMessage
+                });
+                socket.join(newRoomId);
+                await newChat.save();
+            }
+        }
+    } catch (e) {
+        console.error('Ошибка в обработчике событий сокета:', e);
+        socket.emit('Ошибка:', e);
+    }
+}
+
+async function sendMessage(socket, message) {
+    userChatSpace.to(socket.roomId).emit('newMessage', message);
+    if (socket.result === 'seller') {
+        const newMessages = new Messages({
+            room_id: socket.roomId,
+            name: socket.seller.name,
+            role: socket.result,
+            text: message.text,
+            isRead: false
+        });
+        if (socket.roomId) {
+            const chats = await UserChats.findOne({chatID: socket.roomId});
+            if (chats) {
+                await UserChats.findOneAndUpdate({chatID: socket.roomId}, {lastMessage: message.text});
+            }
+        }
+        await newMessages.save();
+    }
+    if (socket.result === 'user') {
+        const newMessages = new Messages({
+            room_id: socket.roomId,
+            name: socket.buyer.full_name,
+            role: socket.result,
+            text: message.text,
+            isRead: false
+        });
+        if (socket.roomId) {
+            const chats = await UserChats.findOne({chatID: socket.roomId});
+            if (chats) {
+                await UserChats.findOneAndUpdate({chatID: socket.roomId}, {lastMessage: message.text});
+            }
+        }
+        await newMessages.save();
+    }
+}
+
 
 chatSpace.on('connection', async (socket) => {
     try {

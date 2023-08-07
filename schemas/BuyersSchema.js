@@ -5,7 +5,6 @@ const Schema = mongoose.Schema;
 const BuyersSchema = new Schema({
     full_name: {
         type: Schema.Types.String,
-        required: true
     },
     phone_number: {
         type: Schema.Types.String,
@@ -21,6 +20,9 @@ const BuyersSchema = new Schema({
         type: Schema.Types.String
     },
     city: {
+        type: Schema.Types.String
+    },
+    code: {
         type: Schema.Types.String
     }
 })

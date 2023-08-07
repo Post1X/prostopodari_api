@@ -8,7 +8,8 @@ const uploadFields = upload.any();
 const router = express.Router();
 
 // buyers
-router.post('/register/buyer', BuyersController.RegBuyer);
+router.post('/register/buyer/call', BuyersController.ConfirmAndReg);
+router.post('/register/buyer/confirm-number', BuyersController.RegBuyer);
 router.post('/login/buyer', BuyersController.LoginBuyer);
 router.put('/get-geo', BuyersController.ChangeGeostatus)
 router.get('/profile/buyer', BuyersController.UserProfile);

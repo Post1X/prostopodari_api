@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+<h1>WebSocket Test</h1>
+<div>
+    <h2>Messages:</h2>
+    <ul id="messagesList"></ul>
+</div>
+<div>
+    <h2>New Message:</h2>
+    <input type="text" id="messageInput">
+    <button onclick="sendMessage()">Send</button>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
+<script>
+    const messagesList = document.getElementById('messagesList');
+    const messageInput = document.getElementById('messageInput');
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluIiwidXNlcl9pZCI6IjY0Y2E3ODg1Njc4M2FkYWE5NTI5OTkzMSIsImlzU2VsbGVyIjp0cnVlLCJpYXQiOjE2OTEyMjk3NTZ9.52dcT8GPpLIlrUgg4q7tFcMORMTzjRnLmYXAWz23kQI';
+    const socket = io('http://localhost:3001/chat/messages', {
+        query: {
+            token: token,
+            seller_id: '64ca78856783adaa95299931',
+            roomId: '8cf4b1c4-9794-4d44-8e88-9e0c674dfcab'
+        },
+    });
+
+    function displayMessages(messages) {
+        messagesList.innerHTML = '';
+        messages.forEach(message => {
+            const listItem = document.createElement('li');
+            listItem.textContent = message.text;
+            messagesList.appendChild(listItem);
+        });
+    }
+
+    socket.on('message', (data) => {
+        console.log('Received message:', data);
+
+        // Добавим новое сообщение в список сообщений и обновим отображение
+        const listItem = document.createElement('li');
+        listItem.textContent = data;
+        messagesList.appendChild(listItem);
+    });
+
+    function sendMessage() {
+        console.log('Sending message...');
+        const message = messageInput.value;
+        socket.emit('sendMessage', { text: message });
+        messageInput.value = '';
+    }
+
+    socket.on('connect', () => {
+        console.log('Connected to server.');
+        socket.emit('getMessages');
+    });
+</script>
+</body>
+</html>
