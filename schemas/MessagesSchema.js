@@ -9,6 +9,9 @@ const MessagesSchema = new Schema({
     text: {
         type: Schema.Types.String,
     },
+    image_url: {
+        type: Schema.Types.String
+    },
     date: {
         type: Schema.Types.Date
     },

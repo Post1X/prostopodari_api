@@ -54,6 +54,26 @@ userChatSpace.on('connection', async (socket) => {
             socket.roomId = uuid();
         }
         await getMessagesAndSendToUsers(socket);
+        socket.on('isRead', async (lastMessage) => {
+            if (socket.result === 'seller') {
+                await Messages.updateMany(
+                    {
+                        _id: {$lte: lastMessage},
+                        role: 'seller'
+                    },
+                    {$set: {isRead: true}}
+                );
+            }
+            if (socket.result === 'user') {
+                await Messages.updateMany(
+                    {
+                        _id: {$lte: lastMessage},
+                        role: 'user'
+                    },
+                    {$set: {isRead: true}}
+                );
+            }
+        })
         socket.on('sendMessage', async (message) => {
             try {
                 console.log('Received message:', message.text);
@@ -187,6 +207,27 @@ chatSpace.on('connection', async (socket) => {
         socket.isSeller = decoded.isSeller || false;
         socket.isAdmin = decoded.isAdmin || false;
         await getMessagesAndSendToClient(socket);
+        socket.on('isRead', async (lastMessage) => {
+            console.log(lastMessage, 'dwada')
+            if (socket.result === 'seller') {
+                await Messages.updateMany(
+                    {
+                        _id: {$lte: lastMessage},
+                        role: 'admin'
+                    },
+                    {$set: {isRead: true}}
+                );
+            }
+            if (socket.result === 'admin') {
+                await Messages.updateMany(
+                    {
+                        _id: {$lte: lastMessage},
+                        role: 'seller'
+                    },
+                    {$set: {isRead: true}}
+                );
+            }
+        })
         socket.on('sendMessage', async (message) => {
             try {
                 console.log('Received message:', message.text);
