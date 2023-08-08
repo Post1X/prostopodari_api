@@ -3,10 +3,9 @@ import JWT from 'jsonwebtoken';
 import makeCall from '../utilities/call';
 
 class BuyersController {
-    static code;
-    static phone_number;
     static RegBuyer = async (req, res, next) => {
         try {
+            const JWT_SECRET = process.env.JWT_SECRET;
             const {phone_number, confCode} = req.body;
             const buyer = await Buyers.findOne({
                 phone_number
@@ -21,8 +20,13 @@ class BuyersController {
                     phone_number: phone_number,
                     code: null
                 })
+                const token = JWT.sign({ //
+                    phone_number: phone_number,
+                    user_id: buyer._id
+                }, JWT_SECRET);
                 res.status(200).json({
-                    message: 'Успешно'
+                    token: token,
+                    user_data: buyer
                 })
             }
         } catch (e) {
@@ -37,11 +41,6 @@ class BuyersController {
             const buyer = await Buyers.findOne({
                 phone_number: phone_number
             })
-            if (buyer) {
-                res.status(301).json({
-                    error: 'Такой номер уже существует'
-                })
-            }
             function generateRandomNumberString() {
                 let result = '';
                 for (let i = 0; i < 4; i++) {
@@ -50,15 +49,23 @@ class BuyersController {
                 }
                 return result;
             }
-
             const code = generateRandomNumberString();
             await makeCall(phone_number, code)
-            const newBuyer = new Buyers({
-                phone_number: phone_number,
-                code: code,
-                number_activated: false
-            })
-            await newBuyer.save();
+            if (!buyer) {
+                const newBuyer = new Buyers({
+                    phone_number: phone_number,
+                    code: code,
+                    number_activated: false
+                })
+                await newBuyer.save();
+            }
+            if (buyer) {
+                await Buyers.findOneAndUpdate({
+                    phone_number: phone_number
+                }, {
+                    code: code
+                })
+            }
             res.status(200).json({
                 message: 'Скоро вам поступит звонок. Нужно ввести последние 4 цифры.'
             })
