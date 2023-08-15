@@ -7,11 +7,11 @@ import Buyers from '../schemas/BuyersSchema';
 class GoodsController {
     static CreateGoods = async (req, res, next) => {
         try {
-            if (!req.isSeller || req.isSeller !== true) {
-                res.status(400).json({
-                    error: 'У вас нет права находиться на данной странице.'
-                })
-            }
+            // if (!req.isSeller || req.isSeller !== true) {
+            //     res.status(400).json({
+            //         error: 'У вас нет права находиться на данной странице.'
+            //     })
+            // }
             const {
                 category_id,
                 subcategory_id,
@@ -146,7 +146,8 @@ class GoodsController {
     //
     static GetAllGoods = async (req, res, next) => {
         try {
-            const goods = await Goods.find({}).sort({is_promoted: -1});
+            const goods = await Goods.find({}).sort({is_promoted: -1})
+                .populate('category_id');
             const modifiedGoods = goods.map((good) => {
                 const price = good.price.toString();
                 const numericPrice = parseFloat(price);
@@ -174,11 +175,11 @@ class GoodsController {
     //
     static UpdateGoods = async (req, res, next) => {
         try {
-            if (!req.isSeller || req.isSeller !== true) {
-                return res.status(400).json({
-                    error: 'У вас нет права находиться на данной странице.'
-                });
-            }
+            // if (!req.isSeller || req.isSeller !== true) {
+            //     return res.status(400).json({
+            //         error: 'У вас нет права находиться на данной странице.'
+            //     });
+            // }
             const photoArray = [];
             if (req.files) {
                 if (req.files.length !== 0) {
@@ -207,9 +208,9 @@ class GoodsController {
             } = req.body;
             const updatedPhotoArrayMain = [];
             if (oldphoto_array) {
-                const splittedOld = oldphoto_array.split(', ')
+                const splittedOld = oldphoto_array.split(',')
                 const updatedPhotoArray = [...splittedOld, ...photoArray];
-                updatedPhotoArrayMain.push(updatedPhotoArray)
+                updatedPhotoArrayMain.push(...updatedPhotoArray)
             }
             if (subcategory_id) {
                 await Goods.findOneAndUpdate(

@@ -50,11 +50,32 @@ class OrdersController {
             const promocodeGet = await Promocodes.findOne({
                 text: promocode
             })
+            const weekdays = storeComission.weekdays;
+            const weekends = storeComission.weekends;
+            const delivery_price = storeComission.distance;
             const promocodeCommission = promocodeGet.percentage;
             const income = (totalPrice * (promocodeCommission + 30)) / 100;
             const status = '64a5e7e78d8485a11d0649ee';
-            const card = '1234 5678 9123 1412'
+            const card = '1234 5678 9123 1412';
             const objId = mongoose.Types.ObjectId(status)
+            const parsedTime = new Date(`${req.body.time} UTC`);
+            const parsedDay = new Date(req.body.day);
+            const dayOfWeek = parsedDay.getUTCDay();
+            let isOpen = false;
+            if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                const {from, to} = weekdays;
+                const fromTime = new Date(`${parsedTime.toISOString().split('T')[0]}T${from}Z`);
+                const toTime = new Date(`${parsedTime.toISOString().split('T')[0]}T${to}Z`);
+                isOpen = parsedTime >= fromTime && parsedTime <= toTime;
+            } else if (dayOfWeek === 0 || dayOfWeek === 6) {
+                const {from, to} = weekends;
+                const fromTime = new Date(`${parsedTime.toISOString().split('T')[0]}T${from}Z`);
+                const toTime = new Date(`${parsedTime.toISOString().split('T')[0]}T${to}Z`);
+                isOpen = parsedTime >= fromTime && parsedTime <= toTime;
+            }
+            if (!isOpen) {
+                return res.status(400).json({message: 'В это время магазин не работает'});
+            }
             const newOrders = new Orders({
                 goods_ids: goodsIds,
                 user_id: user_id,
@@ -62,6 +83,7 @@ class OrdersController {
                 delivery_address: `${city},+ ${address}`,
                 name: name,
                 delivery_day: day,
+                delivery_price: 0,
                 delivery_time: time,
                 phone_number: phone_number,
                 full_amount: totalPrice,

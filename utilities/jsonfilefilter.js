@@ -16,25 +16,23 @@ var r1 = readline.createInterface(readerStream, outstream);
 var lineCount = 0;
 
 r1.on('line', function (line) {
-    // increment line count
     lineCount++;
     data = JSON.parse(line);
-
     saveRecord(data);
 })
 
 const res = [];
 let id = 1;
 function saveRecord(data) {
-    data.forEach(({CityName, CitySize, FullName, Longitude, Latitude}) => {
+    data.forEach(({CityName, CitySize, FullName, Longitude, Latitude, RegionName}) => {
         res.push({
-            id,
             city_name: CityName,
-            is_active: false,
             city_size: CitySize,
             full_name: FullName,
-            Latitude: Latitude,
-            Longitude: Longitude
+            region_name: RegionName,
+            location: {
+                coordinates: [parseFloat(Longitude), parseFloat(Latitude)]
+            }
         })
         id++
     })

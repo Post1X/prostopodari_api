@@ -6,12 +6,16 @@ const authorization = async (req, res, next) => {
     try {
         const {authorization = ''} = req.headers;
         const {originalUrl, method} = req;
+        console.log(req.path)
+        if (EXCLUDE.includes(req.path)) {
+            console.log('okokokokok')
+        }
         if (method === 'OPTIONS' || EXCLUDE.includes(req.path)) {
             next();
             return;
         }
         if (!authorization) {
-            console.log(req.path)
+            console.log('dawokdsopakdopa')
             res.status(400).json({
                 error: 'no_token',
                 description: 'Непредвиденная ошибка. Свяжитесь с администрацией.'

@@ -1,6 +1,6 @@
 import Stores from '../schemas/StoresSchema';
 import Sellers from '../schemas/SellersSchema';
-
+import Goods from '../schemas/GoodsSchema';
 class StoresController {
     static CreateStore = async (req, res, next) => {
         try {
@@ -11,7 +11,7 @@ class StoresController {
             }
             const {user_id} = req;
             const {lon, lat} = req.query;
-            const {address, title, about_store, city} = req.body;
+            const {address, title, about_store, city, distPrice, weekdays, weekends} = req.body;
             if (req.files.length !== 0) {
                 const logoFile = req.files.find(file => file.fieldname === 'logo');
                 const parts = logoFile.path.split('public');
@@ -27,7 +27,10 @@ class StoresController {
                     is_disabled: false,
                     lon: lon,
                     lat: lat,
-                    city: city
+                    city: city,
+                    distance: distPrice,
+                    weekdays: weekdays,
+                    weekends: weekends
                 });
                 await newStores.save();
             }
@@ -123,7 +126,7 @@ class StoresController {
                 photoArray.push(result)
             }
             const {store_id} = req.query;
-            const {address, title, about_store, city} = req.body;
+            const {address, title, about_store, city, distPrice} = req.body;
             const storeCheck = await Stores.findOne({
                 _id: store_id
             });
@@ -139,7 +142,8 @@ class StoresController {
                         address: address,
                         title: title,
                         about_store: about_store,
-                        logo_url: photoArray
+                        logo_url: photoArray[0],
+                        distance: distPrice
                     });
             if (photoArray.length === 0) {
                 await Stores.findByIdAndUpdate({
@@ -150,6 +154,7 @@ class StoresController {
                         address: address,
                         title: title,
                         about_store: about_store,
+                        distance: distPrice
                     });
             }
             const store = await Stores.find({

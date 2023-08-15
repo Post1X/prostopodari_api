@@ -48,6 +48,15 @@ const StoresSchema = new Schema({
     },
     city: {
         type: Schema.Types.String
+    },
+    distance: {
+        type: Schema.Types.Decimal128
+    },
+    weekdays: {
+        type: Schema.Types.String
+    },
+    weekend: {
+        type: Schema.Types.String
     }
 });
 

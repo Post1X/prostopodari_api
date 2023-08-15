@@ -5,6 +5,9 @@ import Sellers from '../schemas/SellersSchema';
 import Chats from '../schemas/ChatsSchema';
 import Buyers from '../schemas/BuyersSchema';
 import UserChats from '../schemas/UserChats';
+import fs from 'fs';
+import ss from "socket.io-stream"
+import * as path from 'path';
 
 const app = require('../app');
 const debug = require('debug')('server:server');
@@ -36,6 +39,7 @@ app.set('io', io);
 
 
 
+const testSpace = io.of('/test');
 const chatSpace = io.of('/chat/messages');
 const userChatSpace = io.of('/chat/user')
 
@@ -55,23 +59,28 @@ userChatSpace.on('connection', async (socket) => {
         }
         await getMessagesAndSendToUsers(socket);
         socket.on('isRead', async (lastMessage) => {
-            if (socket.result === 'seller') {
-                await Messages.updateMany(
-                    {
-                        _id: {$lte: lastMessage},
-                        role: 'seller'
-                    },
-                    {$set: {isRead: true}}
-                );
-            }
-            if (socket.result === 'user') {
-                await Messages.updateMany(
-                    {
-                        _id: {$lte: lastMessage},
-                        role: 'user'
-                    },
-                    {$set: {isRead: true}}
-                );
+            try {
+                if (socket.result === 'seller') {
+                    await Messages.updateMany(
+                        {
+                            _id: {$lte: lastMessage},
+                            role: 'seller'
+                        },
+                        {$set: {isRead: true}}
+                    );
+                }
+                if (socket.result === 'user') {
+                    await Messages.updateMany(
+                        {
+                            _id: {$lte: lastMessage},
+                            role: 'user'
+                        },
+                        {$set: {isRead: true}}
+                    );
+                }
+            } catch (e) {
+                console.error('Ошибка в обработчике событий сокета:', e);
+                socket.disconnect(true);
             }
         })
         socket.on('sendMessage', async (message) => {
@@ -208,24 +217,29 @@ chatSpace.on('connection', async (socket) => {
         socket.isAdmin = decoded.isAdmin || false;
         await getMessagesAndSendToClient(socket);
         socket.on('isRead', async (lastMessage) => {
-            console.log(lastMessage, 'dwada')
-            if (socket.result === 'seller') {
-                await Messages.updateMany(
-                    {
-                        _id: {$lte: lastMessage},
-                        role: 'admin'
-                    },
-                    {$set: {isRead: true}}
-                );
-            }
-            if (socket.result === 'admin') {
-                await Messages.updateMany(
-                    {
-                        _id: {$lte: lastMessage},
-                        role: 'seller'
-                    },
-                    {$set: {isRead: true}}
-                );
+            try {
+                console.log(lastMessage)
+                if (socket.result === 'seller') {
+                    await Messages.updateMany(
+                        {
+                            _id: {$lte: lastMessage},
+                            role: 'admin'
+                        },
+                        {$set: {isRead: true}}
+                    );
+                }
+                if (socket.result === 'admin') {
+                    await Messages.updateMany(
+                        {
+                            _id: {$lte: lastMessage},
+                            role: 'seller'
+                        },
+                        {$set: {isRead: true}}
+                    );
+                }
+            }catch (e) {
+                console.error('Ошибка в обработчике событий сокета:', e);
+                socket.emit('Ошибка:', e);
             }
         })
         socket.on('sendMessage', async (message) => {
@@ -307,6 +321,13 @@ async function processSendMessage(socket, message) {
     }
     await newMessages.save();
 }
+
+testSpace.on('connection', (socket) => {
+    ss(socket).on('profile-image', (stream, data) => {
+        let filename = path.basename(data.name);
+        stream.pipe(fs.createWriteStream(filename));
+    })
+})
 
 server.listen(port);
 server.on('error', onError);
