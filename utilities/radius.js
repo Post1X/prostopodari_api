@@ -1,30 +1,33 @@
-export async function checkIfInside(spotCoordinates) {
-
-    let newRadius = distanceInKmBetweenEarthCoordinates(spotCoordinates[0], spotCoordinates[1], center.lat, center.lng);
-    console.log(newRadius)
-
+export async function checkIfInside(lat1, lon1, lon2, lat2) {
+    const radius = 2000;
+    console.log(lon1, lat1, 'first')
+    console.log(lon2, lat2, 'sec')
+    let newRadius = calcCrow(lat1, lon1, lon2, lat2);
+    console.log(newRadius, 'newRad')
     if (newRadius < radius) {
-        console.log('inside')
+        return 'inside'
     } else if (newRadius > radius) {
-        console.log('outside')
+        return 'outside'
     } else {
-        console.log('on the circle')
+        return 'on the circle'
     }
-
 }
 
-export function distanceInKmBetweenEarthCoordinates(lat1, lon1, lat2, lon2) {
-    var earthRadiusKm = 6371;
-    var dLat = degreesToRadians(lat2 - lat1);
-    var dLon = degreesToRadians(lon2 - lon1);
-    lat1 = degreesToRadians(lat1);
-    lat2 = degreesToRadians(lat2);
-    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return earthRadiusKm * c;
-}
+function calcCrow(lat1, lon1, lat2, lon2)
+{
+    var R = 6371; // km
+    var dLat = toRad(lat2-lat1);
+    var dLon = toRad(lon2-lon1);
+    var lat1 = toRad(lat1);
+    var lat2 = toRad(lat2);
 
-function degreesToRadians(degrees) {
-    return degrees * Math.PI / 180;
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    var d = R * c;
+    return d;
+}
+function toRad(Value)
+{
+    return Value * Math.PI / 180;
 }

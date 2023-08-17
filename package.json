@@ -17,11 +17,15 @@
     "esm": "^3.2.25",
     "express": "~4.16.1",
     "firebase": "^9.23.0",
+    "geo-distance": "^0.2.0",
     "geolib": "^3.3.4",
+    "google-distance-matrix": "^1.1.1",
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
     "joi": "^17.9.2",
     "jsonwebtoken": "^9.0.0",
+    "leaflet": "^1.9.4",
+    "leaflet-geometryutil": "^0.10.2",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "mongodb": "^5.5.0",
@@ -36,7 +40,8 @@
     "socket.io-auth": "^1.0.0",
     "socket.io-stream": "^0.9.1",
     "uuidv4": "^6.2.13",
-    "yarn": "^1.22.19"
+    "yarn": "^1.22.19",
+    "ymaps": "^0.2.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"

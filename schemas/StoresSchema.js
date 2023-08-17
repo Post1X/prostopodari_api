@@ -53,10 +53,10 @@ const StoresSchema = new Schema({
         type: Schema.Types.Decimal128
     },
     weekdays: {
-        type: Schema.Types.String
+        type: Schema.Types.Mixed
     },
-    weekend: {
-        type: Schema.Types.String
+    weekends: {
+        type: Schema.Types.Mixed
     }
 });
 

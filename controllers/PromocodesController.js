@@ -133,7 +133,7 @@ class PromocodesController {
     static DeletePromocode = async (req, res, next) => {
         try {
             const {id} = req.query;
-            await Promocodes.findOneAndDelete({
+            await Promocodes.deleteOne({
                 _id: id
             })
             res.status(200).json({

@@ -1,6 +1,9 @@
 import Buyers from '../schemas/BuyersSchema';
 import JWT from 'jsonwebtoken';
 import makeCall from '../utilities/call';
+import Favorites from '../schemas/FavoritesSchema';
+// import {checkIfInside} from '../utilities/radius';
+import getDistance from '../utilities/getcordinates';
 
 class BuyersController {
     static RegBuyer = async (req, res, next) => {
@@ -41,6 +44,7 @@ class BuyersController {
             const buyer = await Buyers.findOne({
                 phone_number: phone_number
             })
+
             function generateRandomNumberString() {
                 let result = '';
                 for (let i = 0; i < 4; i++) {
@@ -49,6 +53,7 @@ class BuyersController {
                 }
                 return result;
             }
+
             const code = generateRandomNumberString();
             await makeCall(phone_number, code)
             if (!buyer) {
@@ -165,7 +170,6 @@ class BuyersController {
             const {user_id} = req;
             const {lon, lat} = req.query;
             const {address, city} = req.body;
-            console.log(`Широта: ${lat} Долгота: ${lon}`)
             await Buyers.findOneAndUpdate({
                 _id: user_id
             }, {
@@ -174,8 +178,36 @@ class BuyersController {
                 address: address,
                 city: city
             });
+            const favorites = await Favorites.find({
+                user_id: user_id
+            }).populate('store_id')
+            const promise = favorites.map(async (item) => {
+                try {
+                    const distance = JSON.parse(await getDistance(lat, lon, item.store_id.lat, item.store_id.lon))
+                    const trueDistance = distance.distances[0][1] / 1000;
+                    if (trueDistance < 20) {
+                        await Favorites.updateOne({
+                            _id: item.id
+                        }, {
+                            delivery: true
+                        })
+                    }
+                    if (trueDistance > 20) {
+                        await Favorites.updateOne({
+                            _id: item.id
+                        }, {
+                            delivery: false
+                        })
+                    }
+                } catch (e) {
+                    e.status = 401;
+                    next(e);
+                }
+            })
+            await Promise.all(promise)
+            // console.log(await checkIfInside(lon, lat))
             res.status(200).json({
-                message: 'success'
+                message: 'ok'
             })
         } catch (e) {
             e.status = 401;

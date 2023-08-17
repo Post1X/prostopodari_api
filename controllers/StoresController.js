@@ -12,6 +12,8 @@ class StoresController {
             const {user_id} = req;
             const {lon, lat} = req.query;
             const {address, title, about_store, city, distPrice, weekdays, weekends} = req.body;
+            console.log(weekends, 'dpwoakdao')
+            console.log(weekdays, 'dwoaid')
             if (req.files.length !== 0) {
                 const logoFile = req.files.find(file => file.fieldname === 'logo');
                 const parts = logoFile.path.split('public');
@@ -125,7 +127,7 @@ class StoresController {
                 const result = parts[1].substring(1);
                 photoArray.push(result)
             }
-            const {store_id} = req.query;
+            const {store_id, lon, lat} = req.query;
             const {address, title, about_store, city, distPrice} = req.body;
             const storeCheck = await Stores.findOne({
                 _id: store_id

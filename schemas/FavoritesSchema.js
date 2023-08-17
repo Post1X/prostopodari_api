@@ -14,6 +14,9 @@ const FavoritesSchema = new Schema({
     store_id: {
         type: Schema.Types.ObjectId,
         ref: 'Stores'
+    },
+    delivery: {
+        type: Schema.Types.Boolean
     }
 })
 

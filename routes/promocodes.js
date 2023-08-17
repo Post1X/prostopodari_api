@@ -7,5 +7,5 @@ router.get('/', PromocodesController.GetPromocodes);
 router.post('/admin', PromocodesController.CreatePromocodeAdmin)
 router.post('/', PromocodesController.CreatePromocode);
 router.put('/', PromocodesController.UpdatePromocode);
-router.delete('/:id', PromocodesController.DeletePromocode);
+router.delete('/', PromocodesController.DeletePromocode);
 export default router;

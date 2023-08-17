@@ -1,6 +1,7 @@
 import Goods from '../schemas/GoodsSchema';
 import mongoose from 'mongoose';
 import Buyers from '../schemas/BuyersSchema';
+import Favorites from '../schemas/FavoritesSchema';
 
 // git
 
@@ -132,11 +133,28 @@ class GoodsController {
             const promotedGoods = goods.filter(good => good.is_promoted === true);
             const regularGoods = goods.filter(good => good.is_promoted !== true);
             const sortedGoods = [...promotedGoods, ...regularGoods];
-            const modifiedGoods = sortedGoods.map((item) => {
-                const number = item.price.toString();
-                const numericPrice = parseFloat(number);
-                return {...item._doc, price: numericPrice};
+            const modifiedGoodsPromise = sortedGoods.map(async (item) => {
+                try {
+                    const favoriteGood = await Favorites.findOne({
+                        user_id: user_id,
+                        good_id: item._id
+                    });
+                    if (favoriteGood) {
+                        const number = item.price.toString();
+                        const numericPrice = parseFloat(number);
+                        return {...item.toObject(), price: numericPrice, is_favorite: true};
+                    }
+                    if (!favoriteGood) {
+                        const number = item.price.toString();
+                        const numericPrice = parseFloat(number);
+                        return {...item.toObject(), price: numericPrice, is_favorite: false};
+                    }
+                } catch (e) {
+                    e.status = 401;
+                    next(e);
+                }
             });
+            const modifiedGoods = await Promise.all(modifiedGoodsPromise);
             res.status(200).json(modifiedGoods);
         } catch (e) {
             e.status = 401;
@@ -146,13 +164,31 @@ class GoodsController {
     //
     static GetAllGoods = async (req, res, next) => {
         try {
+            const {user_id} = req;
             const goods = await Goods.find({}).sort({is_promoted: -1})
                 .populate('category_id');
-            const modifiedGoods = goods.map((good) => {
-                const price = good.price.toString();
-                const numericPrice = parseFloat(price);
-                return {...good.toObject(), price: numericPrice};
-            });
+            const modifiedGoodsPromise = goods.map(async (good) => {
+                try {
+                    const favoriteGood = await Favorites.findOne({
+                        user_id: user_id,
+                        good_id: good._id
+                    });
+                    if (favoriteGood) {
+                        const price = good.price.toString();
+                        const numericPrice = parseFloat(price);
+                        return {...good.toObject(), price: numericPrice, is_favorite: true};
+                    }
+                    if (!favoriteGood) {
+                        const price = good.price.toString();
+                        const numericPrice = parseFloat(price);
+                        return {...good.toObject(), price: numericPrice, is_favorite: false};
+                    }
+                } catch (e) {
+                    e.status = 401;
+                    next(e);
+                }
+            })
+            const modifiedGoods = await Promise.all(modifiedGoodsPromise)
             res.status(200).json(modifiedGoods);
         } catch (e) {
             e.status = 401;
@@ -163,10 +199,29 @@ class GoodsController {
     static GetOneGood = async (req, res, next) => {
         try {
             const {good_id} = req.query;
-            const good = await Goods.findOne({
-                _id: good_id
+            const {user_id} = req;
+            const favoriteGood = await Favorites.findOne({
+                user_id: user_id,
+                good_id: good_id
             });
-            res.status(200).json(good)
+            if (!favoriteGood) {
+                const good = await Goods.findOne({
+                    _id: good_id
+                });
+                res.status(200).json({
+                    good,
+                    is_favorite: false
+                })
+            }
+            if (favoriteGood) {
+                const good = await Goods.findOne({
+                    _id: good_id
+                });
+                res.status(200).json({
+                    good,
+                    is_favorite: true
+                })
+            }
         } catch (e) {
             e.status = 401;
             next(e);
@@ -306,6 +361,7 @@ class GoodsController {
     }
     static FilterGoods = async (req, res, next) => {
         try {
+            const {user_id} = req;
             const {stock, sort, category, subcategory, search} = req.query;
             let filter = {};
             if (category) {
@@ -355,11 +411,28 @@ class GoodsController {
             const promotedGoods = goods.filter(good => good.is_promoted === true);
             const regularGoods = goods.filter(good => good.is_promoted !== true);
             const sortedGoods = [...promotedGoods, ...regularGoods];
-            const modifiedGoods = sortedGoods.map((item) => {
-                const number = item.price.toString();
-                const numericPrice = parseFloat(number);
-                return {...item._doc, price: numericPrice};
+            const modifiedGoodsPromise = sortedGoods.map(async (item) => {
+                try {
+                    const favoriteGood = await Favorites.findOne({
+                        user_id: user_id,
+                        good_id: item._id
+                    });
+                    if (favoriteGood) {
+                        const number = item.price.toString();
+                        const numericPrice = parseFloat(number);
+                        return {...item.toObject(), price: numericPrice, is_favorite: true};
+                    }
+                    if (!favoriteGood) {
+                        const number = item.price.toString();
+                        const numericPrice = parseFloat(number);
+                        return {...item.toObject(), price: numericPrice, is_favorite: false};
+                    }
+                } catch (e) {
+                    e.status = 401;
+                    next(e);
+                }
             });
+            const modifiedGoods = await Promise.all(modifiedGoodsPromise);
             res.status(200).json(modifiedGoods);
         } catch (e) {
             e.status = 401;
