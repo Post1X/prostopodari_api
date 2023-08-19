@@ -4,6 +4,7 @@ import makeCall from '../utilities/call';
 import Favorites from '../schemas/FavoritesSchema';
 // import {checkIfInside} from '../utilities/radius';
 import getDistance from '../utilities/getcordinates';
+import {checkIfInside} from '../utilities/radius';
 
 class BuyersController {
     static RegBuyer = async (req, res, next) => {
@@ -48,7 +49,8 @@ class BuyersController {
             function generateRandomNumberString() {
                 let result = '';
                 for (let i = 0; i < 4; i++) {
-                    const randomNumber = Math.floor(Math.random() * 10); // Генерируем случайное число от 0 до 9
+                    const randomNumber = Math.floor(Math.random() * 10);
+
                     result += randomNumber.toString();
                 }
                 return result;
@@ -183,16 +185,17 @@ class BuyersController {
             }).populate('store_id')
             const promise = favorites.map(async (item) => {
                 try {
-                    const distance = JSON.parse(await getDistance(lat, lon, item.store_id.lat, item.store_id.lon))
-                    const trueDistance = distance.distances[0][1] / 1000;
-                    if (trueDistance < 20) {
+                    const distance = JSON.parse(await checkIfInside(lat, lon, item.store_id.lat, item.store_id.lon))
+                    const trueDistance = distance / 1000;
+                    console.log(trueDistance, 'truedistance')
+                    if (distance < 20) {
                         await Favorites.updateOne({
                             _id: item.id
                         }, {
                             delivery: true
                         })
                     }
-                    if (trueDistance > 20) {
+                    if (distance > 20) {
                         await Favorites.updateOne({
                             _id: item.id
                         }, {

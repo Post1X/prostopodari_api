@@ -3566,7 +3566,7 @@ repeat-string@^1.5.2:
   resolved "https://registry.yarnpkg.com/repeat-string/-/repeat-string-1.6.1.tgz#8dcae470e1c88abc2d600fff4a776286da75e637"
   integrity sha512-PV0dzCYDNfRi1jCDbJzpW7jNNDRuCOG/jI5ctQcGKt/clZD+YcPS3yIlWuTJMmESC8aevCFmWJy5wjAFgNqN6w==
 
-request@^2.36.0:
+request@^2.36.0, request@^2.80.0:
   version "2.88.2"
   resolved "https://registry.yarnpkg.com/request/-/request-2.88.2.tgz#d73c918731cb5a87da047e207234146f664d12b3"
   integrity sha512-MsvtOrfG9ZcrOwAW+Qi+F6HbD0CWXEh9ou77uOb7FM2WPhwT7smM833PzanhJLsgXjN89Ir6V2PczXNnMpwKhw==
@@ -4333,3 +4333,10 @@ yocto-queue@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
+
+yookassa@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/yookassa/-/yookassa-0.1.1.tgz#8792a1423623ffc17f020a0567010d07bfb02e83"
+  integrity sha512-DtGUhtTfnccTMXYX8zrO5Z9CKgsGA297JW50OwWAZqP2epLac/hncPf58QIcPl6cwgM4AqV6WbwbgyzW5WNVDw==
+  dependencies:
+    request "^2.80.0"

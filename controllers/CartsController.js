@@ -11,7 +11,7 @@ class CartsController {
             const good = await Goods.findOne({_id: good_id});
 
             if (!good) {
-                return res.status(404).json({error: 'Товар не найден.'});
+                return res.status(300).json({error: 'Товар не найден.'});
             }
 
             const cartItems = await CartItem.find({buyer_id: user_id});
@@ -19,14 +19,11 @@ class CartsController {
             if (count > good.count) {
                 return res.status(300).json({error: 'Товар отсутствует на складе.'});
             }
-
             const cartItemWithDifferentStore = cartItems.find(item => item.store_id.toString() !== good.store_id.toString());
             if (cartItemWithDifferentStore) {
                 return res.status(400).json({error: 'Товары могут быть только из одного магазина.'});
             }
-
             await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
-
             const newCartItem = new CartItem({
                 good_id: mongoose.Types.ObjectId(good_id),
                 count: count,

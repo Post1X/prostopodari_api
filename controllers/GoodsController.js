@@ -165,8 +165,11 @@ class GoodsController {
     static GetAllGoods = async (req, res, next) => {
         try {
             const {user_id} = req;
-            const goods = await Goods.find({}).sort({is_promoted: -1})
-                .populate('category_id');
+            const goods = await Goods.find()
+                .sort({is_promoted: -1})
+                .populate('category_id')
+                .populate('store_id')
+            console.log(goods)
             const modifiedGoodsPromise = goods.map(async (good) => {
                 try {
                     const favoriteGood = await Favorites.findOne({
@@ -207,7 +210,8 @@ class GoodsController {
             if (!favoriteGood) {
                 const good = await Goods.findOne({
                     _id: good_id
-                });
+                })
+                    .populate('store_id')
                 res.status(200).json({
                     good,
                     is_favorite: false
@@ -216,7 +220,8 @@ class GoodsController {
             if (favoriteGood) {
                 const good = await Goods.findOne({
                     _id: good_id
-                });
+                })
+                    .populate('store_id')
                 res.status(200).json({
                     good,
                     is_favorite: true
@@ -335,7 +340,8 @@ class GoodsController {
             console.log(good_id)
             const good = await Goods.findOne({
                 _id: good_id
-            });
+            })
+                .populate('store_id')
             console.log(good.is_promoted === true)
             if (good.is_promoted === true) {
                 await Goods.findByIdAndUpdate({_id: good_id}, {
@@ -389,6 +395,7 @@ class GoodsController {
                     .sort({_id: sortDirection})
                     .populate('category_id')
                     .populate('subcategory_id')
+                    .populate('store_id')
             } else {
                 let sortOptions = {};
                 if (sort === 'priceAsc') {
