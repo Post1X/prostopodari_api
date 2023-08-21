@@ -8,7 +8,7 @@ export default async function makeCall(phoneNumber, code) {
             'recipient': phoneNumber,
             'type': 'flashcall',
             'payload': {
-                'sender': 'VKayfe',
+                'sender': 'ВКайфе',
                 'text': code
             }
         });

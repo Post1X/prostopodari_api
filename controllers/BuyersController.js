@@ -3,7 +3,6 @@ import JWT from 'jsonwebtoken';
 import makeCall from '../utilities/call';
 import Favorites from '../schemas/FavoritesSchema';
 // import {checkIfInside} from '../utilities/radius';
-import getDistance from '../utilities/getcordinates';
 import {checkIfInside} from '../utilities/radius';
 
 class BuyersController {
@@ -21,7 +20,8 @@ class BuyersController {
             }
             if (confCode === buyer.code) {
                 await Buyers.findOneAndUpdate({
-                    phone_number: phone_number,
+                    phone_number: phone_number
+                }, {
                     code: null
                 })
                 const token = JWT.sign({ //

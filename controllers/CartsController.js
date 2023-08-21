@@ -73,7 +73,52 @@ class CartsController {
             e.status = 401;
             next(e);
         }
-    };
+    }
+    //
+    static DeleteCartItem = async (req, res, next) => {
+        try {
+            const {count, good_id, deleteAll} = req.body;
+            const {user_id} = req;
+            const cartGood = CartItem.find({
+                good_id: good_id,
+                buyer_id: user_id
+            })
+            if (count > cartGood.count) {
+                await CartItem.findOneAndUpdate({
+                    good_id: good_id,
+                    buyer_id: user_id
+                }, {
+                    count: (cartGood.count - count) - (cartGood.count - count)
+                })
+                res.status(200).json({
+                    error: 'Товаров больше не осталось'
+                })
+            }
+            if (count <= cartGood.count) {
+                await CartItem.findOneAndUpdate({
+                    good_id: good_id,
+                    buyer_id: user_id
+                }, {
+                    count: cartGood.count - count
+                })
+                res.status(200).json({
+                    message: 'success'
+                })
+            }
+            if (deleteAll) {
+                await CartItem.findOneAndDelete({
+                    good_id: good_id,
+                    buyer_id: user_id
+                })
+                res.status(200).json({
+                    message: 'success'
+                })
+            }
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
 
 }
 

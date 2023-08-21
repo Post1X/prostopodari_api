@@ -28,6 +28,9 @@ const OrdersSchema = new Schema({
     delivery_info: {
         type: Schema.Types.String,
     },
+    delivery_price: {
+        type: Schema.Types.Decimal128
+    },
     full_amount: {
         type: Schema.Types.Decimal128,
     },
