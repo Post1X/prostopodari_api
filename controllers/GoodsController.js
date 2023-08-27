@@ -2,6 +2,7 @@ import Goods from '../schemas/GoodsSchema';
 import mongoose from 'mongoose';
 import Buyers from '../schemas/BuyersSchema';
 import Favorites from '../schemas/FavoritesSchema';
+import FavoriteStore from '../schemas/FavoriteStoresSchema';
 
 // git
 
@@ -139,15 +140,28 @@ class GoodsController {
                         user_id: user_id,
                         good_id: item._id
                     });
+                    const favoriteStore = await FavoriteStore.findOne({
+                        store_id: good.store_id._id
+                    })
                     if (favoriteGood) {
-                        const number = item.price.toString();
-                        const numericPrice = parseFloat(number);
-                        return {...item.toObject(), price: numericPrice, is_favorite: true};
+                        const price = good.price.toString();
+                        const numericPrice = parseFloat(price);
+                        return {
+                            ...good.toObject(), price: numericPrice, is_favorite: true, store_id: {
+                                ...good.store_id.toObject(),
+                                is_favoritestore: !!favoriteStore
+                            }
+                        };
                     }
                     if (!favoriteGood) {
-                        const number = item.price.toString();
-                        const numericPrice = parseFloat(number);
-                        return {...item.toObject(), price: numericPrice, is_favorite: false};
+                        const price = good.price.toString();
+                        const numericPrice = parseFloat(price);
+                        return {
+                            ...good.toObject(), price: numericPrice, is_favorite: true, store_id: {
+                                ...good.store_id.toObject(),
+                                is_favoritestore: !!favoriteStore
+                            }
+                        };
                     }
                 } catch (e) {
                     e.status = 401;
@@ -169,22 +183,35 @@ class GoodsController {
                 .sort({is_promoted: -1})
                 .populate('category_id')
                 .populate('store_id')
-            console.log(goods)
             const modifiedGoodsPromise = goods.map(async (good) => {
                 try {
                     const favoriteGood = await Favorites.findOne({
                         user_id: user_id,
                         good_id: good._id
                     });
+                    const favoriteStore = await FavoriteStore.findOne({
+                        store_id: good.store_id._id
+                    })
+                    console.log(favoriteStore, '20-130213921039-')
                     if (favoriteGood) {
                         const price = good.price.toString();
                         const numericPrice = parseFloat(price);
-                        return {...good.toObject(), price: numericPrice, is_favorite: true};
+                        return {
+                            ...good.toObject(), price: numericPrice, is_favorite: true, store_id: {
+                                ...good.store_id.toObject(),
+                                is_favoritestore: !!favoriteStore
+                            }
+                        };
                     }
                     if (!favoriteGood) {
                         const price = good.price.toString();
                         const numericPrice = parseFloat(price);
-                        return {...good.toObject(), price: numericPrice, is_favorite: false};
+                        return {
+                            ...good.toObject(), price: numericPrice, is_favorite: true, store_id: {
+                                ...good.store_id.toObject(),
+                                is_favoritestore: !!favoriteStore
+                            }
+                        };
                     }
                 } catch (e) {
                     e.status = 401;
@@ -201,32 +228,32 @@ class GoodsController {
     //
     static GetOneGood = async (req, res, next) => {
         try {
-            const {good_id} = req.query;
-            const {user_id} = req;
+            const { good_id } = req.query;
+            const { user_id } = req;
+
+            const good = await Goods.findOne({
+                _id: good_id
+            }).populate('store_id');
+
             const favoriteGood = await Favorites.findOne({
                 user_id: user_id,
                 good_id: good_id
             });
-            if (!favoriteGood) {
-                const good = await Goods.findOne({
-                    _id: good_id
-                })
-                    .populate('store_id')
-                res.status(200).json({
-                    good,
-                    is_favorite: false
-                })
-            }
-            if (favoriteGood) {
-                const good = await Goods.findOne({
-                    _id: good_id
-                })
-                    .populate('store_id')
-                res.status(200).json({
-                    good,
-                    is_favorite: true
-                })
-            }
+
+            const favoriteStore = await FavoriteStore.findOne({
+                store_id: good.store_id._id,
+                user_id: user_id
+            });
+
+            const modifiedGood = {
+                ...good.toObject(),
+                is_favorite: favoriteGood ? true : false,
+                store_id: {
+                    ...good.store_id.toObject(),
+                    is_favorite_store: favoriteStore ? true : false
+                }
+            };
+            res.status(200).json({good: modifiedGood})
         } catch (e) {
             e.status = 401;
             next(e);
@@ -424,15 +451,28 @@ class GoodsController {
                         user_id: user_id,
                         good_id: item._id
                     });
+                    const favoriteStore = await FavoriteStore.findOne({
+                        store_id: good.store_id._id
+                    })
                     if (favoriteGood) {
-                        const number = item.price.toString();
-                        const numericPrice = parseFloat(number);
-                        return {...item.toObject(), price: numericPrice, is_favorite: true};
+                        const price = good.price.toString();
+                        const numericPrice = parseFloat(price);
+                        return {
+                            ...good.toObject(), price: numericPrice, is_favorite: true, store_id: {
+                                ...good.store_id.toObject(),
+                                is_favoritestore: !!favoriteStore
+                            }
+                        };
                     }
                     if (!favoriteGood) {
-                        const number = item.price.toString();
-                        const numericPrice = parseFloat(number);
-                        return {...item.toObject(), price: numericPrice, is_favorite: false};
+                        const price = good.price.toString();
+                        const numericPrice = parseFloat(price);
+                        return {
+                            ...good.toObject(), price: numericPrice, is_favorite: true, store_id: {
+                                ...good.store_id.toObject(),
+                                is_favoritestore: !!favoriteStore
+                            }
+                        };
                     }
                 } catch (e) {
                     e.status = 401;

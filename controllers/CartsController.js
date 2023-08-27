@@ -9,11 +9,9 @@ class CartsController {
             const {user_id} = req;
             const {good_id, count} = req.body;
             const good = await Goods.findOne({_id: good_id});
-
             if (!good) {
                 return res.status(300).json({error: 'Товар не найден.'});
             }
-
             const cartItems = await CartItem.find({buyer_id: user_id});
 
             if (count > good.count) {
@@ -25,19 +23,13 @@ class CartsController {
             }
             await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
             const newCartItem = new CartItem({
-                good_id: mongoose.Types.ObjectId(good_id),
-                count: count,
-                store_id: good.store_id,
-                buyer_id: user_id
+                good_id: mongoose.Types.ObjectId(good_id), count: count, store_id: good.store_id, buyer_id: user_id
             });
             await newCartItem.save();
-
             const newCart = new Cart({
-                items: [newCartItem],
-                user: user_id
+                items: [newCartItem], user: user_id
             });
             await newCart.save();
-
             res.status(200).json({message: 'success'});
         } catch (e) {
             e.status = 401;
@@ -56,10 +48,8 @@ class CartsController {
                 const price = good.items[0].good_id.price;
                 const numericPrice = parseFloat(price);
                 return {
-                    ...good.toObject(),
-                    items: [{
-                        ...good.items[0].toObject(),
-                        good_id: {...good.items[0].good_id.toObject(), price: numericPrice}
+                    ...good.toObject(), items: [{
+                        ...good.items[0].toObject(), good_id: {...good.items[0].good_id.toObject(), price: numericPrice}
                     }]
                 };
             });
@@ -77,49 +67,87 @@ class CartsController {
     //
     static DeleteCartItem = async (req, res, next) => {
         try {
-            const {count, good_id, deleteAll} = req.body;
-            const {user_id} = req;
-            const cartGood = CartItem.find({
-                good_id: good_id,
-                buyer_id: user_id
-            })
-            if (count > cartGood.count) {
-                await CartItem.findOneAndUpdate({
-                    good_id: good_id,
-                    buyer_id: user_id
-                }, {
-                    count: (cartGood.count - count) - (cartGood.count - count)
-                })
-                res.status(200).json({
+            const { count, good_id, deleteAll, cartId } = req.body;
+            const { user_id } = req;
+            const cartGood = await Cart.findOne({
+                _id: cartId
+            });
+            const good = await Goods.findOne({
+                _id: good_id
+            });
+            if (count >= cartGood.items[0].count) {
+                await Cart.findOneAndUpdate(
+                    { _id: cartId, 'items.good_id': good_id },
+                    {
+                        $set: {
+                            'items.$.count': 0
+                        }
+                    }
+                );
+                res.status(400).json({
                     error: 'Товаров больше не осталось'
-                })
-            }
-            if (count <= cartGood.count) {
-                await CartItem.findOneAndUpdate({
-                    good_id: good_id,
-                    buyer_id: user_id
-                }, {
-                    count: cartGood.count - count
-                })
+                });
+            } else if (count <= cartGood.items[0].count) {
+                await Cart.findOneAndUpdate(
+                    { _id: cartId, 'items.good_id': good_id },
+                    {
+                        $set: {
+                            'items.$.count': cartGood.items[0].count - count
+                        }
+                    }
+                );
+                await Goods.findOneAndUpdate(
+                    { _id: good_id },
+                    { $inc: { count: count } }
+                );
                 res.status(200).json({
                     message: 'success'
-                })
-            }
-            if (deleteAll) {
-                await CartItem.findOneAndDelete({
-                    good_id: good_id,
-                    buyer_id: user_id
-                })
+                });
+            } else if (deleteAll) {
+                await Cart.findOneAndDelete({
+                    _id: cartId
+                });
                 res.status(200).json({
                     message: 'success'
-                })
+                });
             }
+        } catch (e) {
+            e.status = 500;
+            next(e);
+        }
+    }
+
+
+    //
+    static AddToCart = async (req, res, next) => {
+        try {
+            const {good_id, count, cartId} = req.body;
+            const {user_id} = req;
+            const cartGood = await Cart.findOne({
+                _id: cartId
+            })
+            const good = await Goods.findOne({
+                _id: good_id
+            })
+            console.log(good.count)
+            if (count > good.count) {
+                return res.status(300).json({error: 'Товар отсутствует на складе.'});
+            }
+            console.log(Number(cartGood.items[0].count) + Number(count, '3123213213'))
+            await Cart.findOneAndUpdate({
+                _id: cartId, buyer_id: user_id
+            }, {
+                $set: {'items.0.count': Number(cartGood.items[0].count) + Number(count)}
+            });
+            await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
+            res.status(200).json({
+                message: 'success'
+            })
         } catch (e) {
             e.status = 401;
             next(e);
         }
     }
-
 }
 
 export default CartsController;

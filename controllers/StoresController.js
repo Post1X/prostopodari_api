@@ -1,6 +1,8 @@
 import Stores from '../schemas/StoresSchema';
 import Sellers from '../schemas/SellersSchema';
 import Goods from '../schemas/GoodsSchema';
+import Reviews from '../schemas/ReviewsSchema';
+
 class StoresController {
     static CreateStore = async (req, res, next) => {
         try {
@@ -273,7 +275,75 @@ class StoresController {
             e.status = 401;
             next(e);
         }
-    };
+    }
+    //
+    static CreateReview = async (req, res, next) => {
+        try {
+            const {store_id} = req.query;
+            const {user_name, text} = req.body;
+            const newReview = new Reviews({
+                store_id: store_id,
+                user_name: user_name,
+                text: text
+            })
+            await newReview.save();
+            res.status(200).json({
+                message: 'success'
+            })
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static GetReviews = async (req, res, next) => {
+        try {
+            const {store_id} = req.query;
+            const reviews = await Reviews.find({
+                store_id: store_id
+            });
+            res.status(200).json(
+                reviews
+            )
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static EditReview = async (req, res, next) => {
+        try {
+            const {review_id} = req.query;
+            const {text, user_name} = req.body;
+            await Reviews.findOneAndUpdate({
+                _id: review_id
+            }, {
+                text: text,
+                user_name: user_name
+            })
+            res.status(200).json({
+                message: 'success'
+            })
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static DeleteReview = async (req, res, next) => {
+        try {
+            const {review_id} = req.query;
+            await Reviews.deleteOne({
+                _id: review_id
+            })
+            res.status(200).json({
+                message: 'success'
+            })
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
 }
 
 export default StoresController;

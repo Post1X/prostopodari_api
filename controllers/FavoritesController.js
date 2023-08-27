@@ -1,4 +1,5 @@
 import Favorites from '../schemas/FavoritesSchema';
+import FavoriteStore from '../schemas/FavoriteStoresSchema';
 
 //
 class FavoritesController {
@@ -36,7 +37,7 @@ class FavoritesController {
         try {
             const {store_id} = req.query;
             const {user_id} = req;
-            const favStore = await Favorites.findOne({
+            const favStore = await FavoriteStore.findOne({
                 user_id: user_id,
                 store_id: store_id
             })
@@ -46,12 +47,15 @@ class FavoritesController {
                 })
             }
             if (store_id) {
-                const newFavorites = new Favorites({
+                const newFavorites = new FavoriteStore({
                     user_id: user_id,
                     store_id: store_id
                 })
                 await newFavorites.save();
             }
+            res.status(200).json({
+                message: 'success'
+            })
         } catch (e) {
             e.status = 401;
             next(e);
@@ -76,9 +80,8 @@ class FavoritesController {
     static GetFavoriteStores = async (req, res, next) => {
         try {
             const {user_id} = req;
-            const favorite = await Favorites.find(
+            const favorite = await FavoriteStore.find(
                 {user_id: user_id},
-                {user_id: 1, store_id: 1, _id: 0}
             )
                 .populate('store_id');
             res.status(200).json(favorite);
@@ -97,6 +100,28 @@ class FavoritesController {
                 user_id: user_id,
                 good_id: good_id
             });
+            res.status(200).json({
+                message: 'success'
+            })
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static DeleteFavoriteStore = async (req, res, next) => {
+        try {
+            const {store_id} = req.query;
+            const {user_id} = req;
+            const store = await FavoriteStore.findOne({
+                user_id: user_id,
+                store_id: store_id
+            })
+            console.log(store)
+            await FavoriteStore.findOneAndDelete({
+                user_id: user_id,
+                store_id: store_id
+            })
             res.status(200).json({
                 message: 'success'
             })
