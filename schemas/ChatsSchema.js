@@ -23,6 +23,12 @@ const ChatsSchema = new Schema({
     },
     priority: {
         type: Schema.Types.String
+    },
+    date: {
+        type: Schema.Types.Date
+    },
+    time: {
+        type: Schema.Types.String
     }
 });
 

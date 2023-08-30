@@ -18,7 +18,7 @@ class PaymentsController {
                     type: 'redirect',
                     return_url: 'https://www.example.com/return_url'
                 },
-                description: 'Заказ №1'
+                description: `Пользователь: ${user_id}`
             };
 
             fetch(url, {

@@ -5,7 +5,7 @@ import PaymentsController from '../controllers/PaymentsController';
 const router = express.Router();
 
 router.post('/', OrdersController.CreateOrder);
-router.post('/test', PaymentsController.Test);
+router.post('/payment', PaymentsController.Test);
 router.get('/seller', OrdersController.GetOrderSeller);
 router.get('/buyer', OrdersController.GetOrdersUser);
 router.post('/update-status', OrdersController.ChangeStatus);
