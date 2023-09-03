@@ -47,14 +47,15 @@ class OrdersController {
                 const price = good.items[0].good_id.price;
                 return accumulator + price;
             }, 0);
-            const promocodeGet = await Promocodes.findOne({
-                text: promocode
-            })
+            // const promocodeGet = await Promocodes.findOne({
+            //     text: promocode
+            // })
             const weekdays = storeComission.weekdays;
             const weekends = storeComission.weekends;
             const delivery_price = storeComission.distance;
-            const promocodeCommission = promocodeGet.percentage;
-            const income = (totalPrice * (promocodeCommission + 30)) / 100;
+            // const promocodeCommission = promocodeGet.percentage;
+            // const income = (totalPrice * (promocodeCommission + 30)) / 100;
+            const income = (totalPrice * 30) / 100;
             const status = '64a5e7e78d8485a11d0649ee';
             const card = '1234 5678 9123 1412';
             const objId = mongoose.Types.ObjectId(status)
@@ -82,7 +83,7 @@ class OrdersController {
                 store_id: storeId,
                 delivery_address: `${city},+ ${address}`,
                 name: name,
-                delivery_day: day,
+                delivery_date: day,
                 delivery_price: 0,
                 delivery_time: time,
                 phone_number: phone_number,
@@ -91,19 +92,19 @@ class OrdersController {
                 income: income,
                 status_id: objId,
                 commission_percentage: 30,
-                promocode: promocode,
+                // promocode: promocode,
                 comment: comment,
                 paid: false,
                 paymentCard: card,
-                promocodeComission: promocodeCommission,
+                // promocodeComission: promocodeCommission,
             });
             await newOrders.save();
             //
-            if (promocodeGet.priority === 'user') {
-                await Promocodes.findOneAndDelete({
-                    text: promocode
-                })
-            }
+            // if (promocodeGet.priority === 'user') {
+            //     await Promocodes.findOneAndDelete({
+            //         text: promocode
+            //     })
+            // }
             //
             res.status(200).json({
                 message: 'success'
@@ -153,7 +154,8 @@ class OrdersController {
             });
             const orders = await Orders.find()
                 .populate('store_id')
-                .populate('goods_ids');
+                .populate('goods_ids')
+                .populate('status_id')
             const aaa = [];
             orders.forEach(function (element) {
                 if (
@@ -235,7 +237,8 @@ class OrdersController {
             const {order_id} = req.query;
             const order = await Orders.findOne({
                 _id: order_id
-            }).populate({
+            })
+                .populate({
                 path: 'store_id',
             })
                 .populate({

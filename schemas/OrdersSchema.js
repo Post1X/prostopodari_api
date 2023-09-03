@@ -17,7 +17,7 @@ const OrdersSchema = new Schema({
         ref: 'Buyers'
     },
     delivery_date: {
-        type: Schema.Types.Date
+        type: Schema.Types.String
     },
     delivery_time: {
         type: Schema.Types.String
@@ -68,6 +68,12 @@ const OrdersSchema = new Schema({
     },
     comission: {
         type: Schema.Types.Number
+    },
+    phone_number: {
+        type: Schema.Types.String
+    },
+    name: {
+        type: Schema.Types.String
     }
 })
 

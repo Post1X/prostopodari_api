@@ -91,7 +91,6 @@ class GoodsController {
                 filter.subcategory_id = {$in: subCategoryObjectIds};
             }
             if (store_id) {
-                console.log('aaaa')
                 const storeId = mongoose.Types.ObjectId(store_id)
                 console.log(storeId)
                 filter.store_id = {$in: storeId}
@@ -134,11 +133,11 @@ class GoodsController {
             const promotedGoods = goods.filter(good => good.is_promoted === true);
             const regularGoods = goods.filter(good => good.is_promoted !== true);
             const sortedGoods = [...promotedGoods, ...regularGoods];
-            const modifiedGoodsPromise = sortedGoods.map(async (item) => {
+            const modifiedGoodsPromise = sortedGoods.map(async (good) => {
                 try {
                     const favoriteGood = await Favorites.findOne({
                         user_id: user_id,
-                        good_id: item._id
+                        good_id: good._id
                     });
                     const favoriteStore = await FavoriteStore.findOne({
                         store_id: good.store_id._id
@@ -157,7 +156,7 @@ class GoodsController {
                         const price = good.price.toString();
                         const numericPrice = parseFloat(price);
                         return {
-                            ...good.toObject(), price: numericPrice, is_favorite: true, store_id: {
+                            ...good.toObject(), price: numericPrice, is_favorite: false, store_id: {
                                 ...good.store_id.toObject(),
                                 is_favoritestore: !!favoriteStore
                             }
@@ -207,7 +206,7 @@ class GoodsController {
                         const price = good.price.toString();
                         const numericPrice = parseFloat(price);
                         return {
-                            ...good.toObject(), price: numericPrice, is_favorite: true, store_id: {
+                            ...good.toObject(), price: numericPrice, is_favorite: false, store_id: {
                                 ...good.store_id.toObject(),
                                 is_favoritestore: !!favoriteStore
                             }
@@ -440,16 +439,16 @@ class GoodsController {
                     .sort(sortOptions)
                     .populate('category_id')
                     .populate('subcategory_id')
+                    .populate('store_id')
             }
-
             const promotedGoods = goods.filter(good => good.is_promoted === true);
             const regularGoods = goods.filter(good => good.is_promoted !== true);
             const sortedGoods = [...promotedGoods, ...regularGoods];
-            const modifiedGoodsPromise = sortedGoods.map(async (item) => {
+            const modifiedGoodsPromise = sortedGoods.map(async (good) => {
                 try {
                     const favoriteGood = await Favorites.findOne({
                         user_id: user_id,
-                        good_id: item._id
+                        good_id: good._id
                     });
                     const favoriteStore = await FavoriteStore.findOne({
                         store_id: good.store_id._id
@@ -468,7 +467,7 @@ class GoodsController {
                         const price = good.price.toString();
                         const numericPrice = parseFloat(price);
                         return {
-                            ...good.toObject(), price: numericPrice, is_favorite: true, store_id: {
+                            ...good.toObject(), price: numericPrice, is_favorite: false, store_id: {
                                 ...good.store_id.toObject(),
                                 is_favoritestore: !!favoriteStore
                             }

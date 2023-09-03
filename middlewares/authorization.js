@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import Sellers from '../schemas/SellersSchema';
 //
 const EXCLUDE = ['/register/buyer', '/login/buyer', '/register/seller', '/login/seller', '/login/admin', '/register/buyer/call', '/register/buyer/confirm-number']
 
@@ -26,6 +27,22 @@ const authorization = async (req, res, next) => {
         }
         if (userInfo.isSeller) {
             req.isSeller = userInfo.isSeller
+            const seller = await Sellers.findOne({
+                _id: userInfo.user_id
+            });
+            if (new Date() === seller.subscription_until ?  seller.subscription_until.toISOString() : false) {
+                await Sellers.findOneAndUpdate({
+                    _id: userInfo.user_id
+                }, {
+                    subscription_until: null,
+                    subscription_count: 0,
+                    subscription_status: false
+                });
+                console.log('status changed')
+            }
+            if (new Date().toUTCString() !== seller.subscription_until) {
+                console.log('status not changed')
+            }
         }
         next();
     } catch (e) {
