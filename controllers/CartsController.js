@@ -8,6 +8,7 @@ class CartsController {
         try {
             const {user_id} = req;
             const {good_id, count} = req.body;
+            console.log(count)
             const good = await Goods.findOne({_id: good_id});
             if (!good) {
                 return res.status(300).json({error: 'Товар не найден.'});
@@ -67,8 +68,8 @@ class CartsController {
     //
     static DeleteCartItem = async (req, res, next) => {
         try {
-            const { count, good_id, deleteAll, cartId } = req.body;
-            const { user_id } = req;
+            const {count, good_id, deleteAll, cartId} = req.body;
+            const {user_id} = req;
             const cartGood = await Cart.findOne({
                 _id: cartId
             });
@@ -77,7 +78,7 @@ class CartsController {
             });
             if (count >= cartGood.items[0].count) {
                 await Cart.findOneAndUpdate(
-                    { _id: cartId, 'items.good_id': good_id },
+                    {_id: cartId, 'items.good_id': good_id},
                     {
                         $set: {
                             'items.$.count': 0
@@ -89,7 +90,7 @@ class CartsController {
                 });
             } else if (count <= cartGood.items[0].count) {
                 await Cart.findOneAndUpdate(
-                    { _id: cartId, 'items.good_id': good_id },
+                    {_id: cartId, 'items.good_id': good_id},
                     {
                         $set: {
                             'items.$.count': cartGood.items[0].count - count
@@ -97,8 +98,8 @@ class CartsController {
                     }
                 );
                 await Goods.findOneAndUpdate(
-                    { _id: good_id },
-                    { $inc: { count: count } }
+                    {_id: good_id},
+                    {$inc: {count: count}}
                 );
                 res.status(200).json({
                     message: 'success'

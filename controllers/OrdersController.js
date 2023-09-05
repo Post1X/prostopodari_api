@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import Cart from '../schemas/CartsSchema';
 import Stores from '../schemas/StoresSchema';
 import Promocodes from '../schemas/PromocodesSchema';
+import CartItem from '../schemas/CartItemsSchema';
 
 //
 class OrdersController {
@@ -21,7 +22,7 @@ class OrdersController {
                 comment
             } = req.body;
             const {user_id} = req;
-            //
+            const titleArr = [];
             const goods = await Cart.find({user: user_id})
                 .populate('user')
                 .populate('items.good_id')
@@ -29,6 +30,8 @@ class OrdersController {
             const modifiedGoods = goods.map((good) => {
                 const price = good.items[0].good_id.price;
                 const numericPrice = parseFloat(price);
+                const title = good.items[0].good_id.title;
+                titleArr.push(title);
                 return {
                     ...good.toObject(),
                     items: [{
@@ -37,7 +40,20 @@ class OrdersController {
                     }]
                 };
             });
+            const titleString = titleArr.join(' / ');
+            console.log(titleString)
             const storeId = goods[0].items[0].store_id
+            const countArr = modifiedGoods.map((good) => {
+                return {
+                    title: good.items[0].good_id.title,
+                    count: good.items[0].count
+                }
+            })
+            const countObj = countArr.reduce((obj, count, index) => {
+                obj[`item${index + 1}`] = count;
+                return obj;
+            }, {});
+            console.log(countObj)
             const goodsIds = modifiedGoods.map((good) => good.items[0].good_id._id);
             const storeComission = await Stores.findOne({
                 _id: storeId
@@ -78,10 +94,12 @@ class OrdersController {
             //     return res.status(400).json({message: 'В это время магазин не работает'});
             // }
             const newOrders = new Orders({
+                title: titleString,
                 goods_ids: goodsIds,
                 user_id: user_id,
                 store_id: storeId,
-                delivery_address: `${city},+ ${address}`,
+                delivery_address: address,
+                delivery_city: city,
                 name: name,
                 delivery_date: day,
                 delivery_price: 0,
@@ -92,6 +110,7 @@ class OrdersController {
                 income: income,
                 status_id: objId,
                 commission_percentage: 30,
+                count: countArr,
                 // promocode: promocode,
                 comment: comment,
                 paid: false,
@@ -109,6 +128,12 @@ class OrdersController {
             res.status(200).json({
                 message: 'success'
             });
+            await Cart.deleteMany({
+                user: user_id
+            });
+            await CartItem.deleteMany({
+                buyer_id: user_id
+            })
             await newOrders.save();
         } catch (e) {
             e.status = 401;
@@ -239,12 +264,13 @@ class OrdersController {
                 _id: order_id
             })
                 .populate({
-                path: 'store_id',
-            })
+                    path: 'store_id',
+                })
                 .populate({
                     path: 'goods_ids',
                 })
                 .populate({
+
                     path: 'user_id',
                 })
                 .populate({

@@ -8,6 +8,9 @@ const OrdersSchema = new Schema({
         type: Schema.Types.Array,
         ref: 'Goods'
     },
+    title: {
+        type: Schema.Types.String
+    },
     store_id: {
         type: Schema.Types.ObjectId,
         ref: 'Stores'
@@ -24,6 +27,9 @@ const OrdersSchema = new Schema({
     },
     delivery_address: {
         type: Schema.Types.String,
+    },
+    delivery_city: {
+        type: Schema.Types.String
     },
     delivery_info: {
         type: Schema.Types.String,
@@ -74,6 +80,9 @@ const OrdersSchema = new Schema({
     },
     name: {
         type: Schema.Types.String
+    },
+    count: {
+        type: Schema.Types.Array
     }
 })
 
