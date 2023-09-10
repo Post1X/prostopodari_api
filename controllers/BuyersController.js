@@ -170,13 +170,10 @@ class BuyersController {
     static ChangeGeostatus = async (req, res, next) => {
         try {
             const {user_id} = req;
-            const {lon, lat} = req.query;
             const {address, city} = req.body;
             await Buyers.findOneAndUpdate({
                 _id: user_id
             }, {
-                lon: lon,
-                lat: lat,
                 address: address,
                 city: city
             });
@@ -185,17 +182,14 @@ class BuyersController {
             }).populate('store_id')
             const promise = favorites.map(async (item) => {
                 try {
-                    const distance = JSON.parse(await checkIfInside(lat, lon, item.store_id.lat, item.store_id.lon))
-                    const trueDistance = distance / 1000;
-                    console.log(trueDistance, 'truedistance')
-                    if (distance < 20) {
+                    if (city === item.store_id.city) {
                         await Favorites.updateOne({
                             _id: item.id
                         }, {
                             delivery: true
                         })
                     }
-                    if (distance > 20) {
+                    if (city !== item.store_id.city) {
                         await Favorites.updateOne({
                             _id: item.id
                         }, {
@@ -208,7 +202,6 @@ class BuyersController {
                 }
             })
             await Promise.all(promise)
-            // console.log(await checkIfInside(lon, lat))
             res.status(200).json({
                 message: 'ok'
             })

@@ -71,13 +71,6 @@ class GoodsController {
             const {user_id} = req;
             const {store_id, stock, sort, category, subcategory, search} = req.query;
             //
-            const userLon = await Buyers.findOne({
-                _id: user_id
-            }).select('lon')
-            //
-            const userLat = await Buyers.findOne({
-                _id: user_id
-            }).select('lat')
             //
             let filter = {};
             if (category) {
@@ -130,8 +123,12 @@ class GoodsController {
                     .populate('subcategory_id')
                     .populate('store_id')
             }
-            const promotedGoods = goods.filter(good => good.is_promoted === true);
-            const regularGoods = goods.filter(good => good.is_promoted !== true);
+            const user = await Buyers.findOne({
+                _id: user_id
+            });
+            const rightGoods = goods.filter(good => good.store_id.city === user.city)
+            const promotedGoods = rightGoods.filter(good => good.is_promoted === true);
+            const regularGoods = rightGoods.filter(good => good.is_promoted !== true);
             const sortedGoods = [...promotedGoods, ...regularGoods];
             const modifiedGoodsPromise = sortedGoods.map(async (good) => {
                 try {
@@ -182,7 +179,11 @@ class GoodsController {
                 .sort({is_promoted: -1})
                 .populate('category_id')
                 .populate('store_id')
-            const modifiedGoodsPromise = goods.map(async (good) => {
+            const user = await Buyers.findOne({
+                _id: user_id
+            });
+            const rightGoods = goods.filter(good => good.store_id.city === user.city)
+            const modifiedGoodsPromise = rightGoods.map(async (good) => {
                 try {
                     const favoriteGood = await Favorites.findOne({
                         user_id: user_id,
@@ -441,8 +442,12 @@ class GoodsController {
                     .populate('subcategory_id')
                     .populate('store_id')
             }
-            const promotedGoods = goods.filter(good => good.is_promoted === true);
-            const regularGoods = goods.filter(good => good.is_promoted !== true);
+            const user = await Buyers.findOne({
+                _id: user_id
+            });
+            const rightGoods = goods.filter(good => good.store_id.city === user.city)
+            const promotedGoods = rightGoods.filter(good => good.is_promoted === true);
+            const regularGoods = rightGoods.filter(good => good.is_promoted !== true);
             const sortedGoods = [...promotedGoods, ...regularGoods];
             const modifiedGoodsPromise = sortedGoods.map(async (good) => {
                 try {
