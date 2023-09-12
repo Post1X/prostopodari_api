@@ -26,6 +26,9 @@ const MessagesSchema = new Schema({
     },
     name: {
         type: Schema.Types.String
+    },
+    isImage: {
+        type: Schema.Types.Boolean
     }
 });
 

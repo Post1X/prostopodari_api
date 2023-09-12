@@ -6,7 +6,7 @@ import Chats from '../schemas/ChatsSchema';
 import Buyers from '../schemas/BuyersSchema';
 import UserChats from '../schemas/UserChats';
 import fs from 'fs';
-import ss from "socket.io-stream"
+import ss from 'socket.io-stream'
 import * as path from 'path';
 
 const app = require('../app');
@@ -28,10 +28,11 @@ app.set('port', port);
 
 const server = http.createServer(app);
 const io = socketIO(server, {
+    maxHttpBufferSize: 20 * 1024 * 1024,
     cors: {
         origin: '*',
     }
-});
+})
 app.set('io', io);
 /**
  * Listen on provided port, on all network interfaces.
@@ -82,6 +83,15 @@ userChatSpace.on('connection', async (socket) => {
                 console.error('Ошибка в обработчике событий сокета:', e);
                 socket.disconnect(true);
             }
+        })
+        socket.on('send-img', async (image) => {
+            const splitted = image.split(';base64,');
+            const format = splitted[0].split('/')[1];
+            const fileName = `./public/images/image${Date.now().toString()}.` + format;
+            const baseName = fileName.replace('./public', '');
+            fs.writeFileSync(`./public/images/image${Date.now().toString()}.` + format, splitted[1], {encoding: 'base64'});
+            await sendImage(socket, baseName);
+            await getMessagesAndSendToUsers(socket);
         })
         socket.on('sendMessage', async (message) => {
             try {
@@ -156,15 +166,20 @@ async function getMessagesAndSendToUsers(socket) {
     }
 }
 
-async function sendMessage(socket, message) {
-    userChatSpace.to(socket.roomId).emit('newMessage', message);
+async function sendImage(socket, message) {
+    console.log(message)
+    userChatSpace.to(socket.roomId).emit('newMessage', {
+        message: message,
+        isImage: true
+    });
     if (socket.result === 'seller') {
         const newMessages = new Messages({
             room_id: socket.roomId,
             name: socket.seller.name,
             role: socket.result,
-            text: message.text,
-            isRead: false
+            text: message,
+            isRead: false,
+            isImage: true
         });
         if (socket.roomId) {
             const chats = await UserChats.findOne({chatID: socket.roomId});
@@ -175,6 +190,44 @@ async function sendMessage(socket, message) {
         await newMessages.save();
     }
     if (socket.result === 'user') {
+        const newMessages = new Messages({
+            room_id: socket.roomId,
+            name: socket.buyer.full_name ? socket.buyer.full_name : `Пользователь: ${uuid()}`,
+            role: socket.result,
+            text: message,
+            isRead: false,
+            isImage: true
+        });
+        if (socket.roomId) {
+            const chats = await UserChats.findOne({chatID: socket.roomId});
+            if (chats) {
+                await UserChats.findOneAndUpdate({chatID: socket.roomId}, {lastMessage: message.text});
+            }
+        }
+        await newMessages.save();
+    }
+}
+
+async function sendMessage(socket, message) {
+    userChatSpace.to(socket.roomId).emit('newMessage', message);
+    if (socket.result === 'seller') {
+        const newMessages = new Messages({
+            room_id: socket.roomId,
+            name: socket.seller.name,
+            role: socket.result,
+            text: message.text,
+            isRead: false,
+        });
+        if (socket.roomId) {
+            const chats = await UserChats.findOne({chatID: socket.roomId});
+            if (chats) {
+                await UserChats.findOneAndUpdate({chatID: socket.roomId}, {lastMessage: message.text});
+            }
+        }
+        await newMessages.save();
+    }
+    if (socket.result === 'user') {
+        console.log(socket)
         const newMessages = new Messages({
             room_id: socket.roomId,
             name: socket.buyer.full_name,
@@ -237,7 +290,7 @@ chatSpace.on('connection', async (socket) => {
                         {$set: {isRead: true}}
                     );
                 }
-            }catch (e) {
+            } catch (e) {
                 console.error('Ошибка в обработчике событий сокета:', e);
                 socket.emit('Ошибка:', e);
             }
