@@ -30,7 +30,7 @@ const authorization = async (req, res, next) => {
             const seller = await Sellers.findOne({
                 _id: userInfo.user_id
             });
-            if (new Date() === seller.subscription_until ?  seller.subscription_until.toISOString() : false) {
+            if (new Date() === seller.subscription_until ? seller.subscription_until.toISOString() : false) {
                 await Sellers.findOneAndUpdate({
                     _id: userInfo.user_id
                 }, {

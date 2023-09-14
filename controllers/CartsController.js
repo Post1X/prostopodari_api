@@ -45,6 +45,7 @@ class CartsController {
                 .populate('user')
                 .populate('items.good_id')
                 .populate({path: 'items.store_id'});
+            console.log(goods)
             const modifiedGoods = goods.map((good) => {
                 const price = good.items[0].good_id.price;
                 const numericPrice = parseFloat(price);

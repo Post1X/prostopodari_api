@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 import Buyers from '../schemas/BuyersSchema';
 import Favorites from '../schemas/FavoritesSchema';
 import FavoriteStore from '../schemas/FavoriteStoresSchema';
+import CartsSchema from '../schemas/CartsSchema';
+import CartItem from '../schemas/CartItemsSchema';
 
 // git
 
@@ -123,10 +125,11 @@ class GoodsController {
                     .populate('subcategory_id')
                     .populate('store_id')
             }
-            const user = await Buyers.findOne({
-                _id: user_id
-            });
-            const rightGoods = goods.filter(good => good.store_id.city === user.city)
+            // const user = await Sellers.findOne({
+            //     _id: user_id
+            // });
+            // const rightGoods = goods.filter(good => good.store_id.city ? (good.store_id === user.city) : '')
+            const rightGoods = goods.filter(good => good.store_id.seller_user_id.toString() === user_id.toString())
             const promotedGoods = rightGoods.filter(good => good.is_promoted === true);
             const regularGoods = rightGoods.filter(good => good.is_promoted !== true);
             const sortedGoods = [...promotedGoods, ...regularGoods];
@@ -228,8 +231,8 @@ class GoodsController {
     //
     static GetOneGood = async (req, res, next) => {
         try {
-            const { good_id } = req.query;
-            const { user_id } = req;
+            const {good_id} = req.query;
+            const {user_id} = req;
 
             const good = await Goods.findOne({
                 _id: good_id
@@ -352,9 +355,14 @@ class GoodsController {
             await Goods.findByIdAndDelete({
                 _id: id
             });
+            await Favorites.deleteMany({
+                items: id
+            });
+            await CartsSchema.deleteMany({'items[0].good_id': id});
             res.status(200).json({
                 message: 'success'
             });
+            await CartItem.deleteMany({good_id: id})
         } catch (e) {
             e.status = 401;
             next(e);
@@ -395,8 +403,25 @@ class GoodsController {
     static FilterGoods = async (req, res, next) => {
         try {
             const {user_id} = req;
-            const {stock, sort, category, subcategory, search} = req.query;
+            const {stock, sort, category, subcategory, search, price_from, price_to} = req.query;
             let filter = {};
+            if (price_from !== undefined && price_to !== undefined) {
+                const numericPriceFrom = parseFloat(price_from);
+                const numericPriceTo = parseFloat(price_to);
+                if (!isNaN(numericPriceFrom) && !isNaN(numericPriceTo)) {
+                    filter.price = {$gte: numericPriceFrom, $lte: numericPriceTo};
+                }
+            } else if (price_from !== undefined) {
+                const numericPriceFrom = parseFloat(price_from);
+                if (!isNaN(numericPriceFrom)) {
+                    filter.price = {$gte: numericPriceFrom};
+                }
+            } else if (price_to !== undefined) {
+                const numericPriceTo = parseFloat(price_to);
+                if (!isNaN(numericPriceTo)) {
+                    filter.price = {$lte: numericPriceTo};
+                }
+            }
             if (category) {
                 const categoryIds = category.split(',');
                 const categoryObjectIds = categoryIds.map(result => mongoose.Types.ObjectId(result.trim()));
@@ -413,7 +438,6 @@ class GoodsController {
             if (search) {
                 filter.title = {$regex: new RegExp(search, 'i')};
             }
-
             let goods = [];
 
             if (sort === 'newFirst' || sort === 'oldFirst') {
@@ -507,6 +531,23 @@ class GoodsController {
             res.status(200).json({
                 message: 'success'
             });
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static searchGoods = async (req, res, next) => {
+        try {
+            const {search} = req.query;
+            const filter = {};
+            if (search) {
+                filter.title = {$regex: new RegExp(search, 'i')};
+            }
+            const goods = await Goods.find(filter)
+                .populate('category_id')
+                .populate('store_id')
+            res.status(200).json(goods)
         } catch (e) {
             e.status = 401;
             next(e);

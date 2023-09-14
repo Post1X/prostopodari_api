@@ -1,5 +1,6 @@
 import Favorites from '../schemas/FavoritesSchema';
 import FavoriteStore from '../schemas/FavoriteStoresSchema';
+import Buyers from '../schemas/BuyersSchema';
 
 //
 class FavoritesController {
@@ -65,11 +66,35 @@ class FavoritesController {
     static GetFavorites = async (req, res, next) => {
         try {
             const {user_id} = req;
+            const user = await Buyers.find({
+                _id: user_id
+            })
             const favorite = await Favorites.find({
                 user_id: user_id
             })
                 .populate('good_id')
                 .populate('store_id')
+            await Promise.all(favorite.map(async (item) => {
+                try {
+                    if (user.city === item.store_id.city) {
+                        await Favorites.updateOne({
+                            _id: item.id
+                        }, {
+                            delivery: true
+                        })
+                    }
+                    if (user.city !== item.store_id.city) {
+                        await Favorites.updateOne({
+                            _id: item.id
+                        }, {
+                            delivery: false
+                        })
+                    }
+                } catch (e) {
+                    e.status = 401;
+                    next(e);
+                }
+            }))
             res.status(200).json(favorite)
         } catch (e) {
             e.status = 401;

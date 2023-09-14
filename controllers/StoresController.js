@@ -2,6 +2,7 @@ import Stores from '../schemas/StoresSchema';
 import Sellers from '../schemas/SellersSchema';
 import Goods from '../schemas/GoodsSchema';
 import Reviews from '../schemas/ReviewsSchema';
+import FavoriteStore from '../schemas/FavoriteStoresSchema';
 
 class StoresController {
     static CreateStore = async (req, res, next) => {
@@ -260,6 +261,9 @@ class StoresController {
             await Goods.deleteMany({
                 store_id: store_id
             })
+            await FavoriteStore.deleteMany({
+                store_id: store_id
+            })
             const seller = await Sellers.findOne({_id: user_id}).populate({
                 path: 'active_store',
             });
@@ -342,6 +346,3 @@ class StoresController {
 }
 
 export default StoresController;
-
-
-// todo store deny, update good img
