@@ -13,7 +13,7 @@ class StoresController {
                 })
             }
             const {user_id} = req;
-            const {address, title, about_store, city, distPrice, weekdays, weekends} = req.body;
+            const {address, title, about_store, city, distPrice, weekdays, weekends, lon, lat} = req.body;
             console.log(weekends, 'dpwoakdao')
             console.log(weekdays, 'dwoaid')
             if (req.files.length !== 0) {
@@ -32,7 +32,9 @@ class StoresController {
                     city: city,
                     distance: distPrice,
                     weekdays: weekdays,
-                    weekends: weekends
+                    weekends: weekends,
+                    lon: lon,
+                    lat: lat
                 });
                 await newStores.save();
             }
@@ -126,7 +128,7 @@ class StoresController {
                 photoArray.push(result)
             }
             const {store_id} = req.query;
-            const {address, title, about_store, city, distPrice} = req.body;
+            const {address, title, about_store, city, distPrice, lon, lat} = req.body;
             const storeCheck = await Stores.findOne({
                 _id: store_id
             });
@@ -143,7 +145,9 @@ class StoresController {
                         title: title,
                         about_store: about_store,
                         logo_url: photoArray[0],
-                        distance: distPrice
+                        distance: distPrice,
+                        lon: lon,
+                        lat: lat
                     });
             if (photoArray.length === 0) {
                 await Stores.findByIdAndUpdate({
@@ -154,7 +158,9 @@ class StoresController {
                         address: address,
                         title: title,
                         about_store: about_store,
-                        distance: distPrice
+                        distance: distPrice,
+                        lon: lon,
+                        lat: lat
                     });
             }
             const store = await Stores.find({
