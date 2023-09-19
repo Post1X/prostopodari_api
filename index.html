@@ -18,21 +18,22 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
 <script>
-
     const messagesList = document.getElementById('messagesList');
     const messageInput = document.getElementById('messageInput');
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluIiwidXNlcl9pZCI6IjY0Y2E3ODg1Njc4M2FkYWE5NTI5OTkzMSIsImlzU2VsbGVyIjp0cnVlLCJpYXQiOjE2OTEyMjk3NTZ9.52dcT8GPpLIlrUgg4q7tFcMORMTzjRnLmYXAWz23kQI';
-    const socket = io('http://localhost:3001/chat/user', {
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZV9udW1iZXIiOiIrMzc0NzcyNTI1MDkiLCJ1c2VyX2lkIjoiNjRjODA3YThlOTVhNTkyZDkyMDIzYWZlIiwiaWF0IjoxNjk1MDM4MDQzfQ.LUzs8zmyjI6RqEoexWLVjGuaVPrWfm-nWO5cKcpNfUw';
+    const socket = io('194.58.121.218:3001/chat/user', {
         query: {
             token: token,
-            seller_id: '64ca78856783adaa95299931',
-            roomId: 'dpoawkodkapokdopaskdopsakdopa'
+            seller_id: '64c8f1af5216c9a6b90c8773', // seller idn petka exni misht
+            buyer_id: '64c807a8e95a592d92023afe', // nuynpes buyeri idn
+            roomId: '9f5275cc-63c4-406b-8920-90324f34e4cc'
         },
     });
     document.getElementById('img-submit').onclick = function () {
         const ourFile = document.getElementById('img-uplaod').files[0];
         const reader = new FileReader();
         reader.onloadend = function () {
+            console.log(reader.result, '2321213213213213')
             socket.emit('send-img', reader.result);
         }
         reader.readAsDataURL(ourFile);
@@ -46,9 +47,8 @@
                 const spanElement = document.createElement('span');
                 spanElement.textContent = message.name;
                 listItem.appendChild(spanElement);
-
                 const imageElement = document.createElement('img');
-                imageElement.src = `http://localhost:3001${message.text}`;
+                imageElement.src = `http://194.58.121.218:3001${message.text}`;
                 listItem.appendChild(imageElement);
             } else {
                 listItem.textContent = `${message.name} ${message.text}`;

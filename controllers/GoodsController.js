@@ -186,6 +186,11 @@ class GoodsController {
                 _id: user_id
             });
             const rightGoods = goods.filter(good => good.store_id.city === user.city)
+            if (rightGoods.length === 0) {
+                res.status(300).json({
+                    error: 'В вашем регионе нет пока магазинов'
+                })
+            }
             const modifiedGoodsPromise = rightGoods.map(async (good) => {
                 try {
                     const favoriteGood = await Favorites.findOne({
@@ -470,6 +475,11 @@ class GoodsController {
                 _id: user_id
             });
             const rightGoods = goods.filter(good => good.store_id.city === user.city)
+            if (rightGoods.length === 0) {
+                res.status(300).json({
+                    error: 'В вашем регионе нет пока магазинов'
+                })
+            }
             const promotedGoods = rightGoods.filter(good => good.is_promoted === true);
             const regularGoods = rightGoods.filter(good => good.is_promoted !== true);
             const sortedGoods = [...promotedGoods, ...regularGoods];

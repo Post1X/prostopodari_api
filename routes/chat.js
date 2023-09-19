@@ -8,5 +8,6 @@ const router = express.Router();
 // router.get('/im/messages', ChatController.GetMessages);
 router.get('/im', ChatController.GetChats);
 router.get('/im/admin', ChatController.GetChatsAdmin);
+router.get('/is-created', ChatController.isCreated);
 
 export default router;

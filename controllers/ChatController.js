@@ -1,6 +1,9 @@
 import Sellers from '../schemas/SellersSchema';
 import Chats from '../schemas/ChatsSchema';
 import Messages from '../schemas/MessagesSchema';
+import UserChats from '../schemas/UserChats';
+import {uuid} from 'uuidv4';
+import Buyers from '../schemas/BuyersSchema';
 
 class ChatController {
     static async initSocket(socket) {
@@ -121,11 +124,18 @@ class ChatController {
     static GetChats = async (req, res, next) => {
         try {
             const {user_id} = req;
-            console.log(user_id)
-            const chats = await Chats.find({
-                user_id: user_id
-            })
-            res.status(200).json(chats)
+            if (!req.isSeller) {
+                const chatsUsers = await UserChats.find({
+                    user_id: user_id
+                })
+                res.status(200).json(chatsUsers)
+            }
+            if (req.isSeller) {
+                const chatsSeller = await UserChats.find({
+                    seller_id: user_id
+                })
+                res.status(200).json(chatsSeller)
+            }
         } catch (e) {
             e.status = 401;
             next(e);
@@ -138,6 +148,61 @@ class ChatController {
                 priority: 'admin'
             })
             res.status(200).json(chats)
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static isCreated = async (req, res, next) => {
+        try {
+            const {user_id} = req;
+            const {seller_id} = req.query;
+            const chat = await UserChats.findOne({
+                buyer_id: user_id,
+                seller_id: seller_id
+            });
+            const buyer = await Buyers.findOne({
+                _id: user_id
+            })
+            console.log(buyer)
+            const seller = await Sellers.findOne({
+                _id: seller_id
+            });
+            if (chat) {
+                res.status(200).json({
+                    chatID: chat.chatID
+                })
+                console.log('bus')
+            }
+            ;
+            if (!chat) {
+                console.log('dreamybull')
+                console.log(buyer)
+                const newRoomId = uuid();
+                const newChat = new UserChats({
+                    name: seller ? seller.legal_name : 'Продавец',
+                    user_id: user_id,
+                    seller_id: seller_id,
+                    chatID: newRoomId,
+                    phone_number: buyer.phone_number,
+                    newMessCount: 0,
+                    lastMessage: 'Здравствуйте!'
+                });
+                const newMessages = new Messages({
+                    room_id: newRoomId,
+                    name: buyer.full_name ? buyer.full_name : `Покупатель`,
+                    role: 'user',
+                    text: 'Здравствуйте!',
+                    isRead: false,
+                    isImage: false
+                });
+                await newMessages.save();
+                await newChat.save();
+                res.status(200).json({
+                    chatID: newRoomId
+                })
+            }
         } catch (e) {
             e.status = 401;
             next(e);

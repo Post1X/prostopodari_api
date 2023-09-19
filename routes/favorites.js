@@ -5,8 +5,8 @@ const router = express.Router();
 
 router.get('/', FavoritesController.GetFavorites);
 router.post('/', FavoritesController.AddToFavorites);
+router.delete('/', FavoritesController.DeleteFavorites);
 router.post('/stores', FavoritesController.AddStoreToFavorites)
 router.get('/stores', FavoritesController.GetFavoriteStores);
 router.delete('/stores', FavoritesController.DeleteFavoriteStore);
-router.delete('/', FavoritesController.DeleteFavorites);
 export default router;

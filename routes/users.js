@@ -13,6 +13,7 @@ const router = express.Router();
 router.post('/register/buyer/call', BuyersController.ConfirmAndReg);
 router.post('/register/buyer/confirm-number', BuyersController.RegBuyer);
 router.post('/login/buyer', BuyersController.LoginBuyer);
+router.post('/get-city', BuyersController.findCity);
 router.put('/get-geo', BuyersController.ChangeGeostatus)
 router.get('/profile/buyer', BuyersController.UserProfile);
 router.put('/profile/buyer', BuyersController.UpdateProfile);
@@ -25,7 +26,8 @@ router.get('/profile/seller', SellersController.SellerProfile);
 router.put('/profile/seller', uploadFields, SellersController.UpdateProfile)
 router.put('/profile/seller/password', SellersController.UpdatePassword)
 router.delete('/profile/seller', SellersController.DeleteProfile);
-router.post('/profile/seller/subscription', PromotionsController.getPromotion);;
+router.post('/profile/seller/subscription', PromotionsController.getPromotion);
+;
 router.get('/check-sub', PromotionsController.checkPromotion);
 router.post('/stores/active', SellersController.AddStoreToActive);
 // admin

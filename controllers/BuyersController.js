@@ -2,8 +2,9 @@ import Buyers from '../schemas/BuyersSchema';
 import JWT from 'jsonwebtoken';
 import makeCall from '../utilities/call';
 import Favorites from '../schemas/FavoritesSchema';
+import findCity from '../utilities/cities';
+
 // import {checkIfInside} from '../utilities/radius';
-import {checkIfInside} from '../utilities/radius';
 
 class BuyersController {
     static RegBuyer = async (req, res, next) => {
@@ -170,12 +171,12 @@ class BuyersController {
     static ChangeGeostatus = async (req, res, next) => {
         try {
             const {user_id} = req;
-            const {address, city} = req.body;
+            const {city, address} = req.body;
             await Buyers.findOneAndUpdate({
                 _id: user_id
             }, {
-                address: address,
-                city: city
+                city: city,
+                address: address
             });
             const favorites = await Favorites.find({
                 user_id: user_id
@@ -205,6 +206,26 @@ class BuyersController {
             res.status(200).json({
                 message: 'ok'
             })
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static findCity = async (req, res, next) => {
+        try {
+            const {city} = req.query;
+            let id = 0;
+            const response = await findCity(city);
+            const cities = response
+                .filter((item) => item.tags.includes('province') || item.tags.includes('locality'))
+                .map((item) => ({
+                    id: (id += 1),
+                    city: item.title.text,
+                }));
+            res.status(200).json(
+                cities
+            );
         } catch (e) {
             e.status = 401;
             next(e);

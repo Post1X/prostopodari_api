@@ -3,8 +3,8 @@ import OrdStatuses from '../schemas/OrdStatutesSchema';
 import mongoose from 'mongoose';
 import Cart from '../schemas/CartsSchema';
 import Stores from '../schemas/StoresSchema';
-import Promocodes from '../schemas/PromocodesSchema';
 import CartItem from '../schemas/CartItemsSchema';
+import Promocodes from '../schemas/PromocodesSchema';
 
 //
 class OrdersController {
@@ -19,7 +19,8 @@ class OrdersController {
                 address,
                 name,
                 promocode,
-                comment
+                comment,
+                distance
             } = req.body;
             const {user_id} = req;
             const titleArr = [];
@@ -59,40 +60,76 @@ class OrdersController {
                 _id: storeId
             })
             console.log(storeComission.comission)
-            const totalPrice = modifiedGoods.reduce((accumulator, good) => {
+            let totalPrice = modifiedGoods.reduce((accumulator, good) => {
                 const price = good.items[0].good_id.price;
                 return accumulator + price;
             }, 0);
-            // const promocodeGet = await Promocodes.findOne({
-            //     text: promocode
-            // })
+
             const weekdays = storeComission.weekdays;
             const weekends = storeComission.weekends;
             const delivery_price = storeComission.distance;
-            // const promocodeCommission = promocodeGet.percentage;
-            // const income = (totalPrice * (promocodeCommission + 30)) / 100;
-            const income = (totalPrice * 30) / 100;
+            let promocodeCommission;
+            let income;
+            if (promocode) {
+                const promocodeGet = await Promocodes.findOne({
+                    text: promocode
+                })
+                promocodeCommission = promocodeGet.percentage;
+                income = (totalPrice * (promocodeCommission + 30)) / 100;
+                if (promocodeGet.priority === 'user') {
+                    await Promocodes.findOneAndDelete({
+                        text: promocode
+                    })
+                }
+            }
+            if (!promocode) {
+                income = (totalPrice * 30) / 100;
+            }
+            const deliveryPrice = delivery_price * distance;
+            totalPrice = totalPrice + deliveryPrice;
+            income = income + deliveryPrice;
             const status = '64a5e7e78d8485a11d0649ee';
             const card = '1234 5678 9123 1412';
             const objId = mongoose.Types.ObjectId(status)
-            // const parsedTime = new Date(`${req.body.time} UTC`);
-            // const parsedDay = new Date(req.body.day);
-            // const dayOfWeek = parsedDay.getUTCDay();
-            // let isOpen = false;
-            // if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-            //     const {from, to} = weekdays;
-            //     const fromTime = new Date(`${parsedTime.toISOString().split('T')[0]}T${from}Z`);
-            //     const toTime = new Date(`${parsedTime.toISOString().split('T')[0]}T${to}Z`);
-            //     isOpen = parsedTime >= fromTime && parsedTime <= toTime;
-            // } else if (dayOfWeek === 0 || dayOfWeek === 6) {
-            //     const {from, to} = weekends;
-            //     const fromTime = new Date(`${parsedTime.toISOString().split('T')[0]}T${from}Z`);
-            //     const toTime = new Date(`${parsedTime.toISOString().split('T')[0]}T${to}Z`);
-            //     isOpen = parsedTime >= fromTime && parsedTime <= toTime;
-            // }
-            // if (!isOpen) {
-            //     return res.status(400).json({message: 'В это время магазин не работает'});
-            // }
+            const timeParts = req.body.time.split(':');
+            const dateParts = req.body.day.split('.');
+            const parsedDay = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
+            parsedDay.setUTCHours(timeParts[0]);
+            parsedDay.setUTCMinutes(timeParts[1]);
+            const dayOfWeek = parsedDay.getUTCDay();
+            console.log(parsedDay);
+            console.log(dayOfWeek, 'dayOfWeek');
+            let isOpen = false;
+
+            if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                const {from, to} = weekdays;
+                console.log(from, to);
+                const fromTime = new Date(parsedDay);
+                fromTime.setUTCHours(parseInt(from.split(':')[0], 10));
+                fromTime.setUTCMinutes(parseInt(from.split(':')[1], 10));
+
+                const toTime = new Date(parsedDay);
+                toTime.setUTCHours(parseInt(to.split(':')[0], 10));
+                toTime.setUTCMinutes(parseInt(to.split(':')[1], 10));
+
+                isOpen = parsedDay >= fromTime && parsedDay <= toTime;
+            } else if (dayOfWeek === 0 || dayOfWeek === 6) {
+                const {from, to} = weekends;
+
+                const fromTime = new Date(parsedDay);
+                fromTime.setUTCHours(parseInt(from.split(':')[0], 10));
+                fromTime.setUTCMinutes(parseInt(from.split(':')[1], 10));
+
+                const toTime = new Date(parsedDay);
+                toTime.setUTCHours(parseInt(to.split(':')[0], 10));
+                toTime.setUTCMinutes(parseInt(to.split(':')[1], 10));
+
+                isOpen = parsedDay >= fromTime && parsedDay <= toTime;
+            }
+
+            if (!isOpen) {
+                return res.status(400).json({message: 'В это время магазин не работает'});
+            }
             const newOrders = new Orders({
                 title: titleString,
                 goods_ids: goodsIds,
@@ -102,7 +139,7 @@ class OrdersController {
                 delivery_city: city,
                 name: name,
                 delivery_date: day,
-                delivery_price: 0,
+                delivery_price: deliveryPrice,
                 delivery_time: time,
                 phone_number: phone_number,
                 full_amount: totalPrice,
@@ -111,20 +148,13 @@ class OrdersController {
                 status_id: objId,
                 commission_percentage: 30,
                 count: countArr,
-                // promocode: promocode,
+                promocode: promocode,
                 comment: comment,
                 paid: false,
                 paymentCard: card,
-                // promocodeComission: promocodeCommission,
+                promocodeComission: promocodeCommission,
             });
             await newOrders.save();
-            //
-            // if (promocodeGet.priority === 'user') {
-            //     await Promocodes.findOneAndDelete({
-            //         text: promocode
-            //     })
-            // }
-            //
             res.status(200).json({
                 message: 'success'
             });

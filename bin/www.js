@@ -47,7 +47,9 @@ const userChatSpace = io.of('/chat/user')
 userChatSpace.on('connection', async (socket) => {
     try {
         socket.roomId = socket.handshake.query.roomId;
-        console.log(socket.roomId, 'roomidontop')
+        if (!socket.roomId) {
+            socket.roomId = uuid();
+        }
         socket.seller_id = socket.handshake.query.seller_id;
         socket.buyer_id = socket.handshake.query.buyer_id;
         socket.seller = await Sellers.findOne({_id: socket.seller_id});
@@ -55,9 +57,6 @@ userChatSpace.on('connection', async (socket) => {
         const token = socket.handshake.query.token;
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         socket.result = decoded.isSeller ? 'seller' : 'user';
-        if (!socket.roomId) {
-            socket.roomId = uuid();
-        }
         await getMessagesAndSendToUsers(socket);
         socket.on('isRead', async (lastMessage) => {
             try {
@@ -85,13 +84,24 @@ userChatSpace.on('connection', async (socket) => {
             }
         })
         socket.on('send-img', async (image) => {
-            const splitted = image.split(';base64,');
-            const format = splitted[0].split('/')[1];
-            const fileName = `./public/images/image${Date.now().toString()}.` + format;
-            const baseName = fileName.replace('./public', '');
-            fs.writeFileSync(`./public/images/image${Date.now().toString()}.` + format, splitted[1], {encoding: 'base64'});
-            await sendImage(socket, baseName);
-            await getMessagesAndSendToUsers(socket);
+            try {
+                // console.log(image)
+                // if (typeof image === 'string') {
+                //     console.log('image is string')
+                // } else {
+                //     console.error('Image is not a string:', image);
+                // }
+                const splitted = image.split(';base64,');
+                const format = splitted[0].split('/')[1];
+                const fileName = `./public/images/image${Date.now().toString()}.` + format;
+                const baseName = fileName.replace('./public', '');
+                fs.writeFileSync(`./public/images/image${Date.now().toString()}.` + format, splitted[1], {encoding: 'base64'});
+                await sendImage(socket, baseName);
+                await getMessagesAndSendToUsers(socket);
+            } catch (e) {
+                e.status = 401;
+                console.error(e)
+            }
         })
         socket.on('sendMessage', async (message) => {
             try {
@@ -129,35 +139,24 @@ async function getMessagesAndSendToUsers(socket) {
             messages: chatMessages,
             newMessCount: socket.result === 'seller' ? socket.newMessSeller : socket.newMessUser
         });
-        if (!socket.roomId) {
-            const newRoomId = uuid();
-            socket.roomId = newRoomId;
+        if (!socket.handshake.query.roomId) {
+            const chat = await UserChats.findOne({
+                seller_id: socket.seller_id,
+                user_id: socket.buyer_id
+            });
             const lastMessage = chatMessages.length > 0 ? chatMessages[chatMessages.length - 1].text : '';
-            if (socket.result === 'seller') {
-                const newChat = new UserChats({
-                    name: socket.seller.name,
-                    user_id: socket.buyer_id,
-                    seller_id: socket.seller_id,
-                    chatID: newRoomId,
-                    phone_number: socket.seller.phone_number,
-                    newMessCount: 0,
-                    lastMessage: lastMessage
-                })
-                socket.join(newRoomId);
-                await newChat.save();
-            }
-            if (socket.result === 'user') {
+            if (socket.result === 'user' && !chat) {
                 const newChat = new UserChats({
                     name: socket.buyer.full_name ? socket.buyer.full_name : socket.buyer.phone_number,
                     user_id: socket.buyer_id,
                     seller_id: socket.seller_id,
-                    chatID: newRoomId,
+                    chatID: socket.roomId,
                     phone_number: socket.buyer.phone_number,
                     newMessCount: 0,
                     lastMessage: lastMessage
                 });
-                socket.join(newRoomId);
                 await newChat.save();
+                socket.join(socket.roomId);
             }
         }
     } catch (e) {
@@ -167,7 +166,6 @@ async function getMessagesAndSendToUsers(socket) {
 }
 
 async function sendImage(socket, message) {
-    console.log(message)
     userChatSpace.to(socket.roomId).emit('newMessage', {
         message: message,
         isImage: true
@@ -175,7 +173,7 @@ async function sendImage(socket, message) {
     if (socket.result === 'seller') {
         const newMessages = new Messages({
             room_id: socket.roomId,
-            name: socket.seller.name,
+            name: socket.seller.legal_name,
             role: socket.result,
             text: message,
             isRead: false,
@@ -192,7 +190,7 @@ async function sendImage(socket, message) {
     if (socket.result === 'user') {
         const newMessages = new Messages({
             room_id: socket.roomId,
-            name: socket.buyer.full_name ? socket.buyer.full_name : `Пользователь: ${uuid()}`,
+            name: socket.buyer.full_name ? socket.buyer.full_name : `Покупатель`,
             role: socket.result,
             text: message,
             isRead: false,
@@ -211,9 +209,14 @@ async function sendImage(socket, message) {
 async function sendMessage(socket, message) {
     userChatSpace.to(socket.roomId).emit('newMessage', message);
     if (socket.result === 'seller') {
+        console.log(socket.seller_id)
+        const seller = await Sellers.findOne({
+            _id: socket.seller_id
+        })
+        console.log(seller)
         const newMessages = new Messages({
             room_id: socket.roomId,
-            name: socket.seller.name,
+            name: seller.legal_name,
             role: socket.result,
             text: message.text,
             isRead: false,
@@ -227,10 +230,9 @@ async function sendMessage(socket, message) {
         await newMessages.save();
     }
     if (socket.result === 'user') {
-        console.log(socket)
         const newMessages = new Messages({
             room_id: socket.roomId,
-            name: socket.buyer.full_name,
+            name: socket.buyer.full_name ? socket.buyer.full_name : `Покупатель`,
             role: socket.result,
             text: message.text,
             isRead: false
@@ -248,16 +250,18 @@ async function sendMessage(socket, message) {
 
 chatSpace.on('connection', async (socket) => {
     try {
-        const roomId = socket.handshake.query.roomId;
+        socket.roomId = socket.handshake.query.roomId;
+        if (!socket.roomId) {
+            socket.roomId = uuid();
+        }
         const seller_id = socket.handshake.query.seller_id;
         const token = socket.handshake.query.token;
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const sellerForTest = await Sellers.findOne({
             _id: seller_id
         })
-        if (roomId) {
-            socket.roomId = roomId;
-            socket.join(roomId);
+        if (socket.roomId) {
+            socket.join(socket.roomId);
         }
         const result = decoded ? (decoded.isSeller ? 'seller' : (decoded.isAdmin ? 'admin' : 'user')) : 'user';
         console.log(`Пользователь ${decoded.user_id} с ролью ${result} подключился к чату под номером ${roomId}`);
@@ -332,9 +336,7 @@ async function getMessagesAndSendToClient(socket) {
             messages: chatMessages,
             newMessCount: socket.isSeller ? socket.newMessSeller : socket.newMessAdmin
         });
-        if (!socket.roomId) {
-            const newRoomId = uuid();
-            socket.roomId = newRoomId;
+        if (!socket.handshake.query.roomId) {
             const name = socket.name;
             const user_id = socket.seller_id;
             const phone_number = socket.phone_number;
@@ -342,7 +344,7 @@ async function getMessagesAndSendToClient(socket) {
             const newChat = new Chats({
                 name,
                 user_id,
-                chatID: newRoomId,
+                chatID: socket.roomId,
                 phone_number,
                 newMessCount: 0,
                 lastMessage,

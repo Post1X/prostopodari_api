@@ -21,13 +21,13 @@
 
     const messagesList = document.getElementById('messagesList');
     const messageInput = document.getElementById('messageInput');
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZV9udW1iZXIiOiIrMzc0OTMxNTE0MjYiLCJ1c2VyX2lkIjoiNjRkYjNjYTEzNTQ4NTA0NjA4NDVkNjgxIiwiaWF0IjoxNjk0NDM5MzQyfQ.UThJDzxa2aLyYn4S1tYLnzBNOUwtG7zte7dp7pnxxFc';
-    const socket = io('http://localhost:3001/chat/user', {
+    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZV9udW1iZXIiOiIrMzc0NzcyNTI1MDkiLCJ1c2VyX2lkIjoiNjRjODA3YThlOTVhNTkyZDkyMDIzYWZlIiwiaWF0IjoxNjk0ODA5NjE3fQ.6XNGXyMDqL1E4pY-5nPbLqzrUMb-Jurl8JgXHRQrit0';
+    const socket = io('194.58.121.218:3001/chat/user', {
         query: {
             token: token,
-            seller_id: '64ca78856783adaa95299931',
-            buyer_id: '64db3ca1354850460845d681',
-            roomId: 'dpoawkodkapokdopaskdopsakdopa'
+            seller_id: '65083d5590f545a7a07e9f33', // seller idn petka exni misht
+            buyer_id: '64c807a8e95a592d92023afe', // nuynpes buyeri idn
+            roomId: 'aedc1c9e-c230-4489-a985-02aa75b8becc'
         },
     });
     document.getElementById('img-submit').onclick = function () {
@@ -49,7 +49,7 @@
                 listItem.appendChild(spanElement);
 
                 const imageElement = document.createElement('img');
-                imageElement.src = `http://localhost:3001${message.text}`;
+                imageElement.src = `http://194.58.121.218:3001${message.text}`;
                 listItem.appendChild(imageElement);
             } else {
                 listItem.textContent = `${message.name} ${message.text}`;
@@ -57,6 +57,7 @@
             messagesList.appendChild(listItem);
         });
     }
+
     socket.on('messages', ({messages, newMessCount}) => {
         console.log(messages)
         console.log('Received messages:');
