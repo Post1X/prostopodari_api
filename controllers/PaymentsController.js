@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import YooKassa from 'yookassa';
 
 class PaymentsController {
     static Test = async (req, res, next) => {
@@ -6,7 +7,6 @@ class PaymentsController {
             const {user_id} = req;
             const {value} = req.body;
             const url = 'https://api.yookassa.ru/v3/payments';
-
             function generateRandomString(length) {
                 const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
                 let randomString = '';
@@ -29,11 +29,10 @@ class PaymentsController {
                 capture: true,
                 confirmation: {
                     type: 'redirect',
-                    return_url: 'https://www.example.com/return_url'
+                    return_url: 'http://localhost:3001/orders/sas'
                 },
                 description: `Пользователь: ${user_id}`
             };
-
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -45,8 +44,9 @@ class PaymentsController {
             })
                 .then(response => response.json())
                 .then(data => {
+                    const newPayment =
                     res.status(200).json({
-                        data: data.confirmation.confirmation_url
+                        data: data.confirmation.confirmation_url,
                     })
                 })
                 .catch(error => {
@@ -60,7 +60,20 @@ class PaymentsController {
     //
     static getPromotion = async (req, res, next) => {
         try {
-
+            const yooKassa = new YooKassa({
+                shopId: '244369',
+                secretKey: 'test_7NnPZ1y9-SJDn_kaPGbXe1He3EmNJP-RyUvKD_47y7w'
+            })
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static testModule = async (req, res, next) => {
+        try {
+            console.log('ANONIM')
+            res.send('HelloWorld')
         } catch (e) {
             e.status = 401;
             next(e);

@@ -27,7 +27,7 @@ router.put('/profile/seller', uploadFields, SellersController.UpdateProfile)
 router.put('/profile/seller/password', SellersController.UpdatePassword)
 router.delete('/profile/seller', SellersController.DeleteProfile);
 router.post('/profile/seller/subscription', PromotionsController.getPromotion);
-;
+//
 router.get('/check-sub', PromotionsController.checkPromotion);
 router.post('/stores/active', SellersController.AddStoreToActive);
 // admin

@@ -557,6 +557,7 @@ class GoodsController {
             const goods = await Goods.find(filter)
                 .populate('category_id')
                 .populate('store_id')
+                .populate('subcategory_id')
             res.status(200).json(goods)
         } catch (e) {
             e.status = 401;

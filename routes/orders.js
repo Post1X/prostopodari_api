@@ -12,5 +12,6 @@ router.post('/update-status', OrdersController.ChangeStatus);
 router.get('/status', OrdersController.GetStatus);
 router.get('/single', OrdersController.GetOrder);
 router.post('/status', OrdersController.CreateStatus);
+router.get('/sas', PaymentsController.testModule);
 export default router;
 

@@ -14,14 +14,13 @@ class CartsController {
                 return res.status(300).json({error: 'Товар не найден.'});
             }
             const cartItems = await CartItem.find({buyer_id: user_id});
-
             if (count > good.count) {
                 return res.status(300).json({error: 'Товар отсутствует на складе.'});
             }
-            const cartItemWithDifferentStore = cartItems.find(item => item.store_id.toString() !== good.store_id.toString());
-            if (cartItemWithDifferentStore) {
-                return res.status(400).json({error: 'Товары могут быть только из одного магазина.'});
-            }
+            // const cartItemWithDifferentStore = cartItems.find(item => item ? item.store_id.toString() !== good.store_id.toString() : true);
+            // if (cartItemWithDifferentStore) {
+            //     return res.status(400).json({error: 'Товары могут быть только из одного магазина.'});
+            // }
             await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
             const newCartItem = new CartItem({
                 good_id: mongoose.Types.ObjectId(good_id), count: count, store_id: good.store_id, buyer_id: user_id
@@ -131,20 +130,19 @@ class CartsController {
             const good = await Goods.findOne({
                 _id: good_id
             })
-            console.log(good.count)
             if (count > good.count) {
-                return res.status(300).json({error: 'Товар отсутствует на складе.'});
+                res.status(300).json({error: 'Товар отсутствует на складе.'});
+            } else {
+                await Cart.findOneAndUpdate({
+                    _id: cartId, buyer_id: user_id
+                }, {
+                    $set: {'items.0.count': Number(cartGood.items[0].count) + Number(count)}
+                });
+                await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
+                res.status(200).json({
+                    message: 'success'
+                })
             }
-            console.log(Number(cartGood.items[0].count) + Number(count, '3123213213'))
-            await Cart.findOneAndUpdate({
-                _id: cartId, buyer_id: user_id
-            }, {
-                $set: {'items.0.count': Number(cartGood.items[0].count) + Number(count)}
-            });
-            await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
-            res.status(200).json({
-                message: 'success'
-            })
         } catch (e) {
             e.status = 401;
             next(e);
