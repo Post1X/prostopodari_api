@@ -5,6 +5,7 @@ import Favorites from '../schemas/FavoritesSchema';
 import FavoriteStore from '../schemas/FavoriteStoresSchema';
 import CartsSchema from '../schemas/CartsSchema';
 import CartItem from '../schemas/CartItemsSchema';
+import Banners from '../schemas/BannersSchema';
 
 // git
 
@@ -559,6 +560,20 @@ class GoodsController {
                 .populate('store_id')
                 .populate('subcategory_id')
             res.status(200).json(goods)
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static getBanner = async (req, res, next) => {
+        try {
+            const banner = await Banners.findOne({
+                isNew: true
+            });
+            res.status(200).json({
+                banner: banner.url
+            })
         } catch (e) {
             e.status = 401;
             next(e);

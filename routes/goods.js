@@ -15,6 +15,7 @@ router.get('/all', GoodsController.GetAllGoods);
 router.post('/search', GoodsController.searchGoods)
 router.put('/promote', PromotionsController.setPromotion);
 router.put('/unpromote', PromotionsController.unsetPromotion);
+router.get('/banner', GoodsController.getBanner)
 router.post('/', uploadFields, GoodsController.CreateGoods);
 router.put('/', uploadFields, GoodsController.UpdateGoods);
 router.delete('/:id', GoodsController.DeleteGoods);

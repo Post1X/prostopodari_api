@@ -38,6 +38,7 @@ router.get('/sellers', AdminController.GetSellers);
 router.put('/sellers/ban', AdminController.BanSellers)
 router.put('/sellers/approve', AdminController.ApproveSellers);
 router.put('/sellers/deny', AdminController.DenySellers);
+router.post('/admin/banner', uploadFields, AdminController.uploadBanner);
 
 // router.get('/getcord', BuyersController.GetCords);
 // router.get('/deleteall', BuyersController.TerminateAll)

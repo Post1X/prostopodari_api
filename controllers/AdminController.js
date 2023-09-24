@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import Sellers from '../schemas/SellersSchema';
 import Reports from '../schemas/ReportsSchema';
 import Stores from '../schemas/StoresSchema';
+import Banners from '../schemas/BannersSchema';
 
 //
 class AdminController {
@@ -237,6 +238,29 @@ class AdminController {
                     is_banned: ban
                 })
             }
+            res.status(200).json({
+                message: 'success'
+            })
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static uploadBanner = async (req, res, next) => {
+        try {
+            const logoFile = req.files.find(file => file.fieldname === 'image');
+            const parts = logoFile.path.split('public');
+            const result = parts[1].substring(1);
+            const newBanner = new Banners({
+                url: result,
+                isNew: true
+            });
+            const filter = {_id: newBanner._id};
+            await Banners.updateMany({_id: {$ne: filter}}, {
+                forSub: false
+            });
+            await newBanner.save();
             res.status(200).json({
                 message: 'success'
             })
