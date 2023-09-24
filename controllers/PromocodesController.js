@@ -144,6 +144,34 @@ class PromocodesController {
             next(e);
         }
     }
+    //
+    static checkPromocode = async (req, res, next) => {
+        try {
+            const {text} = req.body;
+            const {user_id} = req;
+            let promo;
+            const promocode = await Promocodes.findOne({
+                text: text,
+                user_id: user_id
+            })
+            if (!promocode) {
+                promo = await Promocodes.findOne({
+                    text: text,
+                    priority: 'admin'
+                })
+            }
+            ;
+            if (promo || promocode) {
+                res.status(200).json(true);
+            }
+            else {
+                res.status(200).json(false)
+            }
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
 }
 
 export default PromocodesController;

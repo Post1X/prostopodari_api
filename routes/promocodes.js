@@ -8,4 +8,5 @@ router.post('/admin', PromocodesController.CreatePromocodeAdmin)
 router.post('/', PromocodesController.CreatePromocode);
 router.put('/', PromocodesController.UpdatePromocode);
 router.delete('/', PromocodesController.DeletePromocode);
+router.post('/check', PromocodesController.checkPromocode);
 export default router;
