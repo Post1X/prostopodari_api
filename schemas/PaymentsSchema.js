@@ -12,6 +12,12 @@ const PaymentsSchema = new Schema({
     },
     forSub: {
         type: Schema.Types.Boolean
+    },
+    isTempOrder: {
+        type: Schema.Types.Boolean
+    },
+    isNew: {
+        type: Schema.Types.Boolean
     }
 })
 

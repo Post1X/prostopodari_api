@@ -3,6 +3,8 @@ import Sellers from '../schemas/SellersSchema';
 import YooKassa from 'yookassa'
 import Payments from '../schemas/PaymentsSchema';
 import CheckPayment from '../utilities/checkpayment';
+import TempOrders from '../schemas/TempOrders';
+import Orders from '../schemas/OrdersSchema';
 
 const yk = new YooKassa({
     shopId: '244372',
@@ -83,6 +85,57 @@ const authorization = async (req, res, next) => {
                 }
             } else {
                 console.log('subscription_until is null or undefined');
+            }
+        }
+        if (userInfo.phone_number) {
+            console.log('321321312')
+            const order = await Payments.findOne({
+                seller_id: userInfo.user_id,
+                isNew: true,
+                isTempOrder: true
+            });
+            if (order) {
+                const paymentStatus = await CheckPayment(order.order_id);
+                let tempOrderObj;
+                if (paymentStatus.status === 'succeeded') {
+                    tempOrderObj = await TempOrders.findOne({
+                        isNew: true
+                    });
+                    const newOrder = new Orders({
+                        _id: tempOrderObj._id,
+                        title: tempOrderObj.title,
+                        store_id: tempOrderObj.store_id,
+                        user_id: tempOrderObj.user_id,
+                        delivery_date: tempOrderObj.delivery_date,
+                        delivery_time: tempOrderObj.delivery_time,
+                        delivery_address: tempOrderObj.delivery_address,
+                        delivery_city: tempOrderObj.delivery_city,
+                        delivery_info: tempOrderObj.delivery_info,
+                        delivery_price: tempOrderObj.delivery_price,
+                        full_amount: tempOrderObj.full_amount,
+                        payment_type: tempOrderObj.payment_type,
+                        commission_percentage: tempOrderObj.commission_percentage,
+                        income: tempOrderObj.income,
+                        status_id: '64a5e7fd8d8485a11d0649f2',
+                        promocode: tempOrderObj.promocode,
+                        postcard: tempOrderObj.postcard,
+                        comment: tempOrderObj.comment,
+                        paid: true,
+                        paymentCard: tempOrderObj.paymentCard,
+                        promocodeComission: tempOrderObj.promocodeComission,
+                        comission: tempOrderObj.comission,
+                        phone_number: tempOrderObj.phone_number,
+                        name: tempOrderObj.name,
+                        count: tempOrderObj.count,
+                    });
+                    await newOrder.save();
+                    await Payments.deleteOne({
+                        _id: order._id
+                    });
+                    await TempOrders.deleteOne({
+                        _id: tempOrderObj._id
+                    })
+                }
             }
         }
         next();

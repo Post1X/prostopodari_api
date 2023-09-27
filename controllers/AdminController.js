@@ -256,6 +256,7 @@ class AdminController {
                 url: result,
                 isNew: true
             });
+            console.log(newBanner._id)
             const filter = {_id: newBanner._id};
             await Banners.updateMany({_id: {$ne: filter}}, {
                 forSub: false

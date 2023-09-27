@@ -5,6 +5,7 @@ import Cart from '../schemas/CartsSchema';
 import Stores from '../schemas/StoresSchema';
 import CartItem from '../schemas/CartItemsSchema';
 import Promocodes from '../schemas/PromocodesSchema';
+import TempOrders from '../schemas/TempOrders';
 
 //
 class OrdersController {
@@ -20,7 +21,7 @@ class OrdersController {
                 name,
                 promocode,
                 comment,
-                distance
+                delivery
             } = req.body;
             const {user_id} = req;
             const titleArr = [];
@@ -54,17 +55,16 @@ class OrdersController {
                 obj[`item${index + 1}`] = count;
                 return obj;
             }, {});
-            console.log(countObj)
+            console.log(day, '| ', time, 'day | time')
+            console.log(countObj, '312321321312321321')
             const goodsIds = modifiedGoods.map((good) => good.items[0].good_id._id);
             const storeComission = await Stores.findOne({
                 _id: storeId
             })
-            console.log(storeComission.comission)
             let totalPrice = modifiedGoods.reduce((accumulator, good) => {
                 const price = good.items[0].good_id.price;
                 return accumulator + price;
             }, 0);
-
             const weekdays = storeComission.weekdays;
             const weekends = storeComission.weekends;
             const delivery_price = storeComission.distance;
@@ -85,13 +85,16 @@ class OrdersController {
             if (!promocode) {
                 income = (totalPrice * 30) / 100;
             }
-            const deliveryPrice = delivery_price * distance;
+            const deliveryPrice = Math.round(delivery_price * delivery);
             totalPrice = totalPrice + deliveryPrice;
             income = income + deliveryPrice;
             const status = '64a5e7e78d8485a11d0649ee';
             const card = '1234 5678 9123 1412';
             const objId = mongoose.Types.ObjectId(status)
             const timeParts = req.body.time.split(':');
+            if (timeParts[1].length === 1) {
+                timeParts[1] = '0' + timeParts[1];
+            }
             const dateParts = req.body.day.split('.');
             const parsedDay = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
             parsedDay.setUTCHours(timeParts[0]);
@@ -100,7 +103,6 @@ class OrdersController {
             console.log(parsedDay);
             console.log(dayOfWeek, 'dayOfWeek');
             let isOpen = false;
-
             if (dayOfWeek >= 1 && dayOfWeek <= 5) {
                 const {from, to} = weekdays;
                 console.log(from, to);
@@ -123,14 +125,12 @@ class OrdersController {
                 const toTime = new Date(parsedDay);
                 toTime.setUTCHours(parseInt(to.split(':')[0], 10));
                 toTime.setUTCMinutes(parseInt(to.split(':')[1], 10));
-
                 isOpen = parsedDay >= fromTime && parsedDay <= toTime;
             }
-
             if (!isOpen) {
                 return res.status(400).json({message: 'В это время магазин не работает'});
             }
-            const newOrders = new Orders({
+            const newOrders = new TempOrders({
                 title: titleString,
                 goods_ids: goodsIds,
                 user_id: user_id,
@@ -154,6 +154,9 @@ class OrdersController {
                 paymentCard: card,
                 promocodeComission: promocodeCommission,
             });
+            await TempOrders.updateMany({
+                isNew: false
+            })
             await newOrders.save();
             res.status(200).json({
                 message: 'success'

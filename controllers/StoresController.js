@@ -14,13 +14,15 @@ class StoresController {
             }
             const {user_id} = req;
             const {address, title, about_store, city, distPrice, weekdays, weekends, lon, lat} = req.body;
-            console.log(weekends, 'dpwoakdao')
-            console.log(weekdays, 'dwoaid')
+            console.log(weekends, 'weekends')
+            console.log(weekdays, 'weekdays')
+            var formattedWeekDays = JSON.parse(weekdays);
+            var formattedWeekEnds = JSON.parse(weekends);
             if (req.files.length !== 0) {
                 const logoFile = req.files.find(file => file.fieldname === 'logo');
                 const parts = logoFile.path.split('public');
                 const result = parts[1].substring(1);
-                const comission = 30;
+                // const comission = 30;
                 const newStores = new Stores({
                     seller_user_id: user_id,
                     address: address,
@@ -31,8 +33,8 @@ class StoresController {
                     is_disabled: false,
                     city: city,
                     distance: distPrice,
-                    weekdays: weekdays,
-                    weekends: weekends,
+                    weekdays: formattedWeekDays,
+                    weekends: formattedWeekEnds,
                     lon: lon,
                     lat: lat
                 });
@@ -128,7 +130,9 @@ class StoresController {
                 photoArray.push(result)
             }
             const {store_id} = req.query;
-            const {address, title, about_store, city, distPrice, lon, lat} = req.body;
+            const {address, title, about_store, city, distPrice, lon, lat, weekdays, weekends} = req.body;
+            var formattedWeekDays = JSON.parse(weekdays);
+            var formattedWeekEnds = JSON.parse(weekends);
             const storeCheck = await Stores.findOne({
                 _id: store_id
             });
@@ -146,6 +150,8 @@ class StoresController {
                         about_store: about_store,
                         logo_url: photoArray[0],
                         distance: distPrice,
+                        weekdays: formattedWeekDays,
+                        weekends: formattedWeekEnds,
                         lon: lon,
                         lat: lat
                     });
@@ -155,6 +161,8 @@ class StoresController {
                     },
                     {
                         city: city,
+                        weekdays: formattedWeekDays,
+                        weekends: formattedWeekEnds,
                         address: address,
                         title: title,
                         about_store: about_store,

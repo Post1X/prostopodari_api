@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import YooKassa from 'yookassa';
+import Payments from '../schemas/PaymentsSchema';
 
 class PaymentsController {
     static Test = async (req, res, next) => {
@@ -7,6 +8,7 @@ class PaymentsController {
             const {user_id} = req;
             const {value} = req.body;
             const url = 'https://api.yookassa.ru/v3/payments';
+
             function generateRandomString(length) {
                 const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
                 let randomString = '';
@@ -43,8 +45,19 @@ class PaymentsController {
                 body: JSON.stringify(requestData)
             })
                 .then(response => response.json())
-                .then(data => {
-                    const newPayment =
+                .then(async data => {
+                    const newPayment = new Payments({
+                        seller_id: user_id,
+                        order_id: data.id,
+                        isTempOrder: true,
+                        isNew: true
+                    });
+                    await Payments.updateMany({
+                        seller_id: user_id
+                    }, {
+                        isNew: false
+                    });
+                    await newPayment.save();
                     res.status(200).json({
                         data: data.confirmation.confirmation_url,
                     })

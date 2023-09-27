@@ -12,7 +12,6 @@ class FinancesController {
             }
             const finances = [];
             for (const store of stores) {
-
                 const order = await Orders.find({store_id: store._id})
                     .populate('user_id')
                     .populate('goods_ids')

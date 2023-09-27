@@ -93,13 +93,12 @@ class CategoriesController {
     //
     static CreateCategory = async (req, res, next) => {
         try {
-            if (!req.isAdmin || req.isAdmin !== true) {
-                res.status(400).json({
-                    error: 'У вас нет права находиться на данной странице.'
-                })
-            }
+            // if (!req.isAdmin || req.isAdmin !== true) {
+            //     res.status(400).json({
+            //         error: 'У вас нет права находиться на данной странице.'
+            //     })
+            // }
             const {title, sort_number, parameters, comission_percentage} = req.body;
-
             if (req.files.length !== 0) {
                 const logoFile = req.files.find(file => file.fieldname === 'photo_url');
                 const parts = logoFile.path.split('public');
@@ -196,11 +195,11 @@ class CategoriesController {
     //
     static CreateSubCategory = async (req, res, next) => {
         try {
-            if (!req.isAdmin || req.isAdmin !== true) {
-                res.status(400).json({
-                    error: 'У вас нет права находиться на данной странице.'
-                })
-            }
+            // if (!req.isAdmin || req.isAdmin !== true) {
+            //     res.status(400).json({
+            //         error: 'У вас нет права находиться на данной странице.'
+            //     })
+            // }
             const {category_id, title, parameters, sort_number} = req.body;
             const subcategory = await SubCategories.findOne({
                 name: title,
