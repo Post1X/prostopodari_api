@@ -171,7 +171,10 @@ class BuyersController {
     static ChangeGeostatus = async (req, res, next) => {
         try {
             const {user_id} = req;
-            const {city, address} = req.body;
+            const {city, address, addressAll} = req.body;
+            console.log(city, 'city')
+            console.log(address, 'address')
+            console.log(addressAll, 'addressAll')
             await Buyers.findOneAndUpdate({
                 _id: user_id
             }, {

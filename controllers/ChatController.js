@@ -165,7 +165,6 @@ class ChatController {
             const buyer = await Buyers.findOne({
                 _id: user_id
             })
-            console.log(buyer)
             const seller = await Sellers.findOne({
                 _id: seller_id
             });
@@ -175,10 +174,7 @@ class ChatController {
                 })
                 console.log('bus')
             }
-            ;
             if (!chat) {
-                console.log('dreamybull')
-                console.log(buyer)
                 const newRoomId = uuid();
                 const newChat = new UserChats({
                     name: seller ? seller.legal_name : 'Продавец',
@@ -208,14 +204,63 @@ class ChatController {
             next(e);
         }
     }
+    //
+    static isStoreChatCreated = async (req, res, next) =>
+    {
+        try
+        {
+            const {user_id} = req;
+            const {buyer_id} = req.query;
+            const chat = await UserChats.findOne({
+                user_id: buyer_id,
+                seller_id: user_id
+            });
+            console.log(chat);
+            const buyer = await Buyers.findOne({
+                _id: buyer_id
+            })
+            const seller = await Sellers.findOne({
+                _id: user_id
+            });
+            if (chat) {
+                res.status(200).json({
+                    chatID: chat.chatID
+                })
+                console.log('bus')
+            }
+            console.log(seller);
+            if (!chat) {
+                const newRoomId = uuid();
+                const newChat = new UserChats({
+                    name: seller.name ? seller.name : 'Продавец',
+                    user_id: buyer_id,
+                    seller_id: user_id,
+                    chatID: newRoomId,
+                    phone_number: buyer.phone_number,
+                    newMessCount: 0,
+                    priority: 'user',
+                    lastMessage: 'Здравствуйте!'
+                });
+                const newMessages = new Messages({
+                    room_id: newRoomId,
+                    name: seller.name ? seller.name : 'Продавец',
+                    role: 'seller',
+                    text: 'Здравствуйте!',
+                    isRead: false,
+                    isImage: false
+                });
+                await newMessages.save();
+                await newChat.save();
+                res.status(200).json({
+                    chatID: newRoomId
+                })
+            }
+        }
+        catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
 }
 
 export default ChatController;
-
-//
-// name: seller.name,
-//     user_id: socket.user_id,
-//     chatID: socket.roomId,
-//     phone_number: seller.phone_number,
-//     newMessCount: 0,
-//     lastMessage: data

@@ -55,8 +55,6 @@ class OrdersController {
                 obj[`item${index + 1}`] = count;
                 return obj;
             }, {});
-            console.log(day, '| ', time, 'day | time')
-            console.log(countObj, '312321321312321321')
             const goodsIds = modifiedGoods.map((good) => good.items[0].good_id._id);
             const storeComission = await Stores.findOne({
                 _id: storeId
@@ -68,24 +66,27 @@ class OrdersController {
             const weekdays = storeComission.weekdays;
             const weekends = storeComission.weekends;
             const delivery_price = storeComission.distance;
+            const deliveryPrice = Math.round(delivery_price * delivery);
             let promocodeCommission;
             let income;
+            let totalIncomeWithComission;
+            const originalIncome = (totalPrice + deliveryPrice) * 30 / 100;
             if (promocode) {
                 const promocodeGet = await Promocodes.findOne({
                     text: promocode
-                })
-                promocodeCommission = promocodeGet.percentage;
-                income = (totalPrice * (promocodeCommission + 30)) / 100;
+                });
+                promocodeCommission = promocodeGet.percentage / 100;
+                const commissionIncomeDifference = (totalPrice + deliveryPrice) * promocodeCommission / 10;
+                totalIncomeWithComission = totalPrice - commissionIncomeDifference;
+                income = totalIncomeWithComission - (totalIncomeWithComission * 30) / 100;
                 if (promocodeGet.priority === 'user') {
                     await Promocodes.findOneAndDelete({
                         text: promocode
-                    })
+                    });
                 }
+            } else {
+                income = originalIncome;
             }
-            if (!promocode) {
-                income = (totalPrice * 30) / 100;
-            }
-            const deliveryPrice = Math.round(delivery_price * delivery);
             totalPrice = totalPrice + deliveryPrice;
             income = income + deliveryPrice;
             const status = '64a5e7e78d8485a11d0649ee';
@@ -142,7 +143,7 @@ class OrdersController {
                 delivery_price: deliveryPrice,
                 delivery_time: time,
                 phone_number: phone_number,
-                full_amount: totalPrice,
+                full_amount: totalIncomeWithComission ? totalIncomeWithComission : totalPrice,
                 postcard: postcard,
                 income: income,
                 status_id: objId,
@@ -161,12 +162,6 @@ class OrdersController {
             res.status(200).json({
                 message: 'success'
             });
-            await Cart.deleteMany({
-                user: user_id
-            });
-            await CartItem.deleteMany({
-                buyer_id: user_id
-            })
             await newOrders.save();
         } catch (e) {
             e.status = 401;

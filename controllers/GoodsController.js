@@ -17,6 +17,7 @@ class GoodsController {
             //         error: 'У вас нет права находиться на данной странице.'
             //     })
             // }
+            let isGettingReadyCheck;
             const {
                 category_id,
                 subcategory_id,
@@ -27,8 +28,13 @@ class GoodsController {
                 short_description,
                 price,
                 parameters,
+                isGettingReady
             } = req.body;
             //
+            if (isGettingReady)
+            {
+                isGettingReadyCheck = true;
+            }
             const photoArray = [];
             console.log(req.files)
             for (let i = 0; i < req.files.length; i++) {
@@ -52,7 +58,8 @@ class GoodsController {
                 short_description: short_description,
                 price: price,
                 parameters: parameters,
-                is_promoted: false
+                is_promoted: false,
+                isGettingReady: isGettingReadyCheck ? isGettingReadyCheck : false
             });
             await newGoods.save();
             res.status(200).json({
@@ -73,8 +80,6 @@ class GoodsController {
             }
             const {user_id} = req;
             const {store_id, stock, sort, category, subcategory, search} = req.query;
-            //
-            //
             let filter = {};
             if (category) {
                 const categoryIds = category.split(',');
@@ -86,18 +91,15 @@ class GoodsController {
                 const subCategoryObjectIds = subCategoryIds.map(result => mongoose.Types.ObjectId(result.trim()));
                 filter.subcategory_id = {$in: subCategoryObjectIds};
             }
-            if (store_id) {
-                const storeId = mongoose.Types.ObjectId(store_id)
-                console.log(storeId)
-                filter.store_id = {$in: storeId}
+            if (stock) {
+                filter.count = {$lte: 0}
             }
-            if (stock === 'true') {
-                filter.count = {$gte: 1};
-            }
+            else
+                filter.count = {$gte: 1}
             if (search) {
                 filter.title = {$regex: new RegExp(search, 'i')};
             }
-            //
+            filter.store_id = store_id;
             let goods = [];
             //
             if (sort === 'newFirst' || sort === 'oldFirst') {

@@ -39,6 +39,7 @@
     "socket.io": "^4.7.1",
     "socket.io-auth": "^1.0.0",
     "socket.io-stream": "^0.9.1",
+    "swagger-autogen": "^2.23.7",
     "uuidv4": "^6.2.13",
     "yarn": "^1.22.19",
     "ymaps": "^0.2.1",

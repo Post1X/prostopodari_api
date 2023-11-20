@@ -15,6 +15,9 @@ const CartItemSchema = new mongoose.Schema({
     buyer_id: {
         type: mongoose.Types.ObjectId,
         ref: 'Buyers'
+    },
+    isGettingReady: {
+        type: mongoose.Schema.Types.Boolean
     }
 });
 

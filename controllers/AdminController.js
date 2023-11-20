@@ -249,14 +249,11 @@ class AdminController {
     //
     static uploadBanner = async (req, res, next) => {
         try {
-            const logoFile = req.files.find(file => file.fieldname === 'image');
-            const parts = logoFile.path.split('public');
-            const result = parts[1].substring(1);
+            const {image} = req.body;
             const newBanner = new Banners({
-                url: result,
+                url: image,
                 isNew: true
             });
-            console.log(newBanner._id)
             const filter = {_id: newBanner._id};
             await Banners.updateMany({_id: {$ne: filter}}, {
                 forSub: false
@@ -266,6 +263,19 @@ class AdminController {
                 message: 'success'
             })
         } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    static uploadImage = async (req, res, next) => {
+        try {
+            const file = req.files.find(file => file.fieldname === 'file');
+            const parts = file.path.split('public');
+            const finalFile = `http://194.58.121.218:3001/${parts[1].substring(1)}`;
+            res.status(200).json(
+                finalFile
+            )
+        }catch (e) {
             e.status = 401;
             next(e);
         }

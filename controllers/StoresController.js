@@ -3,6 +3,7 @@ import Sellers from '../schemas/SellersSchema';
 import Goods from '../schemas/GoodsSchema';
 import Reviews from '../schemas/ReviewsSchema';
 import FavoriteStore from '../schemas/FavoriteStoresSchema';
+import Favorites from '../schemas/FavoritesSchema';
 
 class StoresController {
     static CreateStore = async (req, res, next) => {
@@ -22,7 +23,6 @@ class StoresController {
                 const logoFile = req.files.find(file => file.fieldname === 'logo');
                 const parts = logoFile.path.split('public');
                 const result = parts[1].substring(1);
-                // const comission = 30;
                 const newStores = new Stores({
                     seller_user_id: user_id,
                     address: address,
@@ -278,6 +278,9 @@ class StoresController {
             await FavoriteStore.deleteMany({
                 store_id: store_id
             })
+            await Favorites.deleteMany({
+                store_id: store_id
+            });
             const seller = await Sellers.findOne({_id: user_id}).populate({
                 path: 'active_store',
             });

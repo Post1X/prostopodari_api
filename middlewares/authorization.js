@@ -5,6 +5,8 @@ import Payments from '../schemas/PaymentsSchema';
 import CheckPayment from '../utilities/checkpayment';
 import TempOrders from '../schemas/TempOrders';
 import Orders from '../schemas/OrdersSchema';
+import Cart from '../schemas/CartsSchema';
+import CartItem from '../schemas/CartItemsSchema';
 
 const yk = new YooKassa({
     shopId: '244372',
@@ -134,6 +136,12 @@ const authorization = async (req, res, next) => {
                     });
                     await TempOrders.deleteOne({
                         _id: tempOrderObj._id
+                    })
+                    await Cart.deleteMany({
+                        user: user_id
+                    });
+                    await CartItem.deleteMany({
+                        buyer_id: user_id
                     })
                 }
             }

@@ -8,22 +8,21 @@ class CartsController {
         try {
             const {user_id} = req;
             const {good_id, count} = req.body;
-            console.log(count)
             const good = await Goods.findOne({_id: good_id});
             if (!good) {
                 return res.status(300).json({error: 'Товар не найден.'});
             }
             const cartItems = await CartItem.find({buyer_id: user_id});
-            if (count > good.count) {
+            if (count > good.count && isGettingReady === false) {
                 return res.status(300).json({error: 'Товар отсутствует на складе.'});
             }
-            // const cartItemWithDifferentStore = cartItems.find(item => item ? item.store_id.toString() !== good.store_id.toString() : true);
-            // if (cartItemWithDifferentStore) {
-            //     return res.status(400).json({error: 'Товары могут быть только из одного магазина.'});
-            // }
-            await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
+            const cartItemWithDifferentStore = cartItems.find(item => item ? item.store_id.toString() !== good.store_id.toString() : true);
+            if (cartItemWithDifferentStore) {
+                return res.status(400).json({error: 'Товары могут быть только из одного магазина.'});
+            }
+            // await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
             const newCartItem = new CartItem({
-                good_id: mongoose.Types.ObjectId(good_id), count: count, store_id: good.store_id, buyer_id: user_id
+                good_id: mongoose.Types.ObjectId(good_id), count: count, store_id: good.store_id, buyer_id: user_id, isGettingReady: good.isGettingReady ? true : false
             });
             await newCartItem.save();
             const newCart = new Cart({
@@ -97,10 +96,10 @@ class CartsController {
                         }
                     }
                 );
-                await Goods.findOneAndUpdate(
-                    {_id: good_id},
-                    {$inc: {count: count}}
-                );
+                // await Goods.findOneAndUpdate(
+                //     {_id: good_id},
+                //     {$inc: {count: count}}
+                // );
                 res.status(200).json({
                     message: 'success'
                 });
@@ -108,14 +107,14 @@ class CartsController {
                 const cart = await Cart.findOne({
                     _id: cartId
                 })
-                await Goods.findOneAndUpdate(
-                    {_id: cart.items[0].good_id},
-                    {$inc: {count: cart.items[0].count}}
-                );
+                // await Goods.findOneAndUpdate(
+                //     {_id: cart.items[0].good_id},
+                //     {$inc: {count: cart.items[0].count}}
+                // );
                 await Cart.findOneAndDelete({
                     _id: cartId
                 });
-                await Goods.findOneAndUpdate({})
+                // await Goods.findOneAndUpdate({})
                 res.status(200).json({
                     message: 'success'
                 });
@@ -138,7 +137,7 @@ class CartsController {
             const good = await Goods.findOne({
                 _id: good_id
             })
-            if (count > good.count) {
+            if (cartGood.items[0].count + count > good.count) {
                 res.status(300).json({error: 'Товар отсутствует на складе.'});
             } else {
                 await Cart.findOneAndUpdate({
@@ -146,7 +145,7 @@ class CartsController {
                 }, {
                     $set: {'items.0.count': Number(cartGood.items[0].count) + Number(count)}
                 });
-                await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
+                // await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
                 res.status(200).json({
                     message: 'success'
                 })

@@ -44,6 +44,9 @@ const GoodsSchema = new Schema({
     },
     parameters: {
         type: Schema.Types.Mixed
+    },
+    isGettingReady: {
+        type: Schema.Types.Boolean
     }
 })
 
