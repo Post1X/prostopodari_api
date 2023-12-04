@@ -12,6 +12,7 @@ import orders from './orders';
 import favorites from './favorites';
 import finances from './finances';
 import carts from './carts';
+import subscribe from './subscribe';
 import chat from './chat';
 // a
 
@@ -30,4 +31,5 @@ router.use('/orders', authorization, orders);
 router.use('/chat', authorization, chat);
 router.use('/favorites', authorization, favorites);
 router.use('/finances', authorization, finances)
+router.use('/subscribe', authorization, subscribe)
 export default router;

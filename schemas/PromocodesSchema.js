@@ -22,6 +22,13 @@ const PromocodesSchema = new Schema({
     },
     priority: {
         type: Schema.Types.String
+    },
+    was_used: {
+        type: Schema.Types.Boolean,
+        default: false
+    },
+    next_usage: {
+        type: Schema.Types.Date
     }
 })
 

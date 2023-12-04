@@ -17,6 +17,7 @@ class GoodsController {
             //         error: 'У вас нет права находиться на данной странице.'
             //     })
             // }
+            const {user_id} = req;
             let isGettingReadyCheck;
             const {
                 category_id,
@@ -59,7 +60,8 @@ class GoodsController {
                 price: price,
                 parameters: parameters,
                 is_promoted: false,
-                isGettingReady: isGettingReadyCheck ? isGettingReadyCheck : false
+                isGettingReady: isGettingReadyCheck ? isGettingReadyCheck : false,
+                seller_user_id: user_id
             });
             await newGoods.save();
             res.status(200).json({

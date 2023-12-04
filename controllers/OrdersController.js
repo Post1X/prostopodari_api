@@ -6,6 +6,8 @@ import Stores from '../schemas/StoresSchema';
 import CartItem from '../schemas/CartItemsSchema';
 import Promocodes from '../schemas/PromocodesSchema';
 import TempOrders from '../schemas/TempOrders';
+import Payments from '../schemas/PaymentsSchema';
+import CheckPayment from '../utilities/checkpayment';
 
 //
 class OrdersController {
@@ -69,26 +71,43 @@ class OrdersController {
             const deliveryPrice = Math.round(delivery_price * delivery);
             let promocodeCommission;
             let income;
+            let incomeWithoutPromocode;
             let totalIncomeWithComission;
             const originalIncome = (totalPrice + deliveryPrice) * 30 / 100;
+            let promocodeGet;
             if (promocode) {
-                const promocodeGet = await Promocodes.findOne({
-                    text: promocode
+                const userPromo = await Promocodes.findOne({
+                    text: promocode,
+                    user_id: user_id
                 });
+                const adminPromo = await Promocodes.findOne({
+                    text: promocode,
+                    priority: 'admin'
+                });
+                promocodeGet = userPromo ? userPromo : adminPromo
                 promocodeCommission = promocodeGet.percentage / 100;
+                const parts = promocodeGet.date.split('/'); // Разделение строки на составляющие
+                const isoDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).toISOString();
+                const futureDate = isoDate.setDate(isoDate.getMonth() + 12);
                 const commissionIncomeDifference = (totalPrice + deliveryPrice) * promocodeCommission / 10;
+                console.log(commissionIncomeDifference, 'comissionincomedifference')
                 totalIncomeWithComission = totalPrice - commissionIncomeDifference;
+                console.log(totalIncomeWithComission, 'totalincomewithcomission')
                 income = totalIncomeWithComission - (totalIncomeWithComission * 30) / 100;
+                console.log(income, 'income')
                 if (promocodeGet.priority === 'user') {
-                    await Promocodes.findOneAndDelete({
-                        text: promocode
+                    await Promocodes.findOneAndUpdate({
+                        _id: promocodeGet._id
+                    }, {
+                        was_used: true,
+                        next_usage: futureDate
                     });
                 }
             } else {
-                income = originalIncome;
+                const totalAmount = totalPrice + deliveryPrice;
+                const commission = 0.3;
+                incomeWithoutPromocode = totalAmount - (totalAmount * commission);
             }
-            totalPrice = totalPrice + deliveryPrice;
-            income = income + deliveryPrice;
             const status = '64a5e7e78d8485a11d0649ee';
             const card = '1234 5678 9123 1412';
             const objId = mongoose.Types.ObjectId(status)
@@ -118,7 +137,6 @@ class OrdersController {
                 isOpen = parsedDay >= fromTime && parsedDay <= toTime;
             } else if (dayOfWeek === 0 || dayOfWeek === 6) {
                 const {from, to} = weekends;
-
                 const fromTime = new Date(parsedDay);
                 fromTime.setUTCHours(parseInt(from.split(':')[0], 10));
                 fromTime.setUTCMinutes(parseInt(from.split(':')[1], 10));
@@ -128,9 +146,9 @@ class OrdersController {
                 toTime.setUTCMinutes(parseInt(to.split(':')[1], 10));
                 isOpen = parsedDay >= fromTime && parsedDay <= toTime;
             }
-            if (!isOpen) {
-                return res.status(400).json({message: 'В это время магазин не работает'});
-            }
+            // if (!isOpen) {
+            //     return res.status(400).json({message: 'В это время магазин не работает'});
+            // }
             const newOrders = new TempOrders({
                 title: titleString,
                 goods_ids: goodsIds,
@@ -143,9 +161,9 @@ class OrdersController {
                 delivery_price: deliveryPrice,
                 delivery_time: time,
                 phone_number: phone_number,
-                full_amount: totalIncomeWithComission ? totalIncomeWithComission : totalPrice,
+                full_amount: (totalIncomeWithComission ? totalIncomeWithComission : totalPrice) + deliveryPrice,
                 postcard: postcard,
-                income: income,
+                income: promocode ? income : incomeWithoutPromocode,
                 status_id: objId,
                 commission_percentage: 30,
                 count: countArr,
@@ -305,6 +323,67 @@ class OrdersController {
                     path: 'status_id',
                 })
             res.status(200).json(order)
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static confirmOrder = async (req, res, next) => {
+        try {
+            const {user_id} = req;
+            const order = await Payments.findOne({
+                seller_id: user_id,
+                isNew: true,
+                isTempOrder: true
+            });
+            const paymentStatus = await CheckPayment(order.order_id);
+            let tempOrderObj;
+            if (paymentStatus.status === 'succeeded') {
+                tempOrderObj = await TempOrders.findOne({
+                    isNew: true
+                });
+                const newOrder = new Orders({
+                    _id: tempOrderObj._id,
+                    title: tempOrderObj.title,
+                    store_id: tempOrderObj.store_id,
+                    user_id: tempOrderObj.user_id,
+                    delivery_date: tempOrderObj.delivery_date,
+                    delivery_time: tempOrderObj.delivery_time,
+                    delivery_address: tempOrderObj.delivery_address,
+                    delivery_city: tempOrderObj.delivery_city,
+                    delivery_info: tempOrderObj.delivery_info,
+                    delivery_price: tempOrderObj.delivery_price,
+                    full_amount: tempOrderObj.full_amount,
+                    payment_type: tempOrderObj.payment_type,
+                    commission_percentage: tempOrderObj.commission_percentage,
+                    income: tempOrderObj.income,
+                    status_id: '64a5e7fd8d8485a11d0649f2',
+                    promocode: tempOrderObj.promocode,
+                    postcard: tempOrderObj.postcard,
+                    comment: tempOrderObj.comment,
+                    paid: true,
+                    paymentCard: tempOrderObj.paymentCard,
+                    promocodeComission: tempOrderObj.promocodeComission,
+                    comission: tempOrderObj.comission,
+                    phone_number: tempOrderObj.phone_number,
+                    name: tempOrderObj.name,
+                    count: tempOrderObj.count,
+                });
+                await newOrder.save();
+                await Payments.deleteOne({
+                    _id: order._id
+                });
+                await TempOrders.deleteOne({
+                    _id: tempOrderObj._id
+                })
+                await Cart.deleteMany({
+                    user: user_id
+                });
+                await CartItem.deleteMany({
+                    buyer_id: user_id
+                })
+            }
         } catch (e) {
             e.status = 401;
             next(e);

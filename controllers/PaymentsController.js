@@ -1,6 +1,9 @@
 import fetch from 'node-fetch';
 import YooKassa from 'yookassa';
 import Payments from '../schemas/PaymentsSchema';
+import Cart from '../schemas/CartsSchema';
+import Stores from '../schemas/StoresSchema';
+import TempOrders from '../schemas/TempOrders';
 
 class PaymentsController {
     static Test = async (req, res, next) => {
@@ -83,10 +86,15 @@ class PaymentsController {
         }
     }
     //
-    static testModule = async (req, res, next) => {
+    static getDetailsOnOrder = async (req, res, next) => {
         try {
-            console.log('ANONIM')
-            res.send('HelloWorld')
+            const {user_id} = req;
+            const tempOrder = await TempOrders.findOne({
+                user_id: user_id
+            });
+            res.status(200).json({
+                full_amount: tempOrder.full_amount
+            })
         } catch (e) {
             e.status = 401;
             next(e);

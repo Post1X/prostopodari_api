@@ -32,7 +32,7 @@ router.get('/check-sub', PromotionsController.checkPromotion);
 router.post('/stores/active', SellersController.AddStoreToActive);
 // admin
 router.post('/login/admin', AdminController.AdminLogin);
-// router.get('/sellers/claims', AdminController.ClaimSellers);
+router.get('/sellers/claims', AdminController.ClaimSellers);
 router.put('/sellers/claims', AdminController.ChangeStatus);
 router.get('/sellers', AdminController.GetSellers);
 router.put('/sellers/ban', AdminController.BanSellers)

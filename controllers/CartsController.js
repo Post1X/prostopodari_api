@@ -104,17 +104,13 @@ class CartsController {
                     message: 'success'
                 });
             } else if (deleteAll) {
-                const cart = await Cart.findOne({
-                    _id: cartId
+                await CartItem.deleteMany({
+                    good_id: good_id,
+                    buyer_id: user_id
                 })
-                // await Goods.findOneAndUpdate(
-                //     {_id: cart.items[0].good_id},
-                //     {$inc: {count: cart.items[0].count}}
-                // );
                 await Cart.findOneAndDelete({
                     _id: cartId
                 });
-                // await Goods.findOneAndUpdate({})
                 res.status(200).json({
                     message: 'success'
                 });

@@ -150,10 +150,25 @@ class PromocodesController {
             const {text} = req.body;
             const {user_id} = req;
             let promo;
+            const currentDate = new Date();
             const promocode = await Promocodes.findOne({
                 text: text,
-                user_id: user_id
-            })
+                user_id: user_id,
+                was_used: false
+            });
+            if (promocode) {
+                const currentMonth = ('0' + (currentDate.getMonth() + 1)).slice(-2);
+                const currentDay = ('0' + currentDate.getDate()).slice(-2);
+                const promoNextUsageMonth = ('0' + (promocode.next_usage.getMonth() + 1)).slice(-2);
+                const promoNextUsageDay = ('0' + promocode.next_usage.getDate()).slice(-2);
+                const promoDateMonth = ('0' + (promocode.date.getMonth() + 1)).slice(-2);
+                const promoDateDay = ('0' + promocode.date.getDate()).slice(-2);
+
+                if ((`${currentDay}${currentMonth}`) === `${promoNextUsageDay}${promoNextUsageMonth}` && (`${currentDay}${currentMonth}` === `${promoDateDay}${promoDateMonth}`))
+                    res.status(200).json(true)
+                else
+                    res.status(200).json(false)
+            }
             if (!promocode) {
                 promo = await Promocodes.findOne({
                     text: text,
@@ -161,10 +176,9 @@ class PromocodesController {
                 })
             }
             ;
-            if (promo || promocode) {
+            if (promo && promocode) {
                 res.status(200).json(true);
-            }
-            else {
+            } else {
                 res.status(200).json(false)
             }
         } catch (e) {
