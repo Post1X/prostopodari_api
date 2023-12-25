@@ -15,6 +15,9 @@ const OrdersSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Stores'
     },
+    creationDate: {
+        type: Schema.Types.Date
+    },
     user_id: {
         type: Schema.Types.ObjectId,
         ref: 'Buyers'
@@ -82,6 +85,9 @@ const OrdersSchema = new Schema({
         type: Schema.Types.String
     },
     count: {
+        type: Schema.Types.Array
+    },
+    goods: {
         type: Schema.Types.Array
     }
 })

@@ -87,7 +87,13 @@ const TempOrdersSchema = new Schema({
     isNew: {
         type: Schema.Types.Boolean,
         default: true
-    }
+    },
+    goods: {
+        type: Schema.Types.Array
+    },
+    creationDate: {
+        type: Schema.Types.Date
+    },
 })
 
 const TempOrders = mongoose.model('TempOrders', TempOrdersSchema)

@@ -31,9 +31,18 @@ class GoodsController {
                 parameters,
                 isGettingReady
             } = req.body;
+            console.log(category_id,
+                subcategory_id,
+                title,
+                count,
+                time_to_get_ready,
+                store_id,
+                short_description,
+                price,
+                parameters,
+                isGettingReady);
             //
-            if (isGettingReady)
-            {
+            if (isGettingReady) {
                 isGettingReadyCheck = true;
             }
             const photoArray = [];
@@ -95,8 +104,7 @@ class GoodsController {
             }
             if (stock) {
                 filter.count = {$lte: 0}
-            }
-            else
+            } else
                 filter.count = {$gte: 1}
             if (search) {
                 filter.title = {$regex: new RegExp(search, 'i')};
@@ -175,6 +183,19 @@ class GoodsController {
             const modifiedGoods = await Promise.all(modifiedGoodsPromise);
             res.status(200).json(modifiedGoods);
         } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static getByStore = async (req, res, next) => {
+        try {
+            const {store_id} = req.query;
+            const goods = await Goods.find({
+                store_id: store_id
+            });
+            res.status(200).json(goods)
+        }catch (e) {
             e.status = 401;
             next(e);
         }
@@ -275,25 +296,18 @@ class GoodsController {
     //
     static UpdateGoods = async (req, res, next) => {
         try {
-            // if (!req.isSeller || req.isSeller !== true) {
-            //     return res.status(400).json({
-            //         error: 'У вас нет права находиться на данной странице.'
-            //     });
-            // }
             const photoArray = [];
-            if (req.files) {
-                if (req.files.length !== 0) {
-                    req.files.forEach((file, index) => {
-                        if (file.fieldname === `photo_${index}`) {
-                            const logoFile = req.files.find(f => f.fieldname === `photo_${index}`);
-                            const parts = logoFile.path.split('public');
-                            const result = parts[1].substring(1);
-                            photoArray.push(result);
-                        }
-                    });
-                }
+            if (req.files && req.files.length !== 0) {
+                req.files.forEach((file, index) => {
+                    if (file.fieldname === `photo_${index}`) {
+                        const logoFile = req.files.find(f => f.fieldname === `photo_${index}`);
+                        const parts = logoFile.path.split('public');
+                        const result = parts[1].substring(1);
+                        photoArray.push(result);
+                    }
+                });
             }
-            const {good_id} = req.query;
+            const { good_id } = req.query;
             const {
                 oldphoto_array,
                 category_id,
@@ -312,47 +326,26 @@ class GoodsController {
                 const updatedPhotoArray = [...splittedOld, ...photoArray];
                 updatedPhotoArrayMain.push(...updatedPhotoArray)
             }
-            if (subcategory_id) {
-                await Goods.findOneAndUpdate(
-                    {_id: good_id},
-                    {
-                        category_id: category_id,
-                        subcategory_id: subcategory_id,
-                        title: title,
-                        count: count,
-                        photo_list: updatedPhotoArrayMain,
-                        time_to_get_ready: time_to_get_ready,
-                        store_id: store_id,
-                        short_description: short_description,
-                        price: price,
-                        parameters: parameters
-                    }
-                );
+            updatedPhotoArrayMain.push(...photoArray);
+            await Goods.findOneAndUpdate(
+                { _id: good_id },
+                {
+                    category_id: category_id,
+                    subcategory_id: subcategory_id || null,
+                    title: title,
+                    count: count,
+                    photo_list: updatedPhotoArrayMain,
+                    time_to_get_ready: time_to_get_ready,
+                    store_id: store_id,
+                    short_description: short_description,
+                    price: price,
+                    parameters: parameters
+                }
+            );
 
-                res.status(200).json({
-                    message: 'success'
-                });
-            }
-            if (!subcategory_id) {
-                await Goods.findOneAndUpdate(
-                    {_id: good_id},
-                    {
-                        category_id: category_id,
-                        subcategory_id: null,
-                        title: title,
-                        count: count,
-                        photo_list: updatedPhotoArrayMain,
-                        time_to_get_ready: time_to_get_ready,
-                        store_id: store_id,
-                        short_description: short_description,
-                        price: price,
-                        parameters: parameters
-                    }
-                );
-                res.status(200).json({
-                    message: 'success'
-                });
-            }
+            res.status(200).json({
+                message: 'success'
+            });
         } catch (e) {
             e.status = 401;
             next(e);

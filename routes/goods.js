@@ -12,6 +12,7 @@ router.get('/single', GoodsController.GetOneGood);
 router.get('/filter', GoodsController.FilterGoods);
 router.delete('/photo', GoodsController.DeletePhotos);
 router.get('/all', GoodsController.GetAllGoods);
+router.get('/by-store', GoodsController.getByStore);
 router.post('/search', GoodsController.searchGoods)
 router.put('/promote', PromotionsController.setPromotion);
 router.put('/unpromote', PromotionsController.unsetPromotion);

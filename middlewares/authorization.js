@@ -17,6 +17,7 @@ const EXCLUDE = ['/register/buyer', '/login/buyer', '/register/seller', '/login/
 
 const authorization = async (req, res, next) => {
     try {
+        console.log('IN')
         const {authorization = ''} = req.headers;
         const {originalUrl, method} = req;
         console.log(req.path)
@@ -40,6 +41,7 @@ const authorization = async (req, res, next) => {
         if (userInfo.isSeller) {
             req.isSeller = userInfo.isSeller
         }
+        console.log('out')
         next();
     } catch (e) {
         e.status = 401;

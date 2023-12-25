@@ -8,6 +8,7 @@ import Promocodes from '../schemas/PromocodesSchema';
 import TempOrders from '../schemas/TempOrders';
 import Payments from '../schemas/PaymentsSchema';
 import CheckPayment from '../utilities/checkpayment';
+import Goods from '../schemas/GoodsSchema';
 
 //
 class OrdersController {
@@ -44,6 +45,11 @@ class OrdersController {
                     }]
                 };
             });
+            let goodArr = [];
+            await Promise.all(goods.map(async (item) => {
+                goodArr.push(await Goods.findOne({_id: item.items[0].good_id}));
+            }))
+            console.log(modifiedGoods);
             const titleString = titleArr.join(' / ');
             console.log(titleString)
             const storeId = goods[0].items[0].store_id
@@ -67,6 +73,7 @@ class OrdersController {
             }, 0);
             const weekdays = storeComission.weekdays;
             const weekends = storeComission.weekends;
+
             const delivery_price = storeComission.distance;
             const deliveryPrice = Math.round(delivery_price * delivery);
             let promocodeCommission;
@@ -115,13 +122,11 @@ class OrdersController {
             if (timeParts[1].length === 1) {
                 timeParts[1] = '0' + timeParts[1];
             }
-            const dateParts = req.body.day.split('.');
+            const dateParts = req.body.day.split('-');
             const parsedDay = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
             parsedDay.setUTCHours(timeParts[0]);
             parsedDay.setUTCMinutes(timeParts[1]);
             const dayOfWeek = parsedDay.getUTCDay();
-            console.log(parsedDay);
-            console.log(dayOfWeek, 'dayOfWeek');
             let isOpen = false;
             if (dayOfWeek >= 1 && dayOfWeek <= 5) {
                 const {from, to} = weekdays;
@@ -135,7 +140,7 @@ class OrdersController {
                 toTime.setUTCMinutes(parseInt(to.split(':')[1], 10));
 
                 isOpen = parsedDay >= fromTime && parsedDay <= toTime;
-            } else if (dayOfWeek === 0 || dayOfWeek === 6) {
+            } else if (!weekends.not_working || dayOfWeek === 0 || dayOfWeek === 6) {
                 const {from, to} = weekends;
                 const fromTime = new Date(parsedDay);
                 fromTime.setUTCHours(parseInt(from.split(':')[0], 10));
@@ -172,6 +177,8 @@ class OrdersController {
                 paid: false,
                 paymentCard: card,
                 promocodeComission: promocodeCommission,
+                goods: goodArr,
+                creationDate: new Date()
             });
             await TempOrders.updateMany({
                 isNew: false
@@ -369,6 +376,8 @@ class OrdersController {
                     phone_number: tempOrderObj.phone_number,
                     name: tempOrderObj.name,
                     count: tempOrderObj.count,
+                    goods: tempOrderObj.goods,
+                    creationDate: tempOrderObj.creationDate
                 });
                 await newOrder.save();
                 await Payments.deleteOne({

@@ -148,6 +148,7 @@ class PromocodesController {
     static checkPromocode = async (req, res, next) => {
         try {
             const {text} = req.body;
+            console.log('anus')
             const {user_id} = req;
             let promo;
             const currentDate = new Date();
@@ -157,17 +158,30 @@ class PromocodesController {
                 was_used: false
             });
             if (promocode) {
+                console.log('anus')
+                const currentDate = new Date();
                 const currentMonth = ('0' + (currentDate.getMonth() + 1)).slice(-2);
                 const currentDay = ('0' + currentDate.getDate()).slice(-2);
-                const promoNextUsageMonth = ('0' + (promocode.next_usage.getMonth() + 1)).slice(-2);
-                const promoNextUsageDay = ('0' + promocode.next_usage.getDate()).slice(-2);
-                const promoDateMonth = ('0' + (promocode.date.getMonth() + 1)).slice(-2);
-                const promoDateDay = ('0' + promocode.date.getDate()).slice(-2);
 
-                if ((`${currentDay}${currentMonth}`) === `${promoNextUsageDay}${promoNextUsageMonth}` && (`${currentDay}${currentMonth}` === `${promoDateDay}${promoDateMonth}`))
-                    res.status(200).json(true)
-                else
-                    res.status(200).json(false)
+                const promoDate = new Date(promocode.date);
+                const promoDateMonth = ('0' + (promoDate.getMonth() + 1)).slice(-2);
+                const promoDateDay = ('0' + promoDate.getDate()).slice(-2);
+
+                const currentDateFormatted = `${currentDay}${currentMonth}`;
+                const promoDateFormatted = `${promoDateDay}${promoDateMonth}`;
+                if (!promocode.next_usage) {
+                    res.status(200).json(true);
+                } else {
+                    const promoNextUsageDate = new Date(promocode.next_usage);
+                    const promoNextUsageMonth = ('0' + (promoNextUsageDate.getMonth() + 1)).slice(-2);
+                    const promoNextUsageDay = ('0' + promoNextUsageDate.getDate()).slice(-2);
+                    const promoNextUsageFormatted = `${promoNextUsageDay}${promoNextUsageMonth}`;
+                    if (currentDateFormatted === promoNextUsageFormatted && currentDateFormatted === promoDateFormatted) {
+                        res.status(200).json(true);
+                    } else {
+                        res.status(200).json(false);
+                    }
+                }
             }
             if (!promocode) {
                 promo = await Promocodes.findOne({
@@ -175,7 +189,6 @@ class PromocodesController {
                     priority: 'admin'
                 })
             }
-            ;
             if (promo && promocode) {
                 res.status(200).json(true);
             } else {

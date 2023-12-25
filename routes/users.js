@@ -14,7 +14,7 @@ router.post('/register/buyer/call', BuyersController.ConfirmAndReg);
 router.post('/register/buyer/confirm-number', BuyersController.RegBuyer);
 router.post('/login/buyer', BuyersController.LoginBuyer);
 router.post('/get-city', BuyersController.findCity);
-router.put('/get-geo', BuyersController.ChangeGeostatus)
+router.put('/get-geo', BuyersController.ChangeGeostatus);
 router.get('/profile/buyer', BuyersController.UserProfile);
 router.put('/profile/buyer', BuyersController.UpdateProfile);
 router.delete('/profile/buyer', BuyersController.DeleteProfile);

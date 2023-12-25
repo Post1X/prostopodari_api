@@ -22,12 +22,17 @@ class CartsController {
             }
             // await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
             const newCartItem = new CartItem({
-                good_id: mongoose.Types.ObjectId(good_id), count: count, store_id: good.store_id, buyer_id: user_id, isGettingReady: good.isGettingReady ? true : false
+                good_id: mongoose.Types.ObjectId(good_id),
+                count: count,
+                store_id: good.store_id,
+                buyer_id: user_id,
+                isGettingReady: !!good.isGettingReady
             });
             await newCartItem.save();
             const newCart = new Cart({
-                items: [newCartItem], user: user_id
+                items: [newCartItem], user: user_id, goodId: good_id
             });
+            // console.log(newCart.items[0]._id)
             await newCart.save();
             res.status(200).json({message: 'success'});
         } catch (e) {

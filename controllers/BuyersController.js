@@ -31,7 +31,7 @@ class BuyersController {
                 }, JWT_SECRET);
                 res.status(200).json({
                     token: token,
-                    user_data: buyer
+                    user_data: buyer,
                 })
             }
         } catch (e) {
@@ -75,7 +75,8 @@ class BuyersController {
                 })
             }
             res.status(200).json({
-                message: 'Скоро вам поступит звонок. Нужно ввести последние 4 цифры.'
+                message: 'Скоро вам поступит звонок. Нужно ввести последние 4 цифры.',
+                code: code
             })
         } catch (e) {
             e.status = 401;
@@ -184,28 +185,30 @@ class BuyersController {
             const favorites = await Favorites.find({
                 user_id: user_id
             }).populate('store_id')
-            const promise = favorites.map(async (item) => {
-                try {
-                    if (city === item.store_id.city) {
-                        await Favorites.updateOne({
-                            _id: item.id
-                        }, {
-                            delivery: true
-                        })
+            if (favorites) {
+                const promise = favorites.map(async (item) => {
+                    try {
+                        if (city === item.store_id.city) {
+                            await Favorites.updateOne({
+                                _id: item.id
+                            }, {
+                                delivery: true
+                            })
+                        }
+                        if (city !== item.store_id.city) {
+                            await Favorites.updateOne({
+                                _id: item.id
+                            }, {
+                                delivery: false
+                            })
+                        }
+                    } catch (e) {
+                        e.status = 401;
+                        next(e);
                     }
-                    if (city !== item.store_id.city) {
-                        await Favorites.updateOne({
-                            _id: item.id
-                        }, {
-                            delivery: false
-                        })
-                    }
-                } catch (e) {
-                    e.status = 401;
-                    next(e);
-                }
-            })
-            await Promise.all(promise)
+                })
+                await Promise.all(promise)
+            }
             res.status(200).json({
                 message: 'ok'
             })

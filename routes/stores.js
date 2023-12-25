@@ -14,4 +14,5 @@ router.delete('/reviews', StoresController.DeleteReview);
 router.post('/my', uploadFields, StoresController.CreateStore);
 router.put('/my', uploadFields, StoresController.UpdateStore);
 router.delete('/my', StoresController.DeleteStore);
+router.get('/', StoresController.DeleteStore);
 export default router;

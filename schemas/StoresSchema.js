@@ -11,10 +11,16 @@ const StoresSchema = new Schema({
         type: Schema.Types.String
     },
     subscription_status: {
-        type: Schema.Types.String
+        type: Schema.Types.Boolean,
+        default: false
     },
-    subscription_valid_until: {
-        type: Schema.Types.Date
+    subscription_count: {
+        type: Schema.Types.Number,
+        default: null
+    },
+    subscription_until: {
+        type: Schema.Types.Date,
+        default: null
     },
     logo_url: {
         type: Schema.Types.String,

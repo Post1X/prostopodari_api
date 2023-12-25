@@ -1,6 +1,6 @@
 import Payments from "../schemas/PaymentsSchema";
-import Organisations from "../schemas/SellersSchema";
 import Goods from '../schemas/GoodsSchema';
+import Stores from '../schemas/StoresSchema';
 
 const sub = async (req, res, next) => {
     try {
@@ -8,13 +8,11 @@ const sub = async (req, res, next) => {
         const payment = await Payments.findOne({
             seller_id: user_id,
             isNew: true,
-            is_active: true
         });
         if (payment) {
-            const organisation = await Organisations.findOne({
+            const organisation = await Stores.findOne({
                 _id: user_id
             });
-
             if (organisation) {
                 const orgdate = organisation.subscription_until;
                 const currentDate = new Date();
@@ -22,7 +20,7 @@ const sub = async (req, res, next) => {
                     console.log('Subscription is active. Moving to the next middleware.');
                     next();
                 } else {
-                    await Organisations.updateOne({
+                    await Stores.updateOne({
                         _id: user_id
                     }, {
                         subscription_status: false,

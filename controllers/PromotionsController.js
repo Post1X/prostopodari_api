@@ -6,6 +6,7 @@ import TempOrders from '../schemas/TempOrders';
 import Orders from '../schemas/OrdersSchema';
 import Cart from '../schemas/CartsSchema';
 import CartItem from '../schemas/CartItemsSchema';
+import Stores from '../schemas/StoresSchema';
 
 class PromotionsController {
     static checkPromotion = async (req, res, next) => {
@@ -28,21 +29,21 @@ class PromotionsController {
     //
     static getPromotion = async (req, res, next) => {
         try {
-            const {organizationId} = req.query;
+            const {value, store_id} = req.body;
             const {user_id} = req;
-            const organisation = await Sellers.findOne({
-                _id: organizationId
+            const organisation = await Stores.findOne({
+                _id: store_id
             })
             const url = 'https://api.yookassa.ru/v3/payments';
             const subDetails = {
                 month_amount: 250
             }
-            if (organisation.subscription_status === true) {
+            if (!!organisation.subscription_status === true) {
                 res.status(301).json({
                     error: 'У вас уже есть подписка'
                 })
             }
-            if (organisation.subscription_status === false) {
+            if (!!organisation.subscription_status === false) {
                 function generateRandomString(length) {
                     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
                     let randomString = '';
@@ -57,10 +58,10 @@ class PromotionsController {
                 const idempotenceKey = generateRandomString(7);
                 const requestData = {
                     amount: {
-                        value: subDetails.month_amount,
+                        value: value ? value : subDetails.month_amount,
                         currency: 'RUB'
                     },
-                    description: organizationId,
+                    description: user_id,
                     confirmation: {
                         type: 'redirect',
                         return_url: 'http://localhost:3001/orders/sas'
@@ -80,14 +81,13 @@ class PromotionsController {
                     .then(async data => {
                         try {
                             if (!data.error) {
-                                console.log(data);
                                 await Payments.updateMany({
-                                    user_id: user_id
+                                    seller_id: user_id
                                 }, {
                                     isNew: false
                                 })
                                 const newPaymentMethod = new Payments({
-                                    user_id: user_id,
+                                    seller_id: user_id,
                                     payment_method_id: data.id,
                                     isNew: true
                                 })
@@ -117,21 +117,27 @@ class PromotionsController {
     static setPromotion = async (req, res, next) => {
         try {
             const {good_id} = req.query;
-            const {user_id} = req;
-            const seller = await Sellers.findOne({
-                _id: user_id
+            const good= await Goods.findOne({
+                _id: good_id
+            });
+            const seller = await Stores.findOne({
+                _id: good.store_id
             })
+            if (seller.subscription_count <= 0)
+                return res.status(400).json({
+                    message: 'Не осталось доступных продвижений.'
+                })
             await Goods.findOneAndUpdate({
                 _id: good_id
             }, {
                 is_promoted: true
             });
-            await Sellers.findOneAndUpdate({
-                _id: user_id
+            await Stores.findOneAndUpdate({
+                _id: good.store_id
             }, {
                 subscription_count: seller.subscription_count - 1
             });
-            res.status(200).json({
+            return res.status(200).json({
                 message: 'success'
             });
         } catch (e) {
@@ -143,23 +149,29 @@ class PromotionsController {
     static unsetPromotion = async (req, res, next) => {
         try {
             const {good_id} = req.query;
-            const {user_id} = req;
-            const seller = await Sellers.findOne({
-                _id: user_id
+            const good= await Goods.findOne({
+                _id: good_id
+            });
+            const seller = await Stores.findOne({
+                _id: good.store_id
             })
+            if (!!good.is_promoted === false)
+                return res.status(400).json({
+                    message: 'Непредвиденная ошибка.'
+                })
             await Goods.findOneAndUpdate({
                 _id: good_id
             }, {
                 is_promoted: false
             });
-            await Sellers.findOneAndUpdate({
-                _id: user_id
+            await Stores.findOneAndUpdate({
+                _id: good.store_id
             }, {
                 subscription_count: seller.subscription_count + 1
             });
-            res.status(200).json({
+            return res.status(200).json({
                 message: 'success'
-            })
+            });
         } catch (e) {
             e.status = 401;
             next(e);
@@ -180,6 +192,7 @@ class PromotionsController {
     static  changeSellerStatus = async (req, res, next) => {
         try {
             const {user_id} = req;
+            const {store_id} = req.body;
             const payment = await Payments.findOne({
                 user_id: user_id,
                 isNew: true
@@ -187,7 +200,7 @@ class PromotionsController {
             const data = await CheckPayment(payment.payment_method_id);
             if (data.data.paid === false) {
                 res.status(406).json({
-                    message: 'Подписка не прошла. Попробуйте снова.'
+                    message: 'Оплата не прошла. Попробуйте снова.'
                 })
             } else {
                 if (payment) {
@@ -195,26 +208,18 @@ class PromotionsController {
                         seller_id: user_id,
                         isNew: false
                     })
-                    const newPayment = new Payments({
-                        seller_id: user_id,
-                        organizationId: organizationId,
-                        payment_method_id: payment.payment_method_id,
-                        type: type,
-                        isNew: true
-                    })
                     const currentDate = new Date();
                     const futureDate = new Date(currentDate);
                     futureDate.setMonth(currentDate.getDay() + 7);
                     const isoFormat = futureDate.toISOString();
-                    await Sellers.findOneAndUpdate({
-                        _id: organizationId
+                    await Stores.findOneAndUpdate({
+                        _id: store_id
                     }, {
                         subscription_status: true,
                         subscription_until: isoFormat,
                         is_active: true,
-                        subscription_count: 5
+                        subscription_count: 10
                     });
-                    await newPayment.save()
                     res.status(200).json({
                         message: 'success'
                     })
