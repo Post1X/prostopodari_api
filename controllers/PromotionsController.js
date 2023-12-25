@@ -88,7 +88,7 @@ class PromotionsController {
                                 })
                                 const newPaymentMethod = new Payments({
                                     seller_id: user_id,
-                                    payment_method_id: data.id,
+                                    order_id: data.id,
                                     isNew: true
                                 })
                                 await newPaymentMethod.save();
@@ -197,9 +197,11 @@ class PromotionsController {
                 user_id: user_id,
                 isNew: true
             });
-            const data = await CheckPayment(payment.payment_method_id);
-            if (data.data.paid === false) {
-                res.status(406).json({
+            console.log(payment)
+            const data = await CheckPayment(payment.order_id);
+            console.log(data)
+            if (data.paid === false) {
+               return res.status(406).json({
                     message: 'Оплата не прошла. Попробуйте снова.'
                 })
             } else {
