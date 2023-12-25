@@ -14,22 +14,23 @@ import finances from './finances';
 import carts from './carts';
 import subscribe from './subscribe';
 import chat from './chat';
+import sub from '../middlewares/sub';
 // a
 
 const router = express.Router();
 
-router.use('/stores', authorization, stores);
-router.use('/users', authorization, users);
-router.use('/carts', authorization, carts);
-router.use('/reports', authorization, reports);
-router.use('/categories', authorization, categories);
-router.use('/sub-categories', authorization, subcategories);
-router.use('/promocodes', authorization, promocodes);
-router.use('/cities', authorization, cities);
-router.use('/goods', authorization, goods);
-router.use('/orders', authorization, orders);
-router.use('/chat', authorization, chat);
-router.use('/favorites', authorization, favorites);
-router.use('/finances', authorization, finances)
-router.use('/subscribe', authorization, subscribe)
+router.use('/stores', authorization, sub, stores);
+router.use('/users', authorization, sub, users);
+router.use('/carts', authorization, sub, carts);
+router.use('/reports', authorization, sub, reports);
+router.use('/categories', authorization, sub, categories);
+router.use('/sub-categories', authorization, sub, subcategories);
+router.use('/promocodes', authorization, sub, promocodes);
+router.use('/cities', authorization, sub, cities);
+router.use('/goods', authorization, sub, goods);
+router.use('/orders', authorization, sub, orders);
+router.use('/chat', authorization, sub, chat);
+router.use('/favorites', authorization, sub, favorites);
+router.use('/finances', authorization, sub, finances)
+router.use('/subscribe', authorization, sub, subscribe)
 export default router;
