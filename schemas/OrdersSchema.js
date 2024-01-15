@@ -89,6 +89,9 @@ const OrdersSchema = new Schema({
     },
     goods: {
         type: Schema.Types.Array
+    },
+    adressAll: {
+        type: Schema.Types.String
     }
 })
 

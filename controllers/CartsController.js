@@ -20,21 +20,35 @@ class CartsController {
             if (cartItemWithDifferentStore) {
                 return res.status(400).json({error: 'Товары могут быть только из одного магазина.'});
             }
-            // await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
-            const newCartItem = new CartItem({
-                good_id: mongoose.Types.ObjectId(good_id),
-                count: count,
-                store_id: good.store_id,
-                buyer_id: user_id,
-                isGettingReady: !!good.isGettingReady
-            });
-            await newCartItem.save();
-            const newCart = new Cart({
-                items: [newCartItem], user: user_id, goodId: good_id
-            });
-            // console.log(newCart.items[0]._id)
-            await newCart.save();
-            res.status(200).json({message: 'success'});
+            const cart = await Cart.findOne({
+                goodId: good_id,
+                user: user_id
+            })
+            if (!cart) {
+                const newCartItem = new CartItem({
+                    good_id: mongoose.Types.ObjectId(good_id),
+                    count: count,
+                    store_id: good.store_id,
+                    buyer_id: user_id,
+                    isGettingReady: !!good.isGettingReady
+                });
+                await newCartItem.save();
+                const newCart = new Cart({
+                    items: [newCartItem], user: user_id, goodId: good_id
+                });
+                await newCart.save();
+                return res.status(200).json({message: 'success'});
+            } else {
+                await Cart.updateOne({
+                    goodId: good_id,
+                    user: user_id
+                }, {
+                    $inc: {'items.$[].count': count}
+                });
+                return res.status(200).json({
+                    message: 'success'
+                })
+            }
         } catch (e) {
             e.status = 401;
             next(e);
@@ -85,7 +99,7 @@ class CartsController {
                     {_id: cartId, 'items.good_id': good_id},
                     {
                         $set: {
-                            'items.$.count': 0
+                            'items.$[].count': 0
                         }
                     }
                 );
@@ -96,15 +110,9 @@ class CartsController {
                 await Cart.findOneAndUpdate(
                     {_id: cartId, 'items.good_id': good_id},
                     {
-                        $set: {
-                            'items.$.count': cartGood.items[0].count - count
-                        }
+                        $inc: {'items.$[].count': -count}
                     }
                 );
-                // await Goods.findOneAndUpdate(
-                //     {_id: good_id},
-                //     {$inc: {count: count}}
-                // );
                 res.status(200).json({
                     message: 'success'
                 });
@@ -144,9 +152,8 @@ class CartsController {
                 await Cart.findOneAndUpdate({
                     _id: cartId, buyer_id: user_id
                 }, {
-                    $set: {'items.0.count': Number(cartGood.items[0].count) + Number(count)}
+                    $inc: {'items$[].count': count}
                 });
-                // await Goods.findOneAndUpdate({_id: good_id}, {count: good.count - count});
                 res.status(200).json({
                     message: 'success'
                 })

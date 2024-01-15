@@ -1,4 +1,6 @@
 import Promocodes from '../schemas/PromocodesSchema';
+import Fcm from '../schemas/FcmSchema';
+import admin from 'firebase-admin';
 
 //
 class PromocodesController {
@@ -78,6 +80,25 @@ class PromocodesController {
                     text: text, event_name: event_name, percentage: percentage, priority: 'admin'
                 })
                 await newPromocode.save();
+                const users = await Fcm.find();
+                let token_array = [];
+                users.map((item) => {
+                    if (item.is_driver === true)
+                        token_array.push(item.token);
+                });
+
+                const message = {
+                    notification: {
+                        title: 'Промокод специально для тебя! 👀',
+                        body: `У нас праздник "${event_name}", и мы решили подарить вам промокод ${text} на ${percentage}%!`
+                    }, tokens: token_array
+                };
+
+                await admin.messaging()
+                    .sendMulticast(message)
+                    .catch((error) => {
+                        throw error;
+                    });
                 res.status(200).json(newPromocode)
             }
         } catch (e) {
@@ -153,9 +174,7 @@ class PromocodesController {
             let promo;
             const currentDate = new Date();
             const promocode = await Promocodes.findOne({
-                text: text,
-                user_id: user_id,
-                was_used: false
+                text: text, user_id: user_id, was_used: false
             });
             if (promocode) {
                 console.log('anus')
@@ -185,8 +204,7 @@ class PromocodesController {
             }
             if (!promocode) {
                 promo = await Promocodes.findOne({
-                    text: text,
-                    priority: 'admin'
+                    text: text, priority: 'admin'
                 })
             }
             if (promo && promocode) {

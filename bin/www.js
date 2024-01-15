@@ -8,6 +8,9 @@ import UserChats from '../schemas/UserChats';
 import fs from 'fs';
 import ss from 'socket.io-stream'
 import * as path from 'path';
+import Orders from '../schemas/OrdersSchema';
+import Stores from '../schemas/StoresSchema';
+import setupCronTask from '../utilities/cron';
 
 const app = require('../app');
 const debug = require('debug')('server:server');
@@ -37,12 +40,74 @@ app.set('io', io);
 /**
  * Listen on provided port, on all network interfaces.
  */
-
+setupCronTask();
 
 
 const testSpace = io.of('/test');
 const chatSpace = io.of('/chat/messages');
 const userChatSpace = io.of('/chat/user')
+const getMessages = io.of('/count/messages/buyer');
+const getMessagesSeller = io.of('/count/messages/seller');
+const getOrders = io.of('/count/orders');
+
+getMessages.on('connection', async (socket) => {
+    try {
+        const user_id = socket.handshake.query.buyer_id;
+        const userchats = await UserChats.find({
+            user_id: user_id
+        });
+        console.log('anus')
+        let promises = userchats.map(async (chat) => {
+            return chat.newMessCount;
+        });
+
+        let counts = await Promise.all(promises);
+        let totalNewMessCount = counts.reduce((acc, count) => acc + count, 0);
+
+        getMessages.emit('count', {
+            count: totalNewMessCount
+        });
+    } catch (e) {
+        console.error('Ошибка в обработчике событий сокета getMessages:', e);
+    }
+});
+
+getMessagesSeller.on('connection', async (socket) => {
+    try {
+        const user_id = socket.handshake.query.seller_id;
+        const userchats = await UserChats.find({
+            seller_id: user_id
+        });
+        let totalNewMessCount = 0;
+        userchats.forEach(chat => {
+            totalNewMessCount += chat.newMessCountSeller;
+        });
+        getMessagesSeller.emit('count', {
+            count: totalNewMessCount
+        });
+    } catch (e) {
+        console.error('Ошибка в обработчике событий сокета getMessagesSeller:', e);
+    }
+});
+
+getOrders.on('connection', async (socket) => {
+    try {
+        const seller_id = socket.handshake.query.seller_id;
+        const stores = await Stores.find({
+            seller_user_id: seller_id
+        });
+        let count = 0;
+        await Promise.all(stores.map(async (item) => {
+            const orderCount = await Orders.count({ store_id: item._id });
+            count += orderCount;
+        }))
+        getOrders.emit('count', {
+            count: count
+        })
+    } catch (e) {
+        console.error('Ошибка в обработчике событий сокета getOrders:', e);
+    }
+})
 
 userChatSpace.on('connection', async (socket) => {
     try {
@@ -213,7 +278,6 @@ async function sendMessage(socket, message) {
         const seller = await Sellers.findOne({
             _id: socket.seller_id
         })
-        console.log(seller)
         const newMessages = new Messages({
             room_id: socket.roomId,
             name: seller.legal_name,
@@ -224,7 +288,7 @@ async function sendMessage(socket, message) {
         if (socket.roomId) {
             const chats = await UserChats.findOne({chatID: socket.roomId});
             if (chats) {
-                await UserChats.findOneAndUpdate({chatID: socket.roomId}, {lastMessage: message.text});
+                await UserChats.findOneAndUpdate({chatID: socket.roomId},  {lastMessage: message.text, $inc: {newMessCount: 1}})
             }
         }
         await newMessages.save();
@@ -240,7 +304,7 @@ async function sendMessage(socket, message) {
         if (socket.roomId) {
             const chats = await UserChats.findOne({chatID: socket.roomId});
             if (chats) {
-                await UserChats.findOneAndUpdate({chatID: socket.roomId}, {lastMessage: message.text});
+                await UserChats.findOneAndUpdate({chatID: socket.roomId},  {lastMessage: message.text, $inc: {newMessCountSeller: 1}})
             }
         }
         await newMessages.save();
@@ -376,13 +440,6 @@ async function processSendMessage(socket, message) {
     }
     await newMessages.save();
 }
-
-testSpace.on('connection', (socket) => {
-    ss(socket).on('profile-image', (stream, data) => {
-        let filename = path.basename(data.name);
-        stream.pipe(fs.createWriteStream(filename));
-    })
-})
 
 server.listen(port);
 server.on('error', onError);

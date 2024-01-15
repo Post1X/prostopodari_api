@@ -94,6 +94,9 @@ const TempOrdersSchema = new Schema({
     creationDate: {
         type: Schema.Types.Date
     },
+    adressAll: {
+        type: Schema.Types.String
+    }
 })
 
 const TempOrders = mongoose.model('TempOrders', TempOrdersSchema)

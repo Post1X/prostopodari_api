@@ -18,6 +18,9 @@ const ChatsSchema = new Schema({
     newMessCount: {
         type: Schema.Types.Number
     },
+    newMessCountSeller: {
+        type: Schema.Types.Number
+    },
     lastMessage: {
         type: Schema.Types.String
     },

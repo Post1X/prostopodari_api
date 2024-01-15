@@ -11,9 +11,9 @@ import Stores from '../schemas/StoresSchema';
 class PromotionsController {
     static checkPromotion = async (req, res, next) => {
         try {
-            const {user_id} = req;
-            const seller = await Sellers.findOne({
-                _id: user_id
+            const {store_id} = req.query;
+            const seller = await Stores.findOne({
+                _id: store_id
             });
             if (seller.subscription_status) {
                 res.status(200).json(true)

@@ -212,7 +212,7 @@ class SellersController {
             });
             const user_data = await Sellers.findOne({
                 _id: user_id
-            });
+            }).populate('active_store')
             res.status(200).json({
                 user_data
             })

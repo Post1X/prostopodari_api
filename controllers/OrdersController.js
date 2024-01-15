@@ -24,7 +24,8 @@ class OrdersController {
                 name,
                 promocode,
                 comment,
-                delivery
+                delivery,
+                adressAll
             } = req.body;
             const {user_id} = req;
             const titleArr = [];
@@ -41,24 +42,37 @@ class OrdersController {
                     ...good.toObject(),
                     items: [{
                         ...good.items[0].toObject(),
-                        good_id: {...good.items[0].good_id.toObject(), price: numericPrice}
+                        good_id: {...good.items[0].good_id.toObject(), price: (numericPrice * good.items[0].count)}
                     }]
                 };
             });
+            console.log(day,
+                time,
+                phone_number,
+                postcard,
+                city,
+                address,
+                name,
+                promocode,
+                comment,
+                delivery)
             let goodArr = [];
             await Promise.all(goods.map(async (item) => {
                 goodArr.push(await Goods.findOne({_id: item.items[0].good_id}));
             }))
-            console.log(modifiedGoods);
             const titleString = titleArr.join(' / ');
             console.log(titleString)
             const storeId = goods[0].items[0].store_id
             const countArr = modifiedGoods.map((good) => {
                 return {
                     title: good.items[0].good_id.title,
-                    count: good.items[0].count
+                    photo_list: good.items[0].good_id.photo_list,
+                    price: good.items[0].good_id.price,
+                    count: good.items[0].count,
+                    _id: good.items[0].good_id._id
                 }
-            })
+            });
+            console.log(countArr)
             const countObj = countArr.reduce((obj, count, index) => {
                 obj[`item${index + 1}`] = count;
                 return obj;
@@ -75,7 +89,8 @@ class OrdersController {
             const weekends = storeComission.weekends;
 
             const delivery_price = storeComission.distance;
-            const deliveryPrice = Math.round(delivery_price * delivery);
+            console.log(delivery, 'delivery');
+            const deliveryPrice = Math.round(delivery_price * Math.round(delivery));
             let promocodeCommission;
             let income;
             let incomeWithoutPromocode;
@@ -93,22 +108,26 @@ class OrdersController {
                 });
                 promocodeGet = userPromo ? userPromo : adminPromo
                 promocodeCommission = promocodeGet.percentage / 100;
-                const parts = promocodeGet.date.split('/'); // Разделение строки на составляющие
-                const isoDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).toISOString();
-                const futureDate = isoDate.setDate(isoDate.getMonth() + 12);
+                const parts = promocodeGet.date.split('/');
+                const isoDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                const futureDate = new Date(isoDate);
+                futureDate.setMonth(isoDate.getMonth() + 12);
                 const commissionIncomeDifference = (totalPrice + deliveryPrice) * promocodeCommission / 10;
-                console.log(commissionIncomeDifference, 'comissionincomedifference')
+                console.log(commissionIncomeDifference, 'разница в комиссии');
                 totalIncomeWithComission = totalPrice - commissionIncomeDifference;
-                console.log(totalIncomeWithComission, 'totalincomewithcomission')
+                console.log(totalIncomeWithComission, 'общий доход с комиссией');
                 income = totalIncomeWithComission - (totalIncomeWithComission * 30) / 100;
-                console.log(income, 'income')
+                console.log(income, 'доход');
                 if (promocodeGet.priority === 'user') {
-                    await Promocodes.findOneAndUpdate({
-                        _id: promocodeGet._id
-                    }, {
-                        was_used: true,
-                        next_usage: futureDate
-                    });
+                    await Promocodes.findOneAndUpdate(
+                        {
+                            _id: promocodeGet._id
+                        },
+                        {
+                            was_used: true,
+                            next_usage: futureDate
+                        }
+                    );
                 }
             } else {
                 const totalAmount = totalPrice + deliveryPrice;
@@ -128,9 +147,16 @@ class OrdersController {
             parsedDay.setUTCMinutes(timeParts[1]);
             const dayOfWeek = parsedDay.getUTCDay();
             let isOpen = false;
+
+            console.log('Debugging info:');
+            console.log('timeParts:', timeParts);
+            console.log('parsedDay:', parsedDay);
+
             if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                console.log('Weekdays');
                 const {from, to} = weekdays;
-                console.log(from, to);
+                console.log('from:', from, 'to:', to);
+
                 const fromTime = new Date(parsedDay);
                 fromTime.setUTCHours(parseInt(from.split(':')[0], 10));
                 fromTime.setUTCMinutes(parseInt(from.split(':')[1], 10));
@@ -138,10 +164,15 @@ class OrdersController {
                 const toTime = new Date(parsedDay);
                 toTime.setUTCHours(parseInt(to.split(':')[0], 10));
                 toTime.setUTCMinutes(parseInt(to.split(':')[1], 10));
+
+                console.log('fromTime:', fromTime);
+                console.log('toTime:', toTime);
 
                 isOpen = parsedDay >= fromTime && parsedDay <= toTime;
             } else if (!weekends.not_working || dayOfWeek === 0 || dayOfWeek === 6) {
-                const {from, to} = weekends;
+                console.log('Weekends');
+                const {from, to } = weekends;
+                console.log('from:', from, 'to:', to);
                 const fromTime = new Date(parsedDay);
                 fromTime.setUTCHours(parseInt(from.split(':')[0], 10));
                 fromTime.setUTCMinutes(parseInt(from.split(':')[1], 10));
@@ -149,6 +180,9 @@ class OrdersController {
                 const toTime = new Date(parsedDay);
                 toTime.setUTCHours(parseInt(to.split(':')[0], 10));
                 toTime.setUTCMinutes(parseInt(to.split(':')[1], 10));
+
+                console.log('fromTime:', fromTime);
+                console.log('toTime:', toTime);
                 isOpen = parsedDay >= fromTime && parsedDay <= toTime;
             }
             // if (!isOpen) {
@@ -178,7 +212,8 @@ class OrdersController {
                 paymentCard: card,
                 promocodeComission: promocodeCommission,
                 goods: goodArr,
-                creationDate: new Date()
+                creationDate: new Date(),
+                adressAll: adressAll
             });
             await TempOrders.updateMany({
                 isNew: false
@@ -189,6 +224,7 @@ class OrdersController {
             });
             await newOrders.save();
         } catch (e) {
+            console.error('Ошибка при обработке заказа:', e.stack);
             e.status = 401;
             next(e);
         }
@@ -338,6 +374,7 @@ class OrdersController {
     //
     static confirmOrder = async (req, res, next) => {
         try {
+            console.log('i was here|||||||||||||||||||||||||||||||||')
             const {user_id} = req;
             const order = await Payments.findOne({
                 seller_id: user_id,
@@ -377,7 +414,8 @@ class OrdersController {
                     name: tempOrderObj.name,
                     count: tempOrderObj.count,
                     goods: tempOrderObj.goods,
-                    creationDate: tempOrderObj.creationDate
+                    creationDate: tempOrderObj.creationDate,
+                    adressAll: tempOrderObj.adressAll
                 });
                 await newOrder.save();
                 await Payments.deleteOne({

@@ -5,6 +5,7 @@ import SellersController from '../controllers/SellersController';
 import PromotionsController from '../controllers/PromotionsController';
 
 import upload from '../utilities/multer';
+import FcmController from '../controllers/FcmController';
 
 const uploadFields = upload.any();
 const router = express.Router();
@@ -28,10 +29,13 @@ router.put('/profile/seller/password', SellersController.UpdatePassword)
 router.delete('/profile/seller', SellersController.DeleteProfile);
 router.post('/profile/seller/subscription', PromotionsController.getPromotion);
 //
+router.post('/fcm', FcmController.generateTokenForUser);
+//
 router.get('/check-sub', PromotionsController.checkPromotion);
 router.post('/stores/active', SellersController.AddStoreToActive);
 // admin
 router.post('/login/admin', AdminController.AdminLogin);
+router.post('/admin/message', FcmController.sendMessage);
 router.get('/sellers/claims', AdminController.ClaimSellers);
 router.put('/sellers/claims', AdminController.ChangeStatus);
 router.get('/sellers', AdminController.GetSellers);

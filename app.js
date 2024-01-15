@@ -9,10 +9,9 @@ import headersValidation from "./middlewares/headers";
 import databaseConnections from "./services/database";
 import router from "./routes"
 import bodyParser from "express";
-
-const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
-databaseConnections.connectToDatabase();
+import admin from 'firebase-admin';
+import serviceAccount from "./prosto-podari-7de3c-firebase-adminsdk-9fxsh-78ef29c14e.json";
+databaseConnections.connectToDatabase().then(r => console.log('ok'));
 const app = express();
 
 app.use(headersValidation);
@@ -23,9 +22,16 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(router);
+try {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        projectId: 'prosto-podari-7de3c'
+    });
+    console.log('Firebase Admin SDK initialized successfully!');
+} catch (error) {
+    console.error('Error initializing Firebase Admin SDK:', error);
+}
 app.set('view engine', 'jade');
-
-
 process.once('SIGUSR2', async () => {
     await databaseConnections.closeDatabaseConnection();
     process.kill(process.pid, 'SIGUSR2');

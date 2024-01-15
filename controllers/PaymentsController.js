@@ -11,7 +11,7 @@ class PaymentsController {
             const {user_id} = req;
             const {value} = req.body;
             const url = 'https://api.yookassa.ru/v3/payments';
-
+            console.log(value, 'djioashdiawjoidjawi');
             function generateRandomString(length) {
                 const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
                 let randomString = '';
@@ -23,7 +23,6 @@ class PaymentsController {
 
                 return randomString;
             }
-
             const authHeader = 'Basic ' + Buffer.from('244369:test_7NnPZ1y9-SJDn_kaPGbXe1He3EmNJP-RyUvKD_47y7w').toString('base64');
             const idempotenceKey = generateRandomString(7);
             const requestData = {
@@ -49,6 +48,7 @@ class PaymentsController {
             })
                 .then(response => response.json())
                 .then(async data => {
+                    console.log(data);
                     const newPayment = new Payments({
                         seller_id: user_id,
                         order_id: data.id,
@@ -66,7 +66,7 @@ class PaymentsController {
                     })
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.log('Error:', error);
                 });
         } catch (e) {
             e.status = 401;
@@ -90,11 +90,13 @@ class PaymentsController {
         try {
             const {user_id} = req;
             const tempOrder = await TempOrders.findOne({
-                user_id: user_id
+                user_id: user_id,
+                isNew: true
             });
             res.status(200).json({
                 full_amount: tempOrder.full_amount
             })
+            console.log(tempOrder.full_amount, 'pidor');
         } catch (e) {
             e.status = 401;
             next(e);
