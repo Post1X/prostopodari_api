@@ -1,5 +1,5 @@
 import Fcm from '../schemas/FcmSchema';
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 
 class FcmController {
     static generateTokenForUser = async (req, res, next) => {
@@ -28,8 +28,6 @@ class FcmController {
             users.map((item) => {
                 token_array.push(item.token);
             });
-            console.log(token_array);
-            console.log(title, body);
             const message = {
                 notification: {
                     title: title,

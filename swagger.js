@@ -2,8 +2,8 @@ const swaggerAutogen = require('swagger-autogen')();
 
 const doc = {
     info: {
-        title: 'Autoportal',
-        description: 'DOC for Autoportal',
+        title: 'VKAYFE',
+        description: 'DOC for VKAYFE',
     },
     host: '194.58.121.218:3001',
     schemes: ['http'],

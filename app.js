@@ -10,10 +10,9 @@ import databaseConnections from "./services/database";
 import router from "./routes"
 import bodyParser from "express";
 import admin from 'firebase-admin';
-import serviceAccount from "./prosto-podari-7de3c-firebase-adminsdk-9fxsh-78ef29c14e.json";
+import serviceAccount from "./vkaife-79326-firebase-adminsdk-salqy-3c0ed031ea.json";
 databaseConnections.connectToDatabase().then(r => console.log('ok'));
 const app = express();
-
 app.use(headersValidation);
 app.use(logger('dev'));
 app.use(express.json())
@@ -25,7 +24,7 @@ app.use(router);
 try {
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        projectId: 'prosto-podari-7de3c'
+        projectId: 'vkaife-79326'
     });
     console.log('Firebase Admin SDK initialized successfully!');
 } catch (error) {
