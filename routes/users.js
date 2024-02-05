@@ -44,6 +44,8 @@ router.put('/sellers/approve', AdminController.ApproveSellers);
 router.put('/sellers/deny', AdminController.DenySellers);
 router.post('/admin/upload-image', uploadFields, AdminController.uploadImage);
 router.post('/admin/banner', uploadFields, AdminController.uploadBanner);
+router.get('/admin/banner', AdminController.getBanner)
+router.delete('/admin/banner', AdminController.deleteBanner);
 
 // router.get('/getcord', BuyersController.GetCords);
 // router.get('/deleteall', BuyersController.TerminateAll)

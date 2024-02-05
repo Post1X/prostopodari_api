@@ -275,7 +275,32 @@ class AdminController {
             res.status(200).json(
                 finalFile
             )
-        }catch (e) {
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static getBanner = async (req, res, next) => {
+        try {
+            const banners = await Banners.find({});
+            return res.status(200).json(banners);
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static deleteBanner = async (req, res, next) => {
+        try {
+            const {banner_id} = req.query;
+            await Banners.deleteOne({
+                _id: banner_id
+            });
+            res.status(200).json({
+                message: 'success'
+            })
+        } catch (e) {
             e.status = 401;
             next(e);
         }

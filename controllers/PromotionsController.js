@@ -120,6 +120,13 @@ class PromotionsController {
             const good= await Goods.findOne({
                 _id: good_id
             });
+            const store = await Stores.findOne({
+                _id: good.store_id
+            });
+            if (store.subscription_status !== true)
+                return res.status(200).json({
+                    message: 'Подписка неактивна.'
+                })
             const seller = await Stores.findOne({
                 _id: good.store_id
             })
@@ -194,12 +201,10 @@ class PromotionsController {
             const {user_id} = req;
             const {store_id} = req.body;
             const payment = await Payments.findOne({
-                user_id: user_id,
+                seller_id: user_id,
                 isNew: true
             });
-            console.log(payment)
             const data = await CheckPayment(payment.order_id);
-            console.log(data)
             if (data.paid === false) {
                return res.status(406).json({
                     message: 'Оплата не прошла. Попробуйте снова.'

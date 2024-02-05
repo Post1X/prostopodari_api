@@ -37,10 +37,10 @@ class FinancesController {
     }
     static GetFinancesAdmin = async (req, res, next) => {
         try {
-            const {dateStart, dateEnd} = req.query;
+            const { dateStart, dateEnd } = req.query;
             const startDate = moment(dateStart, 'YY-MM-DD').startOf('day').unix();
             const endDate = moment(dateEnd, 'YY-MM-DD').endOf('day').unix();
-            const orders = await Orders.find({createdAt: {$gte: startDate, $lte: endDate}})
+            const orders = await Orders.find({ createdAt: { $gte: startDate, $lte: endDate } })
                 .populate('store_id')
                 .populate('user_id')
                 .populate({
@@ -48,75 +48,93 @@ class FinancesController {
                     populate: {
                         path: 'seller_user_id',
                     },
-                })
+                });
+
             const stores = [];
             const modifiedFinances = orders.map((item) => {
-                const numericPrice = parseFloat(item.full_amount);
-                console.log(item.full_amount, 'fullamount')
-                const comperc = parseFloat(item.comission_percentage);
-                const promocom = parseFloat(item.promocodeComission)
-                const numericIncome = parseFloat(item.income);
-                const timestamp = new Date(parseInt(item._id.toString().substring(0, 8), 16) * 1000);
-                const formattedTimestamp = moment(timestamp).format('YY-MM-DD');
-                return {...item._doc, full_amount: numericPrice, income: numericIncome};
+                try {
+                    const numericPrice = parseFloat(item.full_amount) || 0;
+                    console.log(item.full_amount, 'fullamount');
+                    const comperc = parseFloat(item.comission_percentage) || 0;
+                    const promocom = parseFloat(item.promocodeComission) || 0;
+                    const numericIncome = parseFloat(item.income) || 0;
+                    const timestamp = new Date(parseInt(item._id.toString().substring(0, 8), 16) * 1000);
+                    const formattedTimestamp = moment(timestamp).format('YY-MM-DD');
+                    return { ...item._doc, full_amount: numericPrice, income: numericIncome };
+                } catch (error) {
+                    console.error('Ошибка при обработке заказа:', error);
+                    return null;
+                }
             });
+
             const allAmount = modifiedFinances.reduce((total, item) => {
-                return Math.ceil(total + parseFloat(item.full_amount));
+                return Math.ceil(total + (item ? parseFloat(item.full_amount) : 0));
             }, 0);
+
             const allIncome = modifiedFinances.reduce((total, item) => {
-                return Math.ceil(total + parseFloat(item.income));
+                return Math.ceil(total + (item ? parseFloat(item.income) : 0));
             }, 0);
+
             const payAmount = allAmount - allIncome;
+
             const statistics = {
                 allAmount: allAmount,
                 payAmount: payAmount,
-                income: allIncome
+                income: allIncome,
             };
-            console.log(orders, 'orders')
+
             const modifiedFinancesData = orders.map((item) => {
-                const comperc = parseFloat(item.commission_percentage);
-                const promocom = parseFloat(item.promocodeComission)
-                const timestamp = new Date(parseInt(item._id.toString().substring(0, 8), 16) * 1000);
-                const formattedTimestamp = moment(timestamp).format('YY-MM-DD');
+                try {
+                    const comperc = parseFloat(item.commission_percentage) || 0;
+                    const promocom = parseFloat(item.promocodeComission) || 0;
+                    const timestamp = new Date(parseInt(item._id.toString().substring(0, 8), 16) * 1000);
+                    const formattedTimestamp = moment(timestamp).format('YY-MM-DD');
 
-                function generateRandom7DigitNumber() {
-                    const min = 0;
-                    const max = 9999999;
-                    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-                    return randomNumber.toString().padStart(7, '0');
-                }
-
-                const store = {
-                    _id: item.store_id._id,
-                    order_number: generateRandom7DigitNumber(),
-                    ip: item.store_id.seller_user_id.ip,
-                    storeName: item.store_id.title,
-                    phone_number: item.user_id.phone_number,
-                    sellerName: item.store_id.seller_user_id.name,
-                };
-                const finance = {
-                    payAmount: Math.ceil(parseFloat(item.full_amount)),
-                    income: Math.ceil(parseFloat(item.income)),
-                    allAmount: Math.ceil(parseFloat(item.full_amount)) + Math.ceil(parseFloat(item.income)),
-                    deliveryAmount: 0,
-                    paymentCard: item.paymentCard,
-                    sellerName: item.store_id.seller_user_id.name,
-                    comission: {
-                        percent: comperc,
-                        promo: promocom
+                    function generateRandom7DigitNumber() {
+                        const min = 0;
+                        const max = 9999999;
+                        const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+                        return randomNumber.toString().padStart(7, '0');
                     }
+
+                    const store = {
+                        _id: item.store_id ? item.store_id._id : null,
+                        order_number: generateRandom7DigitNumber(),
+                        ip: item.store_id ? item.store_id.seller_user_id.ip : null,
+                        storeName: item.store_id ? item.store_id.title : null,
+                        phone_number: item.store_id ? item.user_id.phone_number : null,
+                        sellerName: item.store_id ? item.store_id.seller_user_id.name : null,
+                    };
+
+                    const finance = {
+                        payAmount: Math.ceil(parseFloat(item.full_amount) || 0),
+                        income: Math.ceil(parseFloat(item.income) || 0),
+                        allAmount: Math.ceil(parseFloat(item.full_amount) || 0) + Math.ceil(parseFloat(item.income) || 0),
+                        deliveryAmount: 0,
+                        paymentCard: item.paymentCard || null,
+                        sellerName: item.store_id ? item.store_id.seller_user_id.name : null,
+                        comission: {
+                            percent: comperc,
+                            promo: promocom,
+                        },
+                    };
+
+                    return { seller: store, finance: finance };
+                } catch (error) {
+                    console.error('Ошибка при обработке финансов данных:', error);
+                    return null;
                 }
-                return {seller: store, finance: finance};
             });
+
             res.status(200).json({
                 statistics: statistics,
-                financesSellers: modifiedFinancesData
+                financesSellers: modifiedFinancesData.filter((item) => item !== null),
             });
         } catch (e) {
             e.status = 401;
             next(e);
         }
-    }
+    };
     static GetFinanceForStore = async (req, res, next) => {
         try {
             // if (!req.isAdmin || req.isAdmin !== true) {
@@ -152,7 +170,9 @@ class FinancesController {
                     const minutes = dateObject.getMinutes();
                     return {hours, minutes};
                 }
+
                 const time = getTimeFromObjectId(item._id);
+
                 function generateRandom7DigitNumber() {
                     const min = 0;
                     const max = 9999999;

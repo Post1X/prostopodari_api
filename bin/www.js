@@ -6,8 +6,6 @@ import Chats from '../schemas/ChatsSchema';
 import Buyers from '../schemas/BuyersSchema';
 import UserChats from '../schemas/UserChats';
 import fs from 'fs';
-import ss from 'socket.io-stream'
-import * as path from 'path';
 import Orders from '../schemas/OrdersSchema';
 import Stores from '../schemas/StoresSchema';
 import setupCronTask from '../utilities/cron';
@@ -50,23 +48,16 @@ const getMessages = io.of('/count/messages/buyer');
 const getMessagesSeller = io.of('/count/messages/seller');
 const getOrders = io.of('/count/orders');
 
+async function countNewMessages(userChats, countField = 'newMessCount') {
+    return userChats.reduce((acc, chat) => acc + chat[countField], 0);
+}
+
 getMessages.on('connection', async (socket) => {
     try {
-        const user_id = socket.handshake.query.buyer_id;
-        const userchats = await UserChats.find({
-            user_id: user_id
-        });
-        console.log('anus')
-        let promises = userchats.map(async (chat) => {
-            return chat.newMessCount;
-        });
-
-        let counts = await Promise.all(promises);
-        let totalNewMessCount = counts.reduce((acc, count) => acc + count, 0);
-
-        getMessages.emit('count', {
-            count: totalNewMessCount
-        });
+        const userId = socket.handshake.query.buyer_id;
+        const userChats = await UserChats.find({user_id: userId});
+        const totalNewMessCount = await countNewMessages(userChats);
+        getMessages.emit('count', {count: totalNewMessCount});
     } catch (e) {
         console.error('Ошибка в обработчике событий сокета getMessages:', e);
     }
@@ -74,17 +65,11 @@ getMessages.on('connection', async (socket) => {
 
 getMessagesSeller.on('connection', async (socket) => {
     try {
-        const user_id = socket.handshake.query.seller_id;
-        const userchats = await UserChats.find({
-            seller_id: user_id
-        });
-        let totalNewMessCount = 0;
-        userchats.forEach(chat => {
-            totalNewMessCount += chat.newMessCountSeller;
-        });
-        getMessagesSeller.emit('count', {
-            count: totalNewMessCount
-        });
+        const userId = socket.handshake.query.seller_id;
+        const userChats = await UserChats.find({seller_id: userId});
+        const totalNewMessCount = await countNewMessages(userChats, 'newMessCountSeller');
+
+        getMessagesSeller.emit('count', {count: totalNewMessCount});
     } catch (e) {
         console.error('Ошибка в обработчике событий сокета getMessagesSeller:', e);
     }
@@ -92,22 +77,18 @@ getMessagesSeller.on('connection', async (socket) => {
 
 getOrders.on('connection', async (socket) => {
     try {
-        const seller_id = socket.handshake.query.seller_id;
-        const stores = await Stores.find({
-            seller_user_id: seller_id
-        });
-        let count = 0;
-        await Promise.all(stores.map(async (item) => {
-            const orderCount = await Orders.count({ store_id: item._id });
-            count += orderCount;
-        }))
-        getOrders.emit('count', {
-            count: count
-        })
+        const sellerId = socket.handshake.query.seller_id;
+        const stores = await Stores.find({seller_user_id: sellerId});
+        const count = await stores.reduce(async (acc, item) => {
+            const orderCount = await Orders.countDocuments({store_id: item._id});
+            return acc + orderCount;
+        }, Promise.resolve(0));
+        getOrders.emit('count', {count});
     } catch (e) {
         console.error('Ошибка в обработчике событий сокета getOrders:', e);
     }
-})
+});
+
 
 userChatSpace.on('connection', async (socket) => {
     try {
@@ -150,12 +131,6 @@ userChatSpace.on('connection', async (socket) => {
         })
         socket.on('send-img', async (image) => {
             try {
-                // console.log(image)
-                // if (typeof image === 'string') {
-                //     console.log('image is string')
-                // } else {
-                //     console.error('Image is not a string:', image);
-                // }
                 const splitted = image.split(';base64,');
                 const format = splitted[0].split('/')[1];
                 const fileName = `./public/images/image${Date.now().toString()}.` + format;
@@ -230,88 +205,71 @@ async function getMessagesAndSendToUsers(socket) {
     }
 }
 
-async function sendImage(socket, message) {
+
+async function sendImage(socket, baseName) {
     userChatSpace.to(socket.roomId).emit('newMessage', {
-        message: message,
+        message: baseName,
         isImage: true
     });
+    let update = {};
     if (socket.result === 'seller') {
-        const newMessages = new Messages({
-            room_id: socket.roomId,
-            name: socket.seller.legal_name,
-            role: socket.result,
-            text: message,
-            isRead: false,
-            isImage: true
-        });
-        if (socket.roomId) {
-            const chats = await UserChats.findOne({chatID: socket.roomId});
-            if (chats) {
-                await UserChats.findOneAndUpdate({chatID: socket.roomId}, {lastMessage: message.text});
-            }
-        }
-        await newMessages.save();
+        console.log(socket.seller_id);
+        update = {
+            lastMessage: baseName,
+            $inc: {newMessCount: 1},
+            newMessCountSeller: 0
+        };
+    } else if (socket.result === 'user') {
+        update = {
+            lastMessage: baseName,
+            $inc: {newMessCountSeller: 1},
+            newMessCount: 0
+        };
     }
-    if (socket.result === 'user') {
-        const newMessages = new Messages({
-            room_id: socket.roomId,
-            name: socket.buyer.full_name ? socket.buyer.full_name : `Покупатель`,
-            role: socket.result,
-            text: message,
-            isRead: false,
-            isImage: true
-        });
-        if (socket.roomId) {
-            const chats = await UserChats.findOne({chatID: socket.roomId});
-            if (chats) {
-                await UserChats.findOneAndUpdate({chatID: socket.roomId}, {lastMessage: message.text});
-            }
-        }
-        await newMessages.save();
+    const newMessage = new Messages({
+        room_id: socket.roomId,
+        name: socket.result === 'seller' ? socket.seller.legal_name : socket.buyer.full_name || 'Покупатель',
+        role: socket.result,
+        text: baseName,
+        isRead: false,
+        isImage: true
+    });
+    await newMessage.save();
+    if (socket.roomId) {
+        await UserChats.findOneAndUpdate({chatID: socket.roomId}, update);
     }
 }
 
 async function sendMessage(socket, message) {
     userChatSpace.to(socket.roomId).emit('newMessage', message);
+    let update = {};
+    const seller = await Sellers.findOne({_id: socket.seller_id});
     if (socket.result === 'seller') {
-        console.log(socket.seller_id)
-        const seller = await Sellers.findOne({
-            _id: socket.seller_id
-        })
-        const newMessages = new Messages({
-            room_id: socket.roomId,
-            name: seller.legal_name,
-            role: socket.result,
-            text: message.text,
-            isRead: false,
-        });
-        if (socket.roomId) {
-            const chats = await UserChats.findOne({chatID: socket.roomId});
-            if (chats) {
-                await UserChats.findOneAndUpdate({chatID: socket.roomId},  {lastMessage: message.text, $inc: {newMessCount: 1}})
-            }
-        }
-        await newMessages.save();
+        console.log(socket.seller_id);
+        update = {
+            lastMessage: message.text,
+            $inc: {newMessCount: 1},
+            newMessCountSeller: 0
+        };
+    } else if (socket.result === 'user') {
+        update = {
+            lastMessage: message.text,
+            $inc: {newMessCountSeller: 1},
+            newMessCount: 0
+        };
     }
-    if (socket.result === 'user') {
-        const newMessages = new Messages({
-            room_id: socket.roomId,
-            name: socket.buyer.full_name ? socket.buyer.full_name : `Покупатель`,
-            role: socket.result,
-            text: message.text,
-            isRead: false
-        });
-        if (socket.roomId) {
-            const chats = await UserChats.findOne({chatID: socket.roomId});
-            if (chats) {
-                await UserChats.findOneAndUpdate({chatID: socket.roomId},  {lastMessage: message.text, $inc: {newMessCountSeller: 1}})
-            }
-        }
-        await newMessages.save();
+    const newMessage = new Messages({
+        room_id: socket.roomId,
+        name: socket.result === 'seller' ? seller.legal_name : socket.buyer.full_name || 'Покупатель',
+        role: socket.result,
+        text: message.text,
+        isRead: false,
+    });
+    await newMessage.save();
+    if (socket.roomId) {
+        await UserChats.findOneAndUpdate({chatID: socket.roomId}, update);
     }
 }
-
-
 chatSpace.on('connection', async (socket) => {
     try {
         socket.roomId = socket.handshake.query.roomId;

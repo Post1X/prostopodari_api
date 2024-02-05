@@ -94,7 +94,7 @@ const TempOrdersSchema = new Schema({
     creationDate: {
         type: Schema.Types.Date
     },
-    adressAll: {
+    addressAll: {
         type: Schema.Types.String
     }
 })

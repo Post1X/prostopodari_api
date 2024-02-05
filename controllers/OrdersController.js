@@ -25,7 +25,7 @@ class OrdersController {
                 promocode,
                 comment,
                 delivery,
-                adressAll
+                addressAll
             } = req.body;
             const {user_id} = req;
             const titleArr = [];
@@ -46,51 +46,46 @@ class OrdersController {
                     }]
                 };
             });
-            console.log(day,
-                time,
-                phone_number,
-                postcard,
-                city,
-                address,
-                name,
-                promocode,
-                comment,
-                delivery)
             let goodArr = [];
+            const storeId = goods[0].items[0].store_id
+            const storeComission = await Stores.findOne({
+                _id: storeId
+            })
             await Promise.all(goods.map(async (item) => {
                 goodArr.push(await Goods.findOne({_id: item.items[0].good_id}));
             }))
+            const delivery_price = storeComission.distance;
+            console.log(delivery, 'delivery');
+            const deliveryPrice = Math.round(delivery_price * Math.round(delivery));
             const titleString = titleArr.join(' / ');
             console.log(titleString)
-            const storeId = goods[0].items[0].store_id
             const countArr = modifiedGoods.map((good) => {
                 return {
                     title: good.items[0].good_id.title,
                     photo_list: good.items[0].good_id.photo_list,
                     price: good.items[0].good_id.price,
                     count: good.items[0].count,
-                    _id: good.items[0].good_id._id
+                    _id: good.items[0].good_id._id,
+                    day: day,
+                    time: time,
+                    address: address,
+                    addressAll: addressAll,
+                    city: city,
+                    delivery_price: delivery_price,
+                    name: name
                 }
             });
-            console.log(countArr)
             const countObj = countArr.reduce((obj, count, index) => {
                 obj[`item${index + 1}`] = count;
                 return obj;
             }, {});
             const goodsIds = modifiedGoods.map((good) => good.items[0].good_id._id);
-            const storeComission = await Stores.findOne({
-                _id: storeId
-            })
             let totalPrice = modifiedGoods.reduce((accumulator, good) => {
                 const price = good.items[0].good_id.price;
                 return accumulator + price;
             }, 0);
             const weekdays = storeComission.weekdays;
             const weekends = storeComission.weekends;
-
-            const delivery_price = storeComission.distance;
-            console.log(delivery, 'delivery');
-            const deliveryPrice = Math.round(delivery_price * Math.round(delivery));
             let promocodeCommission;
             let income;
             let incomeWithoutPromocode;
@@ -171,7 +166,7 @@ class OrdersController {
                 isOpen = parsedDay >= fromTime && parsedDay <= toTime;
             } else if (!weekends.not_working || dayOfWeek === 0 || dayOfWeek === 6) {
                 console.log('Weekends');
-                const {from, to } = weekends;
+                const {from, to} = weekends;
                 console.log('from:', from, 'to:', to);
                 const fromTime = new Date(parsedDay);
                 fromTime.setUTCHours(parseInt(from.split(':')[0], 10));
@@ -213,7 +208,7 @@ class OrdersController {
                 promocodeComission: promocodeCommission,
                 goods: goodArr,
                 creationDate: new Date(),
-                adressAll: adressAll
+                addressAll: addressAll
             });
             await TempOrders.updateMany({
                 isNew: false
@@ -374,7 +369,6 @@ class OrdersController {
     //
     static confirmOrder = async (req, res, next) => {
         try {
-            console.log('i was here|||||||||||||||||||||||||||||||||')
             const {user_id} = req;
             const order = await Payments.findOne({
                 seller_id: user_id,
@@ -415,7 +409,7 @@ class OrdersController {
                     count: tempOrderObj.count,
                     goods: tempOrderObj.goods,
                     creationDate: tempOrderObj.creationDate,
-                    adressAll: tempOrderObj.adressAll
+                    addressAll: tempOrderObj.adressAll
                 });
                 await newOrder.save();
                 await Payments.deleteOne({
