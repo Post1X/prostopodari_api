@@ -261,6 +261,52 @@ class ChatController {
             next(e);
         }
     }
+    //
+    static isCreatedAdmin = async (req, res, next) => {
+        try {
+            const {seller_id} = req.query;
+            const chat = await Chats.findOne({
+                seller_id: seller_id,
+                priority: 'admin'
+            });
+            const seller = await Sellers.findOne({
+                _id: seller_id
+            });
+            if (chat) {
+                res.status(200).json({
+                    chatID: chat.chatID
+                })
+            }
+            if (!chat) {
+                const newRoomId = uuid();
+                const newChat = new Chats({
+                    name: seller ? seller.legal_name : 'Продавец',
+                    seller_id: seller_id,
+                    chatID: newRoomId,
+                    priority: 'admin',
+                    newMessCount: 0,
+                    lastMessage: 'Здравствуйте!'
+                });
+                const newMessages = new Messages({
+                    room_id: newRoomId,
+                    name: 'Администратор',
+                    role: 'admin',
+                    text: 'Здравствуйте!',
+                    isRead: false,
+                    isImage: false
+                });
+                await newMessages.save();
+                await newChat.save();
+                res.status(200).json({
+                    chatID: newRoomId
+                })
+            }
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
 }
 
 export default ChatController;

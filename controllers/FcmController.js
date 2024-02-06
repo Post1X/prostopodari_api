@@ -23,7 +23,42 @@ class FcmController {
     static sendMessage = async (req, res, next) => {
         try {
             const {title, body} = req.body;
-            const users = await Fcm.find();
+            const users = await Fcm.find({
+                is_seller: true
+            });
+            let token_array = [];
+            users.map((item) => {
+                token_array.push(item.token);
+            });
+            const message = {
+                notification: {
+                    title: title,
+                    body: body
+                },
+                tokens: token_array
+            };
+            admin.messaging()
+                .sendMulticast(message)
+                .then(() => {
+                    res.status(200).json({
+                        message: 'ok'
+                    });
+                })
+                .catch((error) => {
+                    throw error;
+                });
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static sendMessageBuyer = async (req, res, next) => {
+        try {
+            const {title, body} = req.body;
+            const users = await Fcm.find({
+                is_seller: false
+            });
             let token_array = [];
             users.map((item) => {
                 token_array.push(item.token);

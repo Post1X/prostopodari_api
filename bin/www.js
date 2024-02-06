@@ -102,7 +102,7 @@ userChatSpace.on('connection', async (socket) => {
         socket.buyer = await Buyers.findOne({_id: socket.buyer_id})
         const token = socket.handshake.query.token;
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        socket.result = decoded.isSeller ? 'seller' : 'user';
+        socket.result = decoded.isAdmin ? 'admin' : (decoded.isSeller ? 'seller' : 'user');
         await getMessagesAndSendToUsers(socket);
         socket.on('isRead', async (lastMessage) => {
             try {
@@ -166,18 +166,24 @@ async function getMessagesAndSendToUsers(socket) {
     try {
         console.log('Getting messages...');
         let chatMessages = [];
-        if (socket.result === 'seller' || socket.result === 'user') {
+        if (socket.result === 'seller' || socket.result === 'user' || socket.result === 'admin') {
             chatMessages = await Messages.find({room_id: socket.roomId}).sort({date: 1});
             const sellerMessages = chatMessages.filter((message) => message.role === 'seller');
             const userMessages = chatMessages.filter((message) => message.role === 'user');
+            const adminMessages = chatMessages.filter((message) => message.role === 'admin');
             const newMessSeller = sellerMessages.filter((message) => !message.isRead).length;
             const newMessUser = userMessages.filter((message) => !message.isRead).length;
+            const newMessAdmin = adminMessages.filter((message) => !message.isRead).length;
             socket.newMessSeller = newMessSeller;
             socket.newMessUser = newMessUser;
         }
         userChatSpace.emit('messages', {
             messages: chatMessages,
             newMessCount: socket.result === 'seller' ? socket.newMessSeller : socket.newMessUser
+        });
+        chatSpace.emit('messages', {
+            messages: chatMessages,
+            newMessCount: socket.result === 'admin' ? socket.newMessAdmin : socket.newMessSeller
         });
         if (!socket.handshake.query.roomId) {
             const chat = await UserChats.findOne({
@@ -260,7 +266,9 @@ async function sendMessage(socket, message) {
     }
     const newMessage = new Messages({
         room_id: socket.roomId,
-        name: socket.result === 'seller' ? seller.legal_name : socket.buyer.full_name || 'Покупатель',
+        name: socket.result === 'admin' ? 'Администратор' :
+            socket.result === 'seller' ? seller.legal_name :
+                socket.buyer.full_name || 'Покупатель',
         role: socket.result,
         text: message.text,
         isRead: false,
@@ -270,6 +278,7 @@ async function sendMessage(socket, message) {
         await UserChats.findOneAndUpdate({chatID: socket.roomId}, update);
     }
 }
+
 chatSpace.on('connection', async (socket) => {
     try {
         socket.roomId = socket.handshake.query.roomId;
