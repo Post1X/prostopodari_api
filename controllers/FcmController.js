@@ -1,5 +1,6 @@
 import Fcm from '../schemas/FcmSchema';
 import admin from 'firebase-admin';
+import Notifications from '../schemas/NotificationsSchema';
 
 class FcmController {
     static generateTokenForUser = async (req, res, next) => {
@@ -40,6 +41,13 @@ class FcmController {
             admin.messaging()
                 .sendMulticast(message)
                 .then(() => {
+                    const newNotification = new Notifications({
+                        date: new Date(),
+                        role: 'seller',
+                        title: title,
+                        body: body
+                    })
+                    await newNotification.save();
                     res.status(200).json({
                         message: 'ok'
                     });
@@ -73,6 +81,13 @@ class FcmController {
             admin.messaging()
                 .sendMulticast(message)
                 .then(() => {
+                    const newNotification = new Notifications({
+                        date: new Date(),
+                        role: 'buyer',
+                        title: title,
+                        body: body
+                    })
+                    await newNotification.save();
                     res.status(200).json({
                         message: 'ok'
                     });
@@ -80,6 +95,16 @@ class FcmController {
                 .catch((error) => {
                     throw error;
                 });
+        } catch (e) {
+            e.status = 401;
+            next(e);
+        }
+    }
+    //
+    static getNotifications = async (req, res, next) => {
+        try {
+            const notifs = await Notifications.find({});
+            return res.status(200).json(notifs);
         } catch (e) {
             e.status = 401;
             next(e);

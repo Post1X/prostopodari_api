@@ -37,6 +37,7 @@ router.post('/stores/active', SellersController.AddStoreToActive);
 router.post('/login/admin', AdminController.AdminLogin);
 router.post('/admin/message/sellers', FcmController.sendMessage);
 router.post('/admin/message/buyers', FcmController.sendMessageBuyer);
+router.get('/admin/notifications', FcmController.getNotifications);
 router.get('/sellers/claims', AdminController.ClaimSellers);
 router.put('/sellers/claims', AdminController.ChangeStatus);
 router.get('/sellers', AdminController.GetSellers);
@@ -47,9 +48,5 @@ router.post('/admin/upload-image', uploadFields, AdminController.uploadImage);
 router.post('/admin/banner', uploadFields, AdminController.uploadBanner);
 router.get('/admin/banner', AdminController.getBanner)
 router.delete('/admin/banner', AdminController.deleteBanner);
-
-// router.get('/getcord', BuyersController.GetCords);
-// router.get('/deleteall', BuyersController.TerminateAll)
-
 
 export default router;
