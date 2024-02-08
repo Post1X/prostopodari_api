@@ -281,7 +281,7 @@ class ChatController {
                 const newRoomId = uuid();
                 const newChat = new Chats({
                     name: seller ? seller.legal_name : 'Продавец',
-                    seller_id: seller_id,
+                    user_id: seller_id,
                     chatID: newRoomId,
                     priority: 'admin',
                     newMessCount: 0,

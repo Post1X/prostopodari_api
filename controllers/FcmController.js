@@ -38,16 +38,16 @@ class FcmController {
                 },
                 tokens: token_array
             };
+            const newNotification = new Notifications({
+                date: new Date(),
+                role: 'seller',
+                title: title,
+                body: body
+            })
+            await newNotification.save();
             admin.messaging()
                 .sendMulticast(message)
                 .then(() => {
-                    const newNotification = new Notifications({
-                        date: new Date(),
-                        role: 'seller',
-                        title: title,
-                        body: body
-                    })
-                    await newNotification.save();
                     res.status(200).json({
                         message: 'ok'
                     });
@@ -78,16 +78,16 @@ class FcmController {
                 },
                 tokens: token_array
             };
+            const newNotification = new Notifications({
+                date: new Date(),
+                role: 'buyer',
+                title: title,
+                body: body
+            })
+            await newNotification.save();
             admin.messaging()
                 .sendMulticast(message)
                 .then(() => {
-                    const newNotification = new Notifications({
-                        date: new Date(),
-                        role: 'buyer',
-                        title: title,
-                        body: body
-                    })
-                    await newNotification.save();
                     res.status(200).json({
                         message: 'ok'
                     });

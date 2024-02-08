@@ -124,7 +124,7 @@ class PromotionsController {
                 _id: good.store_id
             });
             if (store.subscription_status !== true)
-                return res.status(200).json({
+                return res.status(400).json({
                     message: 'Подписка неактивна.'
                 })
             const seller = await Stores.findOne({
@@ -133,6 +133,10 @@ class PromotionsController {
             if (seller.subscription_count <= 0)
                 return res.status(400).json({
                     message: 'Не осталось доступных продвижений.'
+                })
+            if (good.is_promoted === true)
+                return res.status(400).json({
+                    message: 'Товар уже продвигается.'
                 })
             await Goods.findOneAndUpdate({
                 _id: good_id
