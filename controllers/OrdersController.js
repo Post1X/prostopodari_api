@@ -137,52 +137,50 @@ class OrdersController {
                 timeParts[1] = '0' + timeParts[1];
             }
             const dateParts = req.body.day.split('-');
-            const parsedDay = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`);
-            parsedDay.setUTCHours(timeParts[0]);
-            parsedDay.setUTCMinutes(timeParts[1]);
-            const dayOfWeek = parsedDay.getUTCDay();
+            const year = parseInt(dateParts[0], 10);
+            const month = parseInt(dateParts[1], 10) - 1;
+            const dayParsed = parseInt(dateParts[2], 10);
+            const hours = parseInt(timeParts[0], 10);
+            const minutes = parseInt(timeParts[1], 10);
+            const parsedDay = new Date(year, month, dayParsed, hours, minutes);
+            const dayOfWeek = parsedDay.getDay();
             let isOpen = false;
-
-            console.log('Debugging info:');
-            console.log('timeParts:', timeParts);
-            console.log('parsedDay:', parsedDay);
-
+            let workingHours;
             if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                console.log('Weekdays');
-                const {from, to} = weekdays;
-                console.log('from:', from, 'to:', to);
-
-                const fromTime = new Date(parsedDay);
-                fromTime.setUTCHours(parseInt(from.split(':')[0], 10));
-                fromTime.setUTCMinutes(parseInt(from.split(':')[1], 10));
-
-                const toTime = new Date(parsedDay);
-                toTime.setUTCHours(parseInt(to.split(':')[0], 10));
-                toTime.setUTCMinutes(parseInt(to.split(':')[1], 10));
-
-                console.log('fromTime:', fromTime);
-                console.log('toTime:', toTime);
-
-                isOpen = parsedDay >= fromTime && parsedDay <= toTime;
-            } else if (!weekends.not_working || dayOfWeek === 0 || dayOfWeek === 6) {
-                console.log('Weekends');
-                const {from, to} = weekends;
-                console.log('from:', from, 'to:', to);
-                const fromTime = new Date(parsedDay);
-                fromTime.setUTCHours(parseInt(from.split(':')[0], 10));
-                fromTime.setUTCMinutes(parseInt(from.split(':')[1], 10));
-
-                const toTime = new Date(parsedDay);
-                toTime.setUTCHours(parseInt(to.split(':')[0], 10));
-                toTime.setUTCMinutes(parseInt(to.split(':')[1], 10));
-
-                console.log('fromTime:', fromTime);
-                console.log('toTime:', toTime);
-                isOpen = parsedDay >= fromTime && parsedDay <= toTime;
+                workingHours = weekdays;
+                if (weekdays.not_working) {
+                    console.log('weekdays')
+                    return res.status(400).json({
+                        message: 'У магазина выходные дни.'
+                    });
+                }
+            } else {
+                workingHours = weekends;
+                if (weekends.not_working) {
+                    console.log('weekends')
+                    return res.status(400).json({
+                        message: 'У магазина выходные дни.'
+                    });
+                }
             }
-            // if (!isOpen) {
-            //     return res.status(400).json({message: 'В это время магазин не работает'});
-            // }
+            const {from, to} = workingHours;
+            const [fromHour, fromMinute] = from.split(':').map(num => parseInt(num, 10));
+            const [toHour, toMinute] = to.split(':').map(num => parseInt(num, 10));
+            const fromTime = new Date(parsedDay);
+            fromTime.setHours(fromHour, fromMinute);
+            const toTime = new Date(parsedDay);
+            toTime.setHours(toHour, toMinute);
+            if (toTime < fromTime) {
+                if (parsedDay < fromTime) {
+                    fromTime.setDate(fromTime.getDate() - 1);
+                } else {
+                    toTime.setDate(toTime.getDate() + 1);
+                }
+            }
+            isOpen = parsedDay >= fromTime && parsedDay <= toTime;
+            if (!isOpen) {
+                return res.status(400).json({message: 'Магазин в это время не работает'});
+            }
             const newOrders = new TempOrders({
                 title: titleString,
                 goods_ids: goodsIds,
@@ -243,11 +241,17 @@ class OrdersController {
                 .exec();
             const modifiedOrders = orders.map((order) => {
                 const modifiedTotalPrice = parseFloat(order.full_amount.toString())
+                const addressAll = order.addressAll;
                 const modifiedGoodsIds = order.goods_ids.map((good) => {
                     const price = parseFloat(good.price.toString());
                     return {...good._doc, price: price};
                 });
-                return {...order._doc, goods_ids: modifiedGoodsIds, full_amount: modifiedTotalPrice};
+                return {
+                    ...order._doc,
+                    goods_ids: modifiedGoodsIds,
+                    full_amount: modifiedTotalPrice,
+                    addressAll: addressAll
+                };
             })
             res.status(200).json(modifiedOrders);
         } catch (e) {
@@ -277,6 +281,7 @@ class OrdersController {
             const modifiedOrders = aaa.map((order) => {
                 const modifiedTotalPrice = parseFloat(order.full_amount.toString())
                 const modifiedIncome = parseFloat(order.income.toString())
+                const addressAll = order.addressAll;
                 const modifiedGoodsIds = order.goods_ids.map((good) => {
                     const price = parseFloat(good.price.toString());
                     return {...good._doc, price: price};
@@ -285,7 +290,8 @@ class OrdersController {
                     ...order._doc,
                     goods_ids: modifiedGoodsIds,
                     full_amount: modifiedTotalPrice,
-                    income: modifiedIncome
+                    income: modifiedIncome,
+                    addressAll: addressAll
                 };
             })
             res.status(200).json(modifiedOrders);

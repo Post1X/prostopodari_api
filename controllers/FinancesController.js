@@ -1,6 +1,7 @@
 import Orders from '../schemas/OrdersSchema';
 import Stores from '../schemas/StoresSchema';
 import moment from 'moment';
+import Sellers from '../schemas/SellersSchema';
 
 class FinancesController {
     static GetFinances = async (req, res, next) => {
@@ -37,10 +38,10 @@ class FinancesController {
     }
     static GetFinancesAdmin = async (req, res, next) => {
         try {
-            const { dateStart, dateEnd } = req.query;
+            const {dateStart, dateEnd} = req.query;
             const startDate = moment(dateStart, 'YY-MM-DD').startOf('day').unix();
             const endDate = moment(dateEnd, 'YY-MM-DD').endOf('day').unix();
-            const orders = await Orders.find({ createdAt: { $gte: startDate, $lte: endDate } })
+            const orders = await Orders.find({createdAt: {$gte: startDate, $lte: endDate}})
                 .populate('store_id')
                 .populate('user_id')
                 .populate({
@@ -60,7 +61,7 @@ class FinancesController {
                     const numericIncome = parseFloat(item.income) || 0;
                     const timestamp = new Date(parseInt(item._id.toString().substring(0, 8), 16) * 1000);
                     const formattedTimestamp = moment(timestamp).format('YY-MM-DD');
-                    return { ...item._doc, full_amount: numericPrice, income: numericIncome };
+                    return {...item._doc, full_amount: numericPrice, income: numericIncome};
                 } catch (error) {
                     console.error('Ошибка при обработке заказа:', error);
                     return null;
@@ -83,7 +84,7 @@ class FinancesController {
                 income: allIncome,
             };
 
-            const modifiedFinancesData = orders.map((item) => {
+            const modifiedFinancesData = await Promise.all(orders.map(async (item) => {
                 try {
                     const comperc = parseFloat(item.commission_percentage) || 0;
                     const promocom = parseFloat(item.promocodeComission) || 0;
@@ -97,6 +98,20 @@ class FinancesController {
                         return randomNumber.toString().padStart(7, '0');
                     }
 
+                    const seller = await Sellers.findOne({
+                        _id: item.seller_id
+                    });
+                    const sellerForData = {
+                        _id: seller._id ? seller._id : null,
+                        name: seller.name ? seller.name : null,
+                        email: seller.email ? seller.email : null,
+                        inn: seller.inn ? seller.inn : null,
+                        ip: seller.ip ? seller.ip : null,
+                        ogrn: seller.ogrn ? seller.ogrn : null,
+                        legal_name: seller.legal_name ? seller.legal_name : null,
+                        phone_number: seller.phone_number ? seller.phone_number : null,
+                        bill_number: seller.bill_number ? seller.bill_number : null,
+                    }
                     const store = {
                         _id: item.store_id ? item.store_id._id : null,
                         order_number: generateRandom7DigitNumber(),
@@ -105,7 +120,6 @@ class FinancesController {
                         phone_number: item.store_id ? item.user_id.phone_number : null,
                         sellerName: item.store_id ? item.store_id.seller_user_id.name : null,
                     };
-
                     const finance = {
                         payAmount: Math.ceil(parseFloat(item.full_amount) || 0),
                         income: Math.ceil(parseFloat(item.income) || 0),
@@ -118,13 +132,12 @@ class FinancesController {
                             promo: promocom,
                         },
                     };
-
-                    return { seller: store, finance: finance };
+                    return {store: store, finance: finance, seller: sellerForData};
                 } catch (error) {
-                    console.error('Ошибка при обработке финансов данных:', error);
+                    console.error('Error processing item:', error);
                     return null;
                 }
-            });
+            }));
 
             res.status(200).json({
                 statistics: statistics,

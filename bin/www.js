@@ -79,10 +79,11 @@ getOrders.on('connection', async (socket) => {
     try {
         const sellerId = socket.handshake.query.seller_id;
         const stores = await Stores.find({seller_user_id: sellerId});
-        const count = await stores.reduce(async (acc, item) => {
+        let count = 0;
+        for (const item of stores) {
             const orderCount = await Orders.countDocuments({store_id: item._id});
-            return acc + orderCount;
-        }, Promise.resolve(0));
+            count += orderCount;
+        }
         getOrders.emit('count', {count});
     } catch (e) {
         console.error('Ошибка в обработчике событий сокета getOrders:', e);
@@ -295,10 +296,11 @@ chatSpace.on('connection', async (socket) => {
             socket.join(socket.roomId);
         }
         const result = decoded ? (decoded.isSeller ? 'seller' : (decoded.isAdmin ? 'admin' : 'user')) : 'user';
-        console.log(`Пользователь ${decoded.user_id} с ролью ${result} подключился к чату под номером ${roomId}`);
-        socket.phone_number = sellerForTest.phone_number;
+        console.log(`Пользователь ${decoded.user_id} с ролью ${result} подключился к чату под номером ${socket.roomId}`);
+        // socket.phone_number = sellerForTest.phone_number;
         socket.seller_id = seller_id;
-        socket.name = sellerForTest.name;
+        console.log(sellerForTest);
+        socket.name = sellerForTest.legal_name;
         socket.result = result;
         socket.user_id = decoded.user_id;
         socket.isSeller = decoded.isSeller || false;
@@ -306,7 +308,6 @@ chatSpace.on('connection', async (socket) => {
         await getMessagesAndSendToClient(socket);
         socket.on('isRead', async (lastMessage) => {
             try {
-                console.log(lastMessage)
                 if (socket.result === 'seller') {
                     await Messages.updateMany(
                         {
@@ -403,6 +404,16 @@ async function processSendMessage(socket, message) {
         const chats = await Chats.findOne({chatID: socket.roomId});
         if (chats) {
             await Chats.findOneAndUpdate({chatID: socket.roomId}, {lastMessage: message.text});
+        } else {
+            const newChat = new Chats({
+                name: socket.name ? socket.name : 'Продавец',
+                user_id: socket.seller_id,
+                chatID: socket.roomId,
+                priority: 'admin',
+                newMessCount: 0,
+                lastMessage: message.text
+            });
+            await newChat.save();
         }
     }
     await newMessages.save();
